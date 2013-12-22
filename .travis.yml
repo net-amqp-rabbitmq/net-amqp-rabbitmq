@@ -9,7 +9,12 @@ perl:
 services: rabbitmq
 script:
   - perl Makefile.PL
-  - make metafile
   - make manifest
+  - make metafile
   - make dist
-  - MQHOST=localhost cpanm --verbose --test-only Net-AMQP-RabbitMQ-*.tar.gz
+  - cpanm --look Net-AMQP-RabbitMQ-*.tar.gz
+#we do it twice, may as well check that the dist will be correct
+  - perl Makefile.PL
+  - make
+  - prove -v -I blib/lib -I blib/arch t
+  - MQHOST=localhost prove -v -I blib/lib -I blib/arch xt

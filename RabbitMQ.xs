@@ -2,8 +2,9 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include <amqp.h>
-#include <amqp_tcp_socket.h>
+#include "amqp.h"
+#include "amqp_tcp_socket.h"
+#include "amqp_private.h"
 
 typedef amqp_connection_state_t Net__AMQP__RabbitMQ;
 
@@ -657,8 +658,9 @@ net_amqp_rabbitmq_disconnect(conn)
   PREINIT:
     int sockfd;
   CODE:
-    amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
-    empty_amqp_pool( &hash_pool );
+    if ( conn->socket != NULL ) {
+        amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
+    }
 
 Net::AMQP::RabbitMQ
 net_amqp_rabbitmq_new(clazz)
@@ -671,11 +673,11 @@ net_amqp_rabbitmq_new(clazz)
 void
 net_amqp_rabbitmq_DESTROY(conn)
   Net::AMQP::RabbitMQ conn
-  PREINIT:
-    int sockfd;
   CODE:
+    if ( conn->socket != NULL ) {
+        amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
+    }
     empty_amqp_pool( &hash_pool );
-    amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
     amqp_destroy_connection(conn);
 
 void
