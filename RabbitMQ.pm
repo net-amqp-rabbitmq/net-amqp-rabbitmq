@@ -23,9 +23,9 @@ Net::AMQP::RabbitMQ - interact with RabbitMQ over AMQP using librabbitmq
 
 =head1 VERSION COMPATIBILITY
 
-This module was forked from L<Net::RabbitMQ> version 0.2.6 which uses an older,
-version of librabbitmq, and doesn't work correctly with newer version of RabbitMQ.
-The main changes between this module and the original is this library uses
+This module was forked from L<Net::RabbitMQ> version 0.2.6 which uses an older
+version of librabbitmq, and doesn't work correctly with newer versions of RabbitMQ.
+The main change between this module and the original is this library uses
 a newer, unforked, version of librabbitmq. Version 0.4.1 to be precise.
 
 This means this module only works with the AMQP 0.9.1 protocol, so requires RabbitMQ
