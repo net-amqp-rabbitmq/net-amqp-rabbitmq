@@ -11,7 +11,7 @@ before_install:
 
 install:
   - sudo apt-get -y install rabbitmq-server
-  - sudo invoke-rc.d rabbitmq-server start
+  - sudo service rabbitmq-server restart
 
 script:
   - perl Makefile.PL
