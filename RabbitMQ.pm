@@ -344,7 +344,7 @@ n0body E<lt>nobody@cpan.orgE<gt>
 
 This software is licensed under the Mozilla Public License. See the LICENSE file in the top distribution directory for the full license text.
 
-librabbitmq is licensed under the Mozilla Public License. See the LICENSE-MPL-RabbitMQ file in the top distribution directory for the full license text.
+librabbitmq is licensed under the MIT License. See the LICENSE-MIT file in the top distribution directory for the full license text.
 
 =cut
 

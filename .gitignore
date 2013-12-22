@@ -6,6 +6,7 @@
 *.bs
 *.o
 MYMETA.*
+META.*
 MANIFEST
 *.swp
 *.old
