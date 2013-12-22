@@ -12,7 +12,11 @@ script:
   - make manifest
   - make metafile
   - make dist
-  - cpanm --look Net-AMQP-RabbitMQ-*.tar.gz
+  - mkdir _clean
+  - mv Net-AMQP-RabbitMQ-*.tar.gz _clean/
+  - cd _clean
+  - tar -xzf Net-AMQP-RabbitMQ-*.tar.gz
+  - cd Net-AMQP-RabbitMQ-*
 #we do it twice, may as well check that the dist will be correct
   - perl Makefile.PL
   - make
