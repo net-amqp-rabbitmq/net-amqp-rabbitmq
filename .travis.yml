@@ -6,16 +6,10 @@ perl:
   - "5.12"
   - "5.10"
   - "5.8"
-before_install:
-  - sudo apt-get update
-
-install:
-  - sudo apt-get -y install rabbitmq-server
-  - sudo service rabbitmq-server restart
-
+services: rabbitmq
 script:
   - perl Makefile.PL
   - make metafile
   - make manifest
   - make dist
-  - MQHSOT=localhost cpanm --verbose --test-only Net-AMQP-RabbitMQ-*.tar.gz
+  - MQHOST=localhost cpanm --verbose --test-only Net-AMQP-RabbitMQ-*.tar.gz
