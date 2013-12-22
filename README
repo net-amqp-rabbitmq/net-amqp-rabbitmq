@@ -13,7 +13,7 @@ If you checkout the github repo, you'll need to run the following commands
 The documentation is in the module file.  Once you install
 the file, you can read it with perldoc.
 
-	perldoc Net::RabbitMQ
+	perldoc Net::AMQP::RabbitMQ
 
 If you want to read it before you install it, you can use
 perldoc directly on the module file.

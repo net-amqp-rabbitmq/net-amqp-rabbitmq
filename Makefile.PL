@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-require 5.004 ;
+require 5.008 ;
 
 use ExtUtils::MakeMaker 5.16 ;
 use Config ;
@@ -13,8 +13,14 @@ foreach ( <$Bin/*.c> ){
 }
 
 WriteMakefile(
-    NAME            => 'Net::RabbitMQ',
+    NAME            => 'Net::AMQP::RabbitMQ',
     VERSION_FROM    => 'RabbitMQ.pm',
+    LICENSE         => 'mozilla',
+    ABSTRACT_FROM   => 'RabbitMQ.pm',
+    AUTHOR          => [
+        'Theo Schlossnagle <jesus@omniti.com>',
+        'Mark Ellis <nobody@cpan.org>',
+    ],
     OBJECT          => "RabbitMQ.o ${ofiles}",
     OPTIMIZE        => $ENV{'OPTIMIZE'},
     CCFLAGS         => "-I${Bin}",

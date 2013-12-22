@@ -1,23 +1,21 @@
-package Net::RabbitMQ;
-
-require DynaLoader;
-
+package Net::AMQP::RabbitMQ;
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = "0.3.0";
-@ISA = qw/DynaLoader/;
+use warnings;
 
-bootstrap Net::RabbitMQ $VERSION ;
+our $VERSION = '0.003';
+
+use XSLoader;
+XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
 use Scalar::Util qw(blessed);
 
 =head1 NAME
 
-Net::RabbitMQ - interact with RabbitMQ over AMQP using librabbitmq
+Net::AMQP::RabbitMQ - interact with RabbitMQ over AMQP using librabbitmq
 
 =head1 SYNOPSIS
 
-	use Net::RabbitMQ;
-	my $mq = Net::RabbitMQ->new();
+	use Net::AMQP::RabbitMQ;
+	my $mq = Net::AMQP::RabbitMQ->new();
 	$mq->connect("localhost", { user => "guest", password => "guest" });
 	$mq->channel_open(1);
 	$mq->publish(1, "queuename", "Hi there!");
@@ -25,14 +23,18 @@ Net::RabbitMQ - interact with RabbitMQ over AMQP using librabbitmq
 
 =head1 VERSION COMPATIBILITY
 
-As of version 0.3.0, Net::RabbitMQ uses the AMQP 0.9.1 protocol. This means it
-will not work with RabbitMQ versions below 2.0.0
+This module was forked from L<Net::RabbitMQ> version 0.2.6 which uses an older,
+version of librabbitmq, and doesn't work correctly with newer version of RabbitMQ.
+The main changes between this module and the original is this library uses
+a newer, unforked, version of librabbitmq. Version 0.4.1 to be precise.
 
-See L<https://www.rabbitmq.com/specification.html>
+This means this module only works with the AMQP 0.9.1 protocol, so requires RabbitMQ
+version 2+. Also, since the version of librabbitmq used is not a custom fork, it
+means this module doesn't support the basic_return callback method.
 
 =head1 DESCRIPTION
 
-C<Net::RabbitMQ> provides a simple wrapper around the librabbitmq library
+C<Net::AMQP::RabbitMQ> provides a simple wrapper around the librabbitmq library
 that allows connecting, declaring exchanges and queues, binding and unbinding
 queues, publishing, consuming and receiving events.
 
@@ -49,7 +51,7 @@ and die on failure.
 
 =item new()
 
-Creates a new Net::RabbitMQ object.
+Creates a new Net::AMQP::RabbitMQ object.
 
 =item connect( $hostname, $options )
 
@@ -330,6 +332,20 @@ Send a hearbeat frame.  If you've connected with a heartbeat parameter,
 you must send a heartbeat periodically matching connection parameter or
 the server may snip the connection.
 
+=head1 ORIGINAL AUTHOR
+
+Theo Schlossnagle <jesus@omniti.com>
+
+=head1 MAINTAINER
+
+n0body E<lt>nobody@cpan.orgE<gt>
+
+=head1 LICENSE
+
+This software is licensed under the Mozilla Public License. See the LICENSE file in the top distribution directory for the full license text.
+
+librabbitmq is licensed under the Mozilla Public License. See the LICENSE-MPL-RabbitMQ file in the top distribution directory for the full license text.
+
 =cut
 
 sub publish {
@@ -347,10 +363,6 @@ sub publish {
 	}
 
 	$self->_publish($channel, $routing_key, $body, $options, $props);
-}
-
-sub basic_return {
-    die "This method has been removed in version 0.3.0";
 }
 
 1;

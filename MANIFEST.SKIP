@@ -24,3 +24,4 @@ amqp_debug.c
 .*\.bs
 MYMETA.*
 README
+\.travis\.yml

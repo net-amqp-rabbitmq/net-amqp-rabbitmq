@@ -1,6 +1,7 @@
-Revision history for perl module Net::RabbitMQ
+Revision history for perl module Net::AMQP::RabbitMQ
 
-v0.3.0 - 2013-12-19
+0.003 - 2013-12-22
+    - forked from Net::RabbitMQ as Net::AMQP::RabbitMQ since changes not accepted upstream
     - use librabbitmq 0.4.1
     - amqp protocol 0.9.1 support only rabbitmq 2+
     - removed basic_return method, since standard version of librabbitmq is used, not custom fork

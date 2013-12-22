@@ -4,9 +4,9 @@ use Time::HiRes qw/gettimeofday tv_interval/;
 
 my $host = '199.15.224.0'; # This OmniTI IP will hang
 $SIG{'PIPE'} = 'IGNORE';
-use_ok('Net::RabbitMQ');
+use_ok('Net::AMQP::RabbitMQ');
 
-my $mq = Net::RabbitMQ->new();
+my $mq = Net::AMQP::RabbitMQ->new();
 ok($mq);
 
 my $start = [gettimeofday];

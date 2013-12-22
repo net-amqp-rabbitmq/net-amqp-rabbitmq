@@ -4,9 +4,9 @@ use Data::Dumper;
 
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
 $SIG{'PIPE'} = 'IGNORE';
-use_ok('Net::RabbitMQ');
+use_ok('Net::AMQP::RabbitMQ');
 
-my $mq = Net::RabbitMQ->new();
+my $mq = Net::AMQP::RabbitMQ->new();
 ok($mq);
 
 eval { $mq->connect($host, { user => "guest", password => "guest", heartbeat => 1 }); };
