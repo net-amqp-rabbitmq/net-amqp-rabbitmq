@@ -23,5 +23,5 @@ amqp_debug.c
 .*\.tar\.gz
 .*\.bs
 MYMETA.*
-README
+README.*
 \.travis\.yml

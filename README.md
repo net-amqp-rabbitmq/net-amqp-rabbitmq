@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/n0body-/net-amqp-rabbitmq.png)](https://travis-ci.org/n0body-/net-amqp-rabbitmq)
+
 You can install this using in the usual Perl fashion:
 
 	perl Makefile.PL
