@@ -7,6 +7,8 @@ perl:
   - "5.10"
   - "5.8"
 services: rabbitmq
+before_install:
+  cpanm -n Devel::Cover::Report::Coveralls
 script:
   - perl Makefile.PL
   - make manifest
@@ -19,6 +21,6 @@ script:
   - cd Net-AMQP-RabbitMQ-*
 #we do it twice, may as well check that the dist will be correct
   - perl Makefile.PL
-  - make
-  - prove -v -I blib/lib -I blib/arch t
-  - MQHOST=localhost prove -v -I blib/lib -I blib/arch xt
+  - cover -test
+  - MQHOST=localhost prove -MDevel::Cover -I blib/lib -I blib/arch xt
+  - cover -report coveralls -ignore_re "\.c|\.h" cover_db
