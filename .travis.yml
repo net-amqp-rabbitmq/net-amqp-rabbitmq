@@ -9,18 +9,11 @@ perl:
 services: rabbitmq
 before_install:
   cpanm -n Devel::Cover::Report::Coveralls
-script:
+install:
+  - mv xt/* t/ #author tests, probably a better way of doing this
+  - rm -r xt
   - perl Makefile.PL
   - make manifest
   - make metafile
-  - make dist
-  - mkdir _clean
-  - mv Net-AMQP-RabbitMQ-*.tar.gz _clean/
-  - cd _clean
-  - tar -xzf Net-AMQP-RabbitMQ-*.tar.gz
-  - cd Net-AMQP-RabbitMQ-*
-#we do it twice, may as well check that the dist will be correct
-  - perl Makefile.PL
-  - cover -test
-  - MQHOST=localhost prove -MDevel::Cover -I blib/lib -I blib/arch xt
-  - cover -report coveralls -ignore_re "\.c|\.h" cover_db
+script:
+  - MQHOST=localhost cover -test -report coveralls -ignore_re "\.c|\.h" -make 'make disttest'
