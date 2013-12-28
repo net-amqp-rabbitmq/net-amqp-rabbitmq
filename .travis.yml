@@ -8,11 +8,15 @@ perl:
   - "5.8"
 services: rabbitmq
 before_install:
-  cpanm -n Devel::Cover::Report::Coveralls
-install:
+  - cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta
+before_script:
   - mv xt/* t/ #author tests, probably a better way of doing this
   - rm -r xt
   - perl Makefile.PL
+  - cpanm -n --installdeps .
   - make manifest
+  - make distdir
+  - cd $(perl -MCPAN::Meta -e '$m = CPAN::Meta->load_file("MYMETA.yml"); print $m->name . "-" . $m->version')
+  - perl Makefile.PL
 script:
-  - MQHOST=localhost cover -test -report coveralls -ignore_re "\.c|\.h" -make 'make disttest'
+  - MQHOST=localhost cover -test -report coveralls -ignore_re "\.c|\.h"
