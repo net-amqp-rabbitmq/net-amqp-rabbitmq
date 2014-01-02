@@ -23,7 +23,7 @@ WriteMakefile(
     ],
     OBJECT          => "RabbitMQ.o ${ofiles}",
     OPTIMIZE        => $ENV{'OPTIMIZE'},
-    CCFLAGS         => "-I${Bin}",
+    CCFLAGS         => "$Config{ccflags} -I${Bin}",
     LIBS            =>['-lrt'],
     META_MERGE        => {
         "meta-spec" => { version => 2 },

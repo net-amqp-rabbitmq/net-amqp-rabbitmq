@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.003001 - 2014-12-01
+    - updated Makefile.PL to fix a compile issue on Debian Wheezy
+
 0.003 - 2013-12-22
     - forked from Net::RabbitMQ as Net::AMQP::RabbitMQ since changes not accepted upstream
     - use librabbitmq 0.4.1
