@@ -35,7 +35,7 @@ while ( $i < 100_000 ) {
     ++$i;
 }
 my $diff = get_mem() - $start_mem;
-ok( $diff < 1, "memory usage hasn't risen by more than 2mb (${diff}mb)" );
+ok( $diff < 1, "memory usage hasn't risen by more than 1mb (${diff}mb)" );
 
 sub get_mem {
     my $mem = `grep VmRSS /proc/$$/status`;

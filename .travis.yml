@@ -11,7 +11,7 @@ before_install:
   - cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta
 before_script:
   - mv xt/* t/ #author tests, probably a better way of doing this
-  - rm -r xt
+  - mv t/018_transaction_memory_leak.t xt/018_transaction_memory_leak.t #doesn't want to run in Devel::Cover
   - perl Makefile.PL
   - cpanm -n --installdeps .
   - make manifest
@@ -20,3 +20,4 @@ before_script:
   - perl Makefile.PL
 script:
   - MQHOST=localhost cover -test -report coveralls -ignore_re "\.c|\.h"
+  - MQHOST=localhost perl -I blib/lib -I blib/arch xt/018_transaction_memory_leak.t
