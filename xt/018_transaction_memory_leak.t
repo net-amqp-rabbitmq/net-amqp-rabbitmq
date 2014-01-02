@@ -32,6 +32,7 @@ while ( $i < 100_000 ) {
     $mq->tx_commit(1);
     ++$i;
     note $i if ($i % 10_000) == 0;
+    diag ( get_mem() - $start_mem ) if ($i % 10_000) == 0;
 }
 my $diff = get_mem() - $start_mem;
 ok( $diff < 1, "memory usage hasn't risen by more than 1mb (${diff}mb)" );
