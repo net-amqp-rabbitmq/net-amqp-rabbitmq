@@ -704,8 +704,13 @@ net_amqp_rabbitmq_tx_commit(conn, channel, args = NULL)
   Net::AMQP::RabbitMQ conn
   int channel
   HV *args
+  PREINIT:
+    amqp_pool_t *channel_pool;
   CODE:
     amqp_tx_commit(conn, channel);
+    channel_pool = amqp_get_or_create_channel_pool(conn, channel);
+    empty_amqp_pool( channel_pool );
+
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), "Commiting transaction");
 
 void

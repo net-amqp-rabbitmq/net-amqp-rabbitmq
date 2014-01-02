@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.004000 - 2014-12-01
+    - fixed a memory leak when using transactions
+
 0.003001 - 2014-12-01
     - updated Makefile.PL to fix a compile issue on Debian Wheezy
 
