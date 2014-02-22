@@ -26,12 +26,12 @@ WriteMakefile(
         "meta-spec" => { version => 2 },
         resources => {
             bugtracker  => {
-                web    => 'https://github.com/n0body-/net-amqp-rabbitmq/issues',
+                web    => 'https://github.com/markwellis/net-amqp-rabbitmq/issues',
             },
             repository => {
                 type => 'git',
-                url => 'git://github.com/n0body-/net-amqp-rabbitmq.git',
-                web => 'https://github.com/n0body-/net-amqp-rabbitmq',
+                url => 'git://github.com/markwellis/net-amqp-rabbitmq.git',
+                web => 'https://github.com/markwellis/net-amqp-rabbitmq',
             },
         },
     },
