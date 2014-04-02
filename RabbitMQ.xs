@@ -652,6 +652,24 @@ net_amqp_rabbitmq_get_channel_max(conn)
   OUTPUT:
     RETVAL
 
+SV*
+net_amqp_rabbitmq_is_connected(conn)
+  Net::AMQP::RabbitMQ conn
+  CODE:
+    if (
+      amqp_get_socket( conn ) != NULL
+      &&
+      amqp_get_sockfd( conn ) > -1
+    ) {
+      RETVAL = newSViv(1);
+    }
+    else {
+      // We don't have a connection, we're still here.
+      RETVAL = &PL_sv_undef;
+    }
+  OUTPUT:
+    RETVAL
+
 void
 net_amqp_rabbitmq_disconnect(conn)
   Net::AMQP::RabbitMQ conn
@@ -660,6 +678,7 @@ net_amqp_rabbitmq_disconnect(conn)
   CODE:
     if ( conn->socket != NULL ) {
         amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
+        amqp_socket_close( amqp_get_socket( conn ) );
     }
 
 Net::AMQP::RabbitMQ
