@@ -1,5 +1,10 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.004002 - 2014-04-02
+    - Added Net::AMQP::RabbitMQ::is_connected() to determine whether or not you have a live connection. (manchicken)
+    - Added a call to Net::AMQP::RabbitMQ::disconnect() to close the socket connection as well. (manchicken)
+    - Added a test to verify the is_connected() functionality. (manchicken)
+
 0.004001 - 2014-02-22
     - changed github repo url
 
