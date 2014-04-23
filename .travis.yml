@@ -10,8 +10,6 @@ services: rabbitmq
 before_install:
   - cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta
 before_script:
-  - mv xt/* t/ #author tests, probably a better way of doing this
-  - mv t/100_transaction_memory_leak.t xt/100_transaction_memory_leak.t #doesn't want to run in Devel::Cover
   - perl Makefile.PL
   - cpanm -n --installdeps .
   - make manifest
