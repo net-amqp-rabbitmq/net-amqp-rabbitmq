@@ -1,6 +1,7 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
 0.005000 - 2014-06-07
+    - removed no_wait from purge documentation as it doesn't do anything
     - Added queue_delete method
 
 0.004002 - 2014-04-02

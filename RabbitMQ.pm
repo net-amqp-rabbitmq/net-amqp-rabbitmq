@@ -290,15 +290,11 @@ C<recv> method.
 
 C<$multiple> specifies if multiple are to be acknowledged at once.
 
-=item purge($channel, $queuename, $no_wait = 0)
+=item purge($channel, $queuename)
 
 C<$channel> is a channel that has been opened with C<channel_open>.
 
 C<$queuename> is the queue to be purged.
-
-C<$no_wait> a boolean specifying if the call should not wait for
-the server to acknowledge the acknowledgement.
-
 
 =item reject($channel, $delivery_tag, $requeue = 0)
 
