@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '0.004002';
+our $VERSION = '0.005000';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -34,7 +34,8 @@ means this module doesn't support the basic_return callback method.
 
 =head1 DESCRIPTION
 
-C<Net::AMQP::RabbitMQ> provides a simple wrapper around the librabbitmq library
+C<Net::AMQP::RabbitMQ> is a fork of C<Net::RabbitMQ> that uses a newer version of librabbitmq
+and fixes some bugs. It provides a simple wrapper around the librabbitmq library
 that allows connecting, declaring exchanges and queues, binding and unbinding
 queues, publishing, consuming and receiving events.
 
@@ -160,6 +161,21 @@ messages with the supplied header values.
 This is like the C<queue_bind> with respect to arguments.  This command unbinds
 the queue from the exchange.  The C<$routing_key> and C<$arguments> must match
 the values supplied when the binding was created.
+
+If this fails, you must reopen the channel
+
+=item queue_delete($channel, $queuename, $options)
+
+Deletes the queue
+
+C<$options> is an optional hash respecting the following keys:
+
+    {
+       if_unused    => $boolean,     #default 1
+       if_empty     => $boolean,     #default 1
+     }
+
+If this fails, you must reopen the channel
 
 =item publish($channel, $routing_key, $body, $options, $props)
 

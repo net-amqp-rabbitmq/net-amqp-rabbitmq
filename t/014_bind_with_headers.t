@@ -1,4 +1,4 @@
-use Test::More 'no_plan'; #  20;
+use Test::More tests => 17;
 use strict;
 
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
@@ -50,6 +50,17 @@ SKIP: {
 	eval { $mq->queue_unbind( 1, $queue, $exchange, $key ) };
 	like( $@, qr/NOT_FOUND - no binding /, "Unbinding queue fails without specifying headers" );
 }
+my $message_count;
+SKIP: {
+	skip "Failed delete closes channel", 1;
+	eval { $message_count = $mq->queue_delete( 1, $queue ) };
+	like( $@, qr/PRECONDITION_FAILED - queue .* in use /, "deleting in use queue without setting if_unused fails" );
+}
 
 eval { $mq->queue_unbind( 1, $queue, $exchange, $key, $headers ) };
 is( $@, '', "queue_unbind" );
+
+eval { $message_count = $mq->queue_delete(1, $queue, {if_unused => 0, if_empty => 0} ); };
+is( $@, '', "queue_delete" );
+eval { $mq->queue_bind( 1, $queue, $exchange, $key, $headers ); };
+like( $@, qr/NOT_FOUND - no queue /, "Binding deleted queue failed - NOT_FOUND" );
