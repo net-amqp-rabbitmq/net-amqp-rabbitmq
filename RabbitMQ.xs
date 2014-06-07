@@ -493,9 +493,17 @@ net_amqp_rabbitmq_consume(conn, channel, queuename, options = NULL)
 HV *
 net_amqp_rabbitmq_recv(conn)
   Net::AMQP::RabbitMQ conn
+  PREINIT:
+    amqp_status_enum status = AMQP_STATUS_OK;
   CODE:
     RETVAL = newHV();
-    internal_recv(RETVAL, conn, 0);
+
+    /* We want to detect whether we were disconnected by the remote host during the internal_recv(). */
+    status = internal_recv(RETVAL, conn, 0);
+    if ( status == AMQP_STATUS_CONNECTION_CLOSED ) {
+        warn("Detected AMQP socket connection was closed.");
+        amqp_socket_close( amqp_get_socket( conn ) );
+    }
   OUTPUT:
     RETVAL
 
