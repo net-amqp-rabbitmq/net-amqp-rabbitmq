@@ -501,8 +501,8 @@ net_amqp_rabbitmq_recv(conn)
     /* We want to detect whether we were disconnected by the remote host during the internal_recv(). */
     status = internal_recv(RETVAL, conn, 0);
     if ( status == AMQP_STATUS_CONNECTION_CLOSED ) {
-        warn("Detected AMQP socket connection was closed.");
         amqp_socket_close( amqp_get_socket( conn ) );
+        Perl_croak(aTHX_ "AMQP socket connection was closed.");
     }
   OUTPUT:
     RETVAL
