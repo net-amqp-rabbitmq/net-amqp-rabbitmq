@@ -31,7 +31,7 @@ is($@, '', "queue_bind");
 
 my $start_mem = get_mem();
 my $i = 0;
-while ( $i < 100_000 ) {
+while ( $i < 60_000 ) {
     $mq->tx_select(1);
     $mq->publish(1, $routekey, "Magic Transient Payload (Commit)", { exchange => $exchange });
     $mq->tx_commit(1);
