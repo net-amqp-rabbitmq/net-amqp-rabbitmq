@@ -1,5 +1,12 @@
 use Test::More tests => 6;
 use strict;
+use warnings;
+
+use Sys::Hostname;
+my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
+my $exchange = "nr_test_x-$unique";
+my $queuename = "nr_test_hole-$unique";
+my $routekey = "nr_test_route-$unique";
 
 my $dtag=(unpack("L",pack("N",1)) != 1)?'0100000000000000':'0000000000000001';
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";

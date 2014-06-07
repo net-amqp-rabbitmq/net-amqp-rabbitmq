@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '0.005000';
+our $VERSION = '0.005001';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -361,20 +361,20 @@ librabbitmq is licensed under the MIT License. See the LICENSE-MIT file in the t
 =cut
 
 sub publish {
-	my ($self, $channel, $routing_key, $body, $options, $props) = @_;
+    my ($self, $channel, $routing_key, $body, $options, $props) = @_;
 
-	$options ||= {};
-	$props   ||= {};
+    $options ||= {};
+    $props   ||= {};
 
-	# Do a shallow clone to avoid modifying variable passed by caller
-	$props = { %$props };
+    # Do a shallow clone to avoid modifying variable passed by caller
+    $props = { %$props };
 
-	# Convert blessed variables in headers to strings
-	if( $props->{headers} ) {
-		$props->{headers} = { map { blessed($_) ? "$_" : $_ } %{ $props->{headers} } };
-	}
+    # Convert blessed variables in headers to strings
+    if( $props->{headers} ) {
+        $props->{headers} = { map { blessed($_) ? "$_" : $_ } %{ $props->{headers} } };
+    }
 
-	$self->_publish($channel, $routing_key, $body, $options, $props);
+    $self->_publish($channel, $routing_key, $body, $options, $props);
 }
 
 1;

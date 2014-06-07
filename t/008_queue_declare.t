@@ -1,5 +1,12 @@
 use Test::More tests => 8;
 use strict;
+use warnings;
+
+use Sys::Hostname;
+my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
+my $exchange = "nr_test_x-$unique";
+my $expect_qn = "test.amqp.net.rabbitmq.perl-$unique";
+my $routekey = "nr_test_route-$unique";
 
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
 
@@ -15,7 +22,6 @@ is($@, '', "channel_open");
 my $queuename = undef;
 my $message_count = 0;
 my $consumer_count = 0;
-my $expect_qn = 'test.net.rabbitmq.perl';
 eval { ($queuename, $message_count, $consumer_count) =
          $mq->queue_declare(1, $expect_qn, { passive => 0, durable => 1, exclusive => 0, auto_delete => 1 }); };
 is($@, '', "queue_declare");

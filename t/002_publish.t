@@ -1,5 +1,12 @@
 use Test::More tests => 8;
 use strict;
+use warnings;
+
+use Sys::Hostname;
+my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
+my $exchange = "nr_test_x-$unique";
+my $queuename = "nr_test_hole-$unique";
+my $routekey = "nr_test_route-$unique";
 
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
 
@@ -12,14 +19,14 @@ eval { $mq->connect($host, { user => "guest", password => "guest" }); };
 is($@, '', "connect");
 eval { $mq->channel_open(1); };
 is($@, '', "channel_open");
-eval { $mq->queue_declare(1, "nr_test_hole", { passive => 0, durable => 1, exclusive => 0, auto_delete => 0 }); };
+eval { $mq->queue_declare(1, $queuename, { passive => 0, durable => 1, exclusive => 0, auto_delete => 0 }); };
 is($@, '', "queue_declare");
-eval { $mq->queue_bind(1, "nr_test_hole", "nr_test_x", "nr_test_route"); };
+eval { $mq->queue_bind(1, $queuename, $exchange, $routekey); };
 is($@, '', "queue_bind");
-eval { 1 while($mq->get(1, "nr_test_hole")); };
+eval { 1 while($mq->get(1, $queuename)); };
 is($@, '', "drain queue");
-eval { $mq->publish(1, "nr_test_route", "Magic Payload", 
-                       { exchange => "nr_test_x" },
+eval { $mq->publish(1, $routekey, "Magic Payload", 
+                       { exchange => $exchange },
                        {
                         content_type => 'text/plain',
                         content_encoding => 'none',

@@ -1,5 +1,10 @@
 use Test::More 'no_plan'; #  20;
 use strict;
+use warnings;
+
+use Sys::Hostname;
+my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
+my $queuename = "x-headers-" . rand() . $unique;
 
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
 
@@ -14,10 +19,8 @@ is($@, '', "connect");
 eval { $mq->channel_open(1); };
 is($@, '', "channel_open");
 
-my $queue = "x-headers-" . rand();
-
-eval { $queue = $mq->queue_declare(1, $queue, { auto_delete => 1 }, { "x-ha-policy" => "all" }); };
+eval { $queuename = $mq->queue_declare(1, $queuename, { auto_delete => 1 }, { "x-ha-policy" => "all" }); };
 is($@, '', "queue_declare");
 
-eval { $queue = $mq->queue_declare(1, $queue, { auto_delete => 0 }); };
+eval { $queuename = $mq->queue_declare(1, $queuename, { auto_delete => 0 }); };
 like( $@, qr/PRECONDITION_FAILED/, "Redeclaring queue with different options fails." );

@@ -3,7 +3,7 @@ use warnings;
 require 5.008 ;
 
 use ExtUtils::MakeMaker 5.16 ;
-use Config ;
+use Config;
 use FindBin qw/$Bin/;
 
 my $ofiles = '';

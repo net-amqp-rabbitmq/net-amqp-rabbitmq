@@ -1,5 +1,12 @@
 use Test::More tests => 7;
 use strict;
+use warnings;
+
+use Sys::Hostname;
+my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
+my $exchange = "nr_test_x-$unique";
+my $queuename = "nr_test_hole-$unique";
+my $routekey = "nr_test_route-$unique";
 
 my $dtag=(unpack("L",pack("N",1)) != 1)?'0100000000000000':'0000000000000001';
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
@@ -13,7 +20,7 @@ eval { $mq->connect($host, { user => "guest", password => "guest" }); };
 is($@, '', "connect");
 eval { $mq->channel_open(1); };
 is($@, '', "channel_open");
-eval { $mq->consume(1, "nr_test_hole", {consumer_tag=>'ctag', no_local=>0,no_ack=>1,exclusive=>0}); };
+eval { $mq->consume(1, $queuename, {consumer_tag=>'ctag', no_local=>0,no_ack=>1,exclusive=>0}); };
 is($@, '', "consume");
 
 my $rv = {};
@@ -24,9 +31,9 @@ $rv->{delivery_tag} =~ s/(.)/sprintf("%02x", ord($1))/esg;
 is_deeply($rv,
           {
           'body' => 'Magic Payload',
-          'routing_key' => 'nr_test_route',
+          'routing_key' => $routekey,
           'delivery_tag' => $dtag,
-          'exchange' => 'nr_test_x',
+          'exchange' => $exchange,
           'consumer_tag' => 'ctag',
           'props' => {
                 content_type => 'text/plain',
