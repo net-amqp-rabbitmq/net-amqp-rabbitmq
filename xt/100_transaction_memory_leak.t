@@ -1,7 +1,13 @@
 use strict;
 use warnings;
+
 use Net::AMQP::RabbitMQ;
 use Test::More tests => 8;
+use Sys::Hostname;
+
+my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
+my $exchange = "nr_test_x-$unique";
+my $routekey = "nr_test_q-$unique";
 
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
 
@@ -20,14 +26,14 @@ my $queuename = '';
 eval { $queuename = $mq->queue_declare(1, '', { passive => 0, durable => 1, exclusive => 0, auto_delete => 1 }); };
 is($@, '', "queue_declare");
 isnt($queuename, '', "queue_declare -> private name");
-eval { $mq->queue_bind(1, $queuename, "nr_test_x", "nr_test_q"); };
+eval { $mq->queue_bind(1, $queuename, $exchange, $routekey); };
 is($@, '', "queue_bind");
 
 my $start_mem = get_mem();
 my $i = 0;
 while ( $i < 100_000 ) {
     $mq->tx_select(1);
-    $mq->publish(1, "nr_test_q", "Magic Transient Payload (Commit)", { exchange => "nr_test_x" });
+    $mq->publish(1, $routekey, "Magic Transient Payload (Commit)", { exchange => $exchange });
     $mq->tx_commit(1);
     if ( ( $i % 10_000 ) == 0 ) {
         diag ( sprintf("%i - used: %.2fmb, diff: %.2fmb", $i, get_mem(), get_mem() - $start_mem ) );
