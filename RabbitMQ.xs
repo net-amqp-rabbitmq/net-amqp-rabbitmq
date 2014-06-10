@@ -500,7 +500,7 @@ net_amqp_rabbitmq_recv(conn)
 
     /* We want to detect whether we were disconnected by the remote host during the internal_recv(). */
     status = internal_recv(RETVAL, conn, 0);
-    if ( status == AMQP_STATUS_CONNECTION_CLOSED ) {
+    if ( status == AMQP_STATUS_CONNECTION_CLOSED || status == AMQP_STATUS_SOCKET_ERROR ) {
         amqp_socket_close( amqp_get_socket( conn ) );
         Perl_croak(aTHX_ "AMQP socket connection was closed.");
     }
@@ -637,6 +637,14 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
       }
     }
     rv = amqp_basic_publish(conn, channel, exchange_b, routing_key_b, mandatory, immediate, &properties, body_b);
+
+    /* If the connection failed, blast the file descriptor! */
+    if ( rv == AMQP_STATUS_CONNECTION_CLOSED || rv == AMQP_STATUS_SOCKET_ERROR ) {
+        amqp_socket_close( amqp_get_socket( conn ) );
+        Perl_croak(aTHX_ "AMQP socket connection was closed.");
+    }
+
+    /* Otherwise, just croak */
     if ( rv != AMQP_STATUS_OK ) {
         Perl_croak( aTHX_ "Publish failed, error code %d", rv);
     }
