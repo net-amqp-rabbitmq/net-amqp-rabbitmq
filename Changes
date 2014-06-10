@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.005002 - 2014-06-07
+    - Fixed an issue where a disconnect from the server may have occurred during an internal_recv() call, but we weren't detecting and disconnecting accordingly. Now we disconnect in a way that allows is_connected() to realize that we're no longer connected so that we can then re-connect (manchicken)
+
 0.005001 - 2014-06-07
     - changed tests to use unique queue/exchange names
 
