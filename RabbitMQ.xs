@@ -641,7 +641,7 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
     /* If the connection failed, blast the file descriptor! */
     if ( rv == AMQP_STATUS_CONNECTION_CLOSED || rv == AMQP_STATUS_SOCKET_ERROR ) {
         amqp_socket_close( amqp_get_socket( conn ) );
-        Perl_croak(aTHX_ "AMQP socket connection was closed.");
+        Perl_croak(aTHX_ "Publish failed because AMQP socket connection was closed.");
     }
 
     /* Otherwise, just croak */
