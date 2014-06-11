@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.005003 - 2014-06-10
+    - Fixed an issue where the disconnect from the server was causing the publish() to fail without resetting file descriptor... which made it impossible to detect connection issues encountered during publish. Also updated the recv() to handle the socket error status as well. (manchicken)
+
 0.005002 - 2014-06-07
     - Fixed an issue where a disconnect from the server may have occurred during an internal_recv() call, but we weren't detecting and disconnecting accordingly. Now we disconnect in a way that allows is_connected() to realize that we're no longer connected so that we can then re-connect (manchicken)
 
