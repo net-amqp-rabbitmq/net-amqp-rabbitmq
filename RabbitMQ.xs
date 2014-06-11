@@ -676,12 +676,19 @@ net_amqp_rabbitmq_get(conn, channel, queuename, options = NULL)
       if(amqp_data_in_buffer(conn)) {
         int rv;
         rv = internal_recv(hv, conn, 1);
-        if(rv != AMQP_STATUS_OK) Perl_croak(aTHX_ "Bad frame read.");
+        if ( rv == AMQP_STATUS_CONNECTION_CLOSED || rv == AMQP_STATUS_SOCKET_ERROR ) {
+          amqp_socket_close( amqp_get_socket( conn ) );
+          Perl_croak(aTHX_ "Failed to get(), AMQP socket connection was closed.");
+        }
+        else if(rv != AMQP_STATUS_OK) {
+          Perl_croak(aTHX_ "Bad frame read.");
+        }
       }
       RETVAL = (SV *)newRV_noinc((SV *)hv);
     }
-    else
+    else {
       RETVAL = &PL_sv_undef;
+    }
   OUTPUT:
     RETVAL
 

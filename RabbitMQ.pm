@@ -350,7 +350,7 @@ Theo Schlossnagle <jesus@omniti.com>
 
 =head1 MAINTAINER
 
-Mark Ellis E<lt>markellis@cpan.orgE<gt>
+Mark Ellis E<lt>markellis@cpan.orgE<gt>, Michael "manchicken" Stemle, Jr. E<lt>themanchicken@gmail.comE<gt>
 
 =head1 LICENSE
 
