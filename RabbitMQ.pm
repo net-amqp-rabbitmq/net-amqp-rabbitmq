@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '0.005003';
+our $VERSION = '0.005004';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -74,6 +74,10 @@ C<$options> is an optional hash respecting the following keys:
 =item disconnect()
 
 Causes the connection to RabbitMQ to be torn down.
+
+=item is_connected()
+
+Returns true if a valid socket connection appears to exist, false otherwise.
 
 =item channel_open($channel)
 
@@ -344,13 +348,25 @@ Send a hearbeat frame.  If you've connected with a heartbeat parameter,
 you must send a heartbeat periodically matching connection parameter or
 the server may snip the connection.
 
+=back
+
+=head1 WARNING AND ERROR MESSAGES
+
+=head2 Fatal Errors
+
+It should be noted that almost all errors in this library are considered fatal,
+insomuch as they trigger a C<croak()>. In these errors, if it appears that somehow
+the connection has been closed by the remote host, or otherwise invalidated,
+the socket will also be closed and should be re-opened before any additional
+calls are made.
+
 =head1 ORIGINAL AUTHOR
 
 Theo Schlossnagle <jesus@omniti.com>
 
 =head1 MAINTAINER
 
-Mark Ellis E<lt>markellis@cpan.orgE<gt>
+Mark Ellis E<lt>markellis@cpan.orgE<gt>, Michael "manchicken" Stemle, Jr. E<lt>themanchicken@gmail.comE<gt>
 
 =head1 LICENSE
 
