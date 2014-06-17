@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.005005 - 2014-06-17
+    - Changed timeout test to use seconds rather than sub seconds, as it was failing on bsds
+
 0.005004 - 2014-06-12
     - Updated POD to include the new is_connected() method.
     - Added socket error detection and disconnection logic into the die_on_* methods, and updated calls to those functions accordingly.

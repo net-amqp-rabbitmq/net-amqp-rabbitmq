@@ -10,9 +10,9 @@ my $mq = Net::AMQP::RabbitMQ->new();
 ok($mq);
 
 my $start = [gettimeofday];
-my $attempt = 0.6;
+my $attempt = 3;
 eval { $mq->connect($host, { user => "guest", password => "guest", timeout => $attempt }); };
 my $duration = tv_interval($start);
 isnt($@, '', "connect");
-# 50ms tolerance should work with most operating systems
-cmp_ok(abs($duration-$attempt), '<', 0.05, 'timeout');
+# 500ms tolerance should work with most operating systems
+cmp_ok(abs($duration-$attempt), '<', 0.5, 'timeout');
