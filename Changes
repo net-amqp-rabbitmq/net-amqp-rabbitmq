@@ -1,5 +1,9 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.005006 - 2014-06-24
+    - Added some additional handling for UTF-8 going into Perl strings (manchicken)
+    - Added a simple test to demonstrate UTF-8 safety. (manchicken)
+
 0.005005 - 2014-06-17
     - Changed timeout test to use seconds rather than sub seconds, as it was failing on bsds
 
