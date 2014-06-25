@@ -1,5 +1,9 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.005007 - 2014-07-03
+    - Fixed a reported memory leak
+    - Fixed a problem with failed assertions on channel_close() on a not-at-all-connected instance.
+
 0.005006 - 2014-06-24
     - Added some additional handling for UTF-8 going into Perl strings (manchicken)
     - Added a simple test to demonstrate UTF-8 safety. (manchicken)

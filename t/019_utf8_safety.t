@@ -1,4 +1,4 @@
-use Test::More tests => 15;
+use Test::More tests => 19;
 use strict;
 use warnings;
 use utf8;
@@ -8,7 +8,8 @@ my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
 my $exchange = "nr_test_x-$unique";
 my $routekey = "nr_test_q-$unique";
 
-my $dtag=(unpack("L",pack("N",1)) != 1)?'0100000000000000':'0000000000000001';
+my $dtag1=(unpack("L",pack("N",1)) != 1)?'0100000000000000':'0000000000000001';
+my $dtag2=(unpack("L",pack("N",1)) != 1)?'0200000000000000':'0000000000000002';
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
 
 use_ok('Net::AMQP::RabbitMQ');
@@ -46,7 +47,7 @@ is_deeply($rv,
           {
           'body' => $utf8_payload,
           'routing_key' => $routekey,
-          'delivery_tag' => $dtag,
+          'delivery_tag' => $dtag1,
           'exchange' => $exchange,
           'consumer_tag' => 'ctag',
           'props' => { 'headers' => $utf8_headers },
@@ -54,5 +55,25 @@ is_deeply($rv,
 
 ok(utf8::is_utf8($rv->{'body'}), 'verify body back is utf8');
 ok(utf8::is_utf8($rv->{'props'}->{'headers'}->{'dummy'}), 'verify dummy header back is utf8');
+
+my $ascii_payload = "Some ASCII payload";
+
+eval { $mq->publish(1, $routekey, $ascii_payload, { exchange => $exchange }, { content_encoding => 'C' }); };
+is($@, '', "publish");
+
+$rv = {};
+eval { $rv = $mq->recv(); };
+is($@, '', "recv");
+$rv->{delivery_tag} =~ s/(.)/sprintf("%02x", ord($1))/esg;
+is_deeply($rv,
+          {
+          'body' => $ascii_payload,
+          'routing_key' => $routekey,
+          'delivery_tag' => $dtag2,
+          'exchange' => $exchange,
+          'consumer_tag' => 'ctag',
+          'props' => { 'content_encoding' => 'C' },
+          }, "payload");
+ok( ! utf8::is_utf8($rv->{'body'}), 'not utf8');
 
 1;

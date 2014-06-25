@@ -218,7 +218,10 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
           ||
           p->headers.entries[i].value.kind == AMQP_FIELD_KIND_BYTES
         ) {
-          SV *hvalue = newSVpvn( p->headers.entries[i].value.value.bytes.bytes, p->headers.entries[i].value.value.bytes.len);
+          SV *hvalue = newSVpvn(
+            p->headers.entries[i].value.value.bytes.bytes,
+            p->headers.entries[i].value.value.bytes.len
+          );
 
           /* If it's UTF8, set the flag on... */
           if (p->headers.entries[i].value.kind == AMQP_FIELD_KIND_UTF8) {
@@ -371,6 +374,12 @@ net_amqp_rabbitmq_channel_close(conn, channel)
   Net::AMQP::RabbitMQ conn
   int channel
   CODE:
+    /* If we don't have a socket, just return. */
+    if (
+      ! amqp_get_socket( conn )
+    ) {
+      return;
+    }
     die_on_amqp_error(aTHX_ amqp_channel_close(conn, channel, AMQP_REPLY_SUCCESS), conn, "Closing channel");
 
 void
@@ -556,6 +565,7 @@ net_amqp_rabbitmq_recv(conn)
         amqp_socket_close( amqp_get_socket( conn ) );
         Perl_croak(aTHX_ "AMQP socket connection was closed.");
     }
+    sv_2mortal((SV*)RETVAL);
   OUTPUT:
     RETVAL
 
