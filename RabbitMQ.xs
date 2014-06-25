@@ -218,7 +218,10 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
           ||
           p->headers.entries[i].value.kind == AMQP_FIELD_KIND_BYTES
         ) {
-          SV *hvalue = newSVpvn( p->headers.entries[i].value.value.bytes.bytes, p->headers.entries[i].value.value.bytes.len);
+          SV *hvalue = newSVpvn(
+            p->headers.entries[i].value.value.bytes.bytes,
+            p->headers.entries[i].value.value.bytes.len
+          );
 
           /* If it's UTF8, set the flag on... */
           if (p->headers.entries[i].value.kind == AMQP_FIELD_KIND_UTF8) {
