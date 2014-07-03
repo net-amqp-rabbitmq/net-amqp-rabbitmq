@@ -374,6 +374,12 @@ net_amqp_rabbitmq_channel_close(conn, channel)
   Net::AMQP::RabbitMQ conn
   int channel
   CODE:
+    /* If we don't have a socket, just return. */
+    if (
+      ! amqp_get_socket( conn )
+    ) {
+      return;
+    }
     die_on_amqp_error(aTHX_ amqp_channel_close(conn, channel, AMQP_REPLY_SUCCESS), conn, "Closing channel");
 
 void
