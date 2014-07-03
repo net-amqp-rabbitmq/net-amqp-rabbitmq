@@ -559,6 +559,7 @@ net_amqp_rabbitmq_recv(conn)
         amqp_socket_close( amqp_get_socket( conn ) );
         Perl_croak(aTHX_ "AMQP socket connection was closed.");
     }
+    sv_2mortal((SV*)RETVAL);
   OUTPUT:
     RETVAL
 
