@@ -1,9 +1,14 @@
-use Test::More tests => 21;
+use Test::More;
 use strict;
 use warnings;
 use utf8;
 
-use JSON;
+eval ("use JSON;");
+if ( $@ ) {
+     plan skip_all => "Missing JSON.pm";
+} else {
+     plan tests => 21;
+}
 use Sys::Hostname;
 my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
 my $exchange = "nr_test_x-$unique";
