@@ -238,6 +238,26 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
               0
           );
         }
+
+        // Handle arrays
+        else if ( p->headers.entries[i].value.kind == AMQP_FIELD_KIND_ARRAY ) {
+          hv_store(
+            headers,
+            p->headers.entries[i].key.bytes, p->headers.entries[i].key.len,
+            mq_array_to_arrayref( p->headers.entries[i].value.value.array ),
+            0
+          );
+        }
+
+        // Handle tables (hashes when translated to Perl)
+        else if ( p->headers.entries[i].value.kind == AMQP_FIELD_KIND_TABLE) {
+          hv_store(
+            headers,
+            p->headers.entries[i].key.bytes, p->headers.entries[i].key.len,
+            mq_table_to_hashref( p->headers.entries[i].value.value.table ),
+            0
+          );
+        }
       }
     }
 
@@ -345,6 +365,14 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array) {
   }
 }
 
+SV* mq_array_to_arrayref( amqp_array_t *mq_array ) {
+  // Iterate over the array entries and decode them to Perl...
+}
+
+SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
+  // Iterate over the table keys and decode them to Perl...
+}
+
 void hash_to_amqp_table(HV *hash, amqp_table_t *table) {
   HE   *he;
   char *key;
@@ -358,6 +386,7 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table) {
   hv_iterinit(hash);
   while (NULL != (he = hv_iternext(hash))) {
     key = hv_iterkey(he, &retlen);
+    warn("HASH KEY: %s",key);
     value = hv_iterval(hash, he);
 
     if (SvGMAGICAL(value))
@@ -379,6 +408,8 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table) {
       entry->value.kind = AMQP_FIELD_KIND_I32;
       entry->value.value.i32 = (int32_t) SvIV(value);
     } else if (SvROK(value)) {
+      warn("Dumping for ref in table");
+      sv_dump(value);
       /* We've got a reference */
       switch (SvTYPE(SvRV(value))) {
         // Array Reference
@@ -795,6 +826,9 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
       }
       if (NULL != (v = hv_fetch(props, "headers", strlen("headers"), 0))) {
         hash_to_amqp_table((HV *)SvRV(*v), &properties.headers);
+        warn("<<< HEADERS BEING PUBLISHED >>>");
+        sv_dump(*v);
+        warn("<<< END HEADERS BEING PUBLISHED >>>");
         properties._flags |= AMQP_BASIC_HEADERS_FLAG;
       }
     }
