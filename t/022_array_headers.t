@@ -35,6 +35,7 @@ my $headers = { array_1 => [qw/a b c/], hash_1 => { a => 1, b => 2, c => 3 } };
 
 eval { $mq->publish(1, $routekey, $payload, { exchange => $exchange }, { headers => $headers }); };
 is($@, '', "publish");
+die "Fatal publish failure!" if $@;
 
 eval { $mq->consume(1, $queuename, {consumer_tag=>'ctag', no_local=>0,no_ack=>1,exclusive=>0}); };
 is($@, '', "consume");

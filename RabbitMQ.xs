@@ -15,6 +15,9 @@ typedef amqp_connection_state_t Net__AMQP__RabbitMQ;
 #define str_from_hv(hv,name) \
  do { SV **v; if(NULL != (v = hv_fetch(hv, #name, strlen(#name), 0))) name = SvPV_nolen(*v); } while(0)
 
+void hash_to_amqp_table(HV *hash, amqp_table_t *table);
+void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array);
+
 void die_on_error(pTHX_ int x, amqp_connection_state_t conn, char const *context) {
   /* Handle socket errors */
   if ( x == AMQP_STATUS_CONNECTION_CLOSED || x == AMQP_STATUS_SOCKET_ERROR ) {
@@ -28,6 +31,7 @@ void die_on_error(pTHX_ int x, amqp_connection_state_t conn, char const *context
 }
 
 amqp_pool_t hash_pool;
+amqp_pool_t array_pool;
 
 void die_on_amqp_error(pTHX_ amqp_rpc_reply_t x, amqp_connection_state_t conn, char const *context) {
   switch (x.reply_type) {
@@ -272,7 +276,76 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
   return result;
 }
 
-void hash_to_amqp_table(amqp_connection_state_t conn, HV *hash, amqp_table_t *table) {
+void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array) {
+  int idx = 0;
+  SV  **value;
+
+  amqp_field_value_t *new_elements = amqp_pool_alloc(
+    &array_pool,
+    (av_top_index(perl_array) * sizeof(amqp_field_value_t))
+  );
+  amqp_field_value_t *element;
+
+  mq_array->entries = new_elements;
+  mq_array->num_entries = 0;
+
+  for ( idx = 0; idx < av_top_index(perl_array); idx += 1) {
+    value = av_fetch( perl_array, idx, 0 );
+
+    // We really should never see NULL here.
+    assert(value != NULL);
+
+    /* Determine type of *value */
+    if (SvIOK(*value)) {
+      element = &mq_array->entries[mq_array->num_entries];
+      mq_array->num_entries += 1;
+
+      element->kind = AMQP_FIELD_KIND_I32;
+      element->value.i32 = (int32_t) SvIV(*value);
+
+    } else if (SvPOK(*value)) {
+      element = &mq_array->entries[mq_array->num_entries];
+      mq_array->num_entries += 1;
+
+      element->kind = AMQP_FIELD_KIND_UTF8;
+      element->value.bytes = amqp_cstring_bytes(SvPV_nolen(*value));
+
+    } else if (SvROK(*value)) {
+      /* Is it a hashref or another array? */
+      switch (SvTYPE(SvRV(*value))) {
+        // Array Reference
+        case SVt_PVAV:
+          element = &mq_array->entries[mq_array->num_entries];
+          mq_array->num_entries += 1;
+
+          element->kind = AMQP_FIELD_KIND_ARRAY;
+          array_to_amqp_array((AV*)SvRV(*value), &(element->value.array));
+          
+          break;
+
+        case SVt_PVHV:
+          element = &mq_array->entries[mq_array->num_entries];
+          mq_array->num_entries += 1;
+
+          element->kind = AMQP_FIELD_KIND_ARRAY;
+          hash_to_amqp_table((HV*)SvRV(*value), &(element->value.table));
+
+          break;
+
+        default:
+          Perl_croak( aTHX_ "Unsupported reference type for array index %ld", idx );
+      }
+
+    } else {
+      Perl_croak( aTHX_ "Unsupported SvType for array index %ld", idx );
+    }
+    /* Assign it to the field value */
+
+    /* Append it to the array */
+  }
+}
+
+void hash_to_amqp_table(HV *hash, amqp_table_t *table) {
   HE   *he;
   char *key;
   SV   *value;
@@ -304,9 +377,34 @@ void hash_to_amqp_table(amqp_connection_state_t conn, HV *hash, amqp_table_t *ta
 
       entry->key = amqp_cstring_bytes(key);
       entry->value.kind = AMQP_FIELD_KIND_I32;
-      entry->value.value.i32 = (uint64_t) SvIV(value);
+      entry->value.value.i32 = (int32_t) SvIV(value);
+    } else if (SvROK(value)) {
+      /* We've got a reference */
+      switch (SvTYPE(SvRV(value))) {
+        // Array Reference
+        case SVt_PVAV:
+          entry = &table->entries[table->num_entries];
+          table->num_entries++;
+
+          entry->key = amqp_cstring_bytes(key);
+          entry->value.kind = AMQP_FIELD_KIND_ARRAY;
+          array_to_amqp_array((AV*)SvRV(value), &(entry->value.value.array));
+          break;
+
+        case SVt_PVHV:
+          entry = &table->entries[table->num_entries];
+          table->num_entries++;
+
+          entry->key = amqp_cstring_bytes(key);
+          entry->value.kind = AMQP_FIELD_KIND_TABLE;
+          hash_to_amqp_table((HV*)SvRV(value), &(entry->value.value.table));
+          break;
+
+        default:
+          Perl_croak( aTHX_ "Unsupported reference type for hash key %s", key );
+      }
     } else {
-      Perl_croak( aTHX_ "Unsupported SvType for hash value: %d", SvTYPE(value) );
+      Perl_croak( aTHX_ "Unsupported SvType for hash key: %s", key );
     }
   }
 }
@@ -355,6 +453,8 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
 
     die_on_amqp_error(aTHX_ amqp_login(conn, vhost, channel_max, frame_max, heartbeat, AMQP_SASL_METHOD_PLAIN, user, password), conn, "Logging in");
     empty_amqp_pool( &hash_pool );
+    init_amqp_pool( &hash_pool, 512 );
+    empty_amqp_pool( &array_pool );
     init_amqp_pool( &hash_pool, 512 );
 
     RETVAL = 1;
@@ -467,7 +567,7 @@ net_amqp_rabbitmq_queue_declare(conn, channel, queuename, options = NULL, args =
       int_from_hv(options, auto_delete);
     }
     if(args)
-      hash_to_amqp_table(conn, args, &arguments);
+      hash_to_amqp_table(args, &arguments);
     amqp_queue_declare_ok_t *r = amqp_queue_declare(conn, channel, queuename_b, passive,
                                                     durable, exclusive, auto_delete,
                                                     arguments);
@@ -494,7 +594,7 @@ net_amqp_rabbitmq_queue_bind(conn, channel, queuename, exchange, bindingkey, arg
     if(bindingkey == NULL && args == NULL)
       Perl_croak(aTHX_ "bindingkey or args must be specified");
     if(args)
-      hash_to_amqp_table(conn, args, &arguments);
+      hash_to_amqp_table(args, &arguments);
     amqp_queue_bind(conn, channel, amqp_cstring_bytes(queuename),
                     amqp_cstring_bytes(exchange),
                     amqp_cstring_bytes(bindingkey),
@@ -517,7 +617,7 @@ net_amqp_rabbitmq_queue_unbind(conn, channel, queuename, exchange, bindingkey, a
     if(bindingkey == NULL && args == NULL)
       Perl_croak(aTHX_ "bindingkey or args must be specified");
     if(args)
-      hash_to_amqp_table(conn, args, &arguments);
+      hash_to_amqp_table(args, &arguments);
     amqp_queue_unbind(conn, channel, amqp_cstring_bytes(queuename),
                       amqp_cstring_bytes(exchange),
                     amqp_cstring_bytes(bindingkey),
@@ -694,7 +794,7 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
         properties._flags |= AMQP_BASIC_TIMESTAMP_FLAG;
       }
       if (NULL != (v = hv_fetch(props, "headers", strlen("headers"), 0))) {
-        hash_to_amqp_table(conn, (HV *)SvRV(*v), &properties.headers);
+        hash_to_amqp_table((HV *)SvRV(*v), &properties.headers);
         properties._flags |= AMQP_BASIC_HEADERS_FLAG;
       }
     }
@@ -807,6 +907,7 @@ net_amqp_rabbitmq_DESTROY(conn)
         amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
     }
     empty_amqp_pool( &hash_pool );
+    empty_amqp_pool( &array_pool );
     amqp_destroy_connection(conn);
 
 void
