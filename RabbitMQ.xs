@@ -17,6 +17,8 @@ typedef amqp_connection_state_t Net__AMQP__RabbitMQ;
 
 void hash_to_amqp_table(HV *hash, amqp_table_t *table);
 void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array);
+SV*  mq_array_to_arrayref(amqp_array_t *array);
+SV*  mq_table_to_hashref(amqp_table_t *table);
 
 void die_on_error(pTHX_ int x, amqp_connection_state_t conn, char const *context) {
   /* Handle socket errors */
@@ -94,6 +96,8 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
   size_t body_received;
   int result;
   int is_utf8_body = 1; // The body is UTF-8 by default
+
+  amqp_table_entry_t *header_entry = (amqp_table_entry_t*)NULL;
 
   result = 0;
   while (1) {
@@ -208,32 +212,34 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
       hv_store( props, "headers", strlen("headers"), newRV_noinc((SV *)headers), 0 );
 
       for( i=0; i < p->headers.num_entries; ++i ) {
-        if( p->headers.entries[i].value.kind == AMQP_FIELD_KIND_I32 ) {
+        header_entry = &(p->headers.entries[i]);
+
+        if( header_entry->value.kind == AMQP_FIELD_KIND_I32 ) {
           hv_store( headers,
-              p->headers.entries[i].key.bytes, p->headers.entries[i].key.len,
-              newSViv(p->headers.entries[i].value.value.i32),
+              header_entry->key.bytes, header_entry->key.len,
+              newSViv(header_entry->value.value.i32),
               0
           );
         }
 
         // Handle kind UTF8 and kind BYTES
         else if(
-          p->headers.entries[i].value.kind == AMQP_FIELD_KIND_UTF8
+          header_entry->value.kind == AMQP_FIELD_KIND_UTF8
           ||
-          p->headers.entries[i].value.kind == AMQP_FIELD_KIND_BYTES
+          header_entry->value.kind == AMQP_FIELD_KIND_BYTES
         ) {
           SV *hvalue = newSVpvn(
-            p->headers.entries[i].value.value.bytes.bytes,
-            p->headers.entries[i].value.value.bytes.len
+            header_entry->value.value.bytes.bytes,
+            header_entry->value.value.bytes.len
           );
 
           /* If it's UTF8, set the flag on... */
-          if (p->headers.entries[i].value.kind == AMQP_FIELD_KIND_UTF8) {
+          if (header_entry->value.kind == AMQP_FIELD_KIND_UTF8) {
             SvUTF8_on(hvalue);
           }
 
           hv_store( headers,
-              p->headers.entries[i].key.bytes, p->headers.entries[i].key.len,
+              header_entry->key.bytes, header_entry->key.len,
               hvalue,
               0
           );
@@ -243,18 +249,18 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
         else if ( p->headers.entries[i].value.kind == AMQP_FIELD_KIND_ARRAY ) {
           hv_store(
             headers,
-            p->headers.entries[i].key.bytes, p->headers.entries[i].key.len,
-            mq_array_to_arrayref( p->headers.entries[i].value.value.array ),
+            header_entry->key.bytes, header_entry->key.len,
+            mq_array_to_arrayref( &header_entry->value.value.array ),
             0
           );
         }
 
         // Handle tables (hashes when translated to Perl)
-        else if ( p->headers.entries[i].value.kind == AMQP_FIELD_KIND_TABLE) {
+        else if ( header_entry->value.kind == AMQP_FIELD_KIND_TABLE) {
           hv_store(
             headers,
-            p->headers.entries[i].key.bytes, p->headers.entries[i].key.len,
-            mq_table_to_hashref( p->headers.entries[i].value.value.table ),
+            header_entry->key.bytes, header_entry->key.len,
+            mq_table_to_hashref( &header_entry->value.value.table ),
             0
           );
         }
@@ -365,12 +371,60 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array) {
   }
 }
 
-SV* mq_array_to_arrayref( amqp_array_t *mq_array ) {
-  // Iterate over the array entries and decode them to Perl...
+// Iterate over the array entries and decode them to Perl...
+SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
+  AV* perl_array = newAV();
+
+  SV* perl_element = &PL_sv_undef;
+  amqp_field_value_t* mq_element;
+
+  int current_entry = 0;
+
+  for (; current_entry < mq_array->num_entries; current_entry += 1) {
+    mq_element = &mq_array->entries[current_entry];
+    switch (mq_element->kind) {
+      // Number
+      case AMQP_FIELD_KIND_I32:
+        perl_element = newSViv(mq_element->value.i32);
+        break;
+
+      case AMQP_FIELD_KIND_BYTES:
+        perl_element = newSVpvn(
+          mq_element->value.bytes.bytes,
+          mq_element->value.bytes.len
+        );
+        break;
+
+      case AMQP_FIELD_KIND_UTF8:
+        perl_element = newSVpvn(
+          mq_element->value.bytes.bytes,
+          mq_element->value.bytes.len
+        );
+        SvUTF8_on(perl_element); // It's UTF-8!
+        break;
+
+      case AMQP_FIELD_KIND_ARRAY:
+        perl_element = mq_array_to_arrayref(&(mq_element->value.array));
+        break;
+
+      case AMQP_FIELD_KIND_TABLE:
+        perl_element = mq_table_to_hashref(&(mq_element->value.table));
+        break;
+
+      default:
+        // ACK!
+        Perl_croak(aTHX_ "Unsupported reference type for array element %c", mq_element->kind);
+    }
+
+    av_push(perl_array, perl_element);
+  }
+
+  return newRV_noinc((SV*)perl_array);
 }
 
 SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
   // Iterate over the table keys and decode them to Perl...
+  return &PL_sv_undef;
 }
 
 void hash_to_amqp_table(HV *hash, amqp_table_t *table) {

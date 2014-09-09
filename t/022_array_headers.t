@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use utf8;
 
+use Data::Dumper;
 use Sys::Hostname;
 my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
 my $exchange = "nr_test_x-$unique";
@@ -44,6 +45,7 @@ my $rv = {};
 eval { $rv = $mq->recv(); };
 is($@, '', "recv");
 $rv->{delivery_tag} =~ s/(.)/sprintf("%02x", ord($1))/esg;
+diag(Dumper($rv->{props}));
 is_deeply($rv,
           {
           'body' => $payload,
