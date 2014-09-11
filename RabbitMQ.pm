@@ -172,7 +172,7 @@ Deletes the queue
 
 C<$options> is an optional hash respecting the following keys:
 
-    {
+     {
        if_unused    => $boolean,     #default 1
        if_empty     => $boolean,     #default 1
      }
@@ -196,6 +196,7 @@ C<$options> is an optional hash respecting the following keys:
      }
 
 C<$props> is an optional hash (the AMQP 'props') respecting the following keys:
+
      {
        content_type => $string,
        content_encoding => $string,
@@ -246,6 +247,7 @@ containing the following information:
      }
 
 C<$props> is the hash sent by publish()  respecting the following keys:
+
      {
        content_type => $string,
        content_encoding => $string,
@@ -263,15 +265,15 @@ C<$props> is the hash sent by publish()  respecting the following keys:
 
 =head2 get($channel, $queuename, $options)
 
+This command runs an amqp_basic_get which returns undef immediately
+if no messages are available on the queue and returns a has as follows
+if a message is available.
+
 C<$channel> is a channel that has been opened with C<channel_open>.
 
 C<$queuename> is the name of the queue from which we'd like to consume.
 
 C<$options> is an optional hash respecting the following keys:
-
-This command runs an amqp_basic_get which returns undef immediately
-if no messages are available on the queue and returns a has as follows
-if a message is available.
 
      {
        body => 'Magic Transient Payload', # the reconstructed body
@@ -306,7 +308,6 @@ C<$delivery_tag> the delivery tag seen from a returned frame from the
 C<recv> method.
 
 C<$requeue> specifies if the message should be requeued.
-
 
 =head2 tx_select($channel)
 
