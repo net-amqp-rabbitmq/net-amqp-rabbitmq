@@ -266,14 +266,8 @@ C<$props> is the hash sent by publish()  respecting the following keys:
 =head2 get($channel, $queuename, $options)
 
 This command runs an amqp_basic_get which returns undef immediately
-if no messages are available on the queue and returns a has as follows
-if a message is available.
-
-C<$channel> is a channel that has been opened with C<channel_open>.
-
-C<$queuename> is the name of the queue from which we'd like to consume.
-
-C<$options> is an optional hash respecting the following keys:
+if no messages are available on the queue and returns a hash as follows
+if a message is available:
 
      {
        body => 'Magic Transient Payload', # the reconstructed body
@@ -283,6 +277,16 @@ C<$options> is an optional hash respecting the following keys:
        delivery_tag => 1,                 # (used for acks)
        redelivered => 0,                  # if message is redelivered
        message_count => 0,                # message count
+     }
+
+C<$channel> is a channel that has been opened with C<channel_open>.
+
+C<$queuename> is the name of the queue from which we'd like to consume.
+
+C<$options> is an optional hash respecting the following keys:
+
+     {
+       no_ack => $boolean,  #default 1
      }
 
 =head2 ack($channel, $delivery_tag, $multiple = 0)
