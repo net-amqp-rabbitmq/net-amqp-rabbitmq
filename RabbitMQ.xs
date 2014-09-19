@@ -308,14 +308,14 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array) {
 
   amqp_field_value_t *new_elements = amqp_pool_alloc(
     &array_pool,
-    ((av_top_index(perl_array)+1) * sizeof(amqp_field_value_t))
+    ((av_len(perl_array)+1) * sizeof(amqp_field_value_t))
   );
   amqp_field_value_t *element;
 
   mq_array->entries = new_elements;
   mq_array->num_entries = 0;
 
-  for ( idx = 0; idx <= av_top_index(perl_array); idx += 1) {
+  for ( idx = 0; idx <= av_len(perl_array); idx += 1) {
     value = av_fetch( perl_array, idx, 0 );
 
     // We really should never see NULL here.
