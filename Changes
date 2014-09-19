@@ -1,5 +1,9 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.006000 - 2014-09-19
+    - Fixed assigning an uint64_t to an int32_t value #12 (manchicken)
+    - Fixed hashes and arrays aren't properly handled when sent in as headers #18 (manchicken)
+
 0.005007 - 2014-07-03
     - Fixed a reported memory leak
     - Fixed a problem with failed assertions on channel_close() on a not-at-all-connected instance.
