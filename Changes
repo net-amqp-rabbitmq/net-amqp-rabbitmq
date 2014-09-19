@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.006001 - 2014-09-19
+    - Doc fixes (autarch)
+
 0.006000 - 2014-09-19
     - Fixed assigning an uint64_t to an int32_t value #12 (manchicken)
     - Fixed hashes and arrays aren't properly handled when sent in as headers #18 (manchicken)
