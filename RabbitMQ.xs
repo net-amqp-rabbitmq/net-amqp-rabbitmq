@@ -8,6 +8,9 @@
 
 typedef amqp_connection_state_t Net__AMQP__RabbitMQ;
 
+amqp_pool_t hash_pool;
+amqp_pool_t array_pool;
+
 #define int_from_hv(hv,name) \
  do { SV **v; if(NULL != (v = hv_fetch(hv, #name, strlen(#name), 0))) name = SvIV(*v); } while(0)
 #define double_from_hv(hv,name) \
@@ -31,9 +34,6 @@ void die_on_error(pTHX_ int x, amqp_connection_state_t conn, char const *context
     Perl_croak(aTHX_ "%s: %s\n", context, strerror(-x));
   }
 }
-
-amqp_pool_t hash_pool;
-amqp_pool_t array_pool;
 
 void die_on_amqp_error(pTHX_ amqp_rpc_reply_t x, amqp_connection_state_t conn, char const *context) {
   switch (x.reply_type) {
@@ -308,14 +308,14 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array) {
 
   amqp_field_value_t *new_elements = amqp_pool_alloc(
     &array_pool,
-    (av_top_index(perl_array) * sizeof(amqp_field_value_t))
+    ((av_top_index(perl_array)+1) * sizeof(amqp_field_value_t))
   );
   amqp_field_value_t *element;
 
   mq_array->entries = new_elements;
   mq_array->num_entries = 0;
 
-  for ( idx = 0; idx < av_top_index(perl_array); idx += 1) {
+  for ( idx = 0; idx <= av_top_index(perl_array); idx += 1) {
     value = av_fetch( perl_array, idx, 0 );
 
     // We really should never see NULL here.
@@ -346,7 +346,7 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array) {
 
           element->kind = AMQP_FIELD_KIND_ARRAY;
           array_to_amqp_array((AV*)SvRV(*value), &(element->value.array));
-          
+
           break;
 
         case SVt_PVHV:
@@ -424,7 +424,66 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
 
 SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
   // Iterate over the table keys and decode them to Perl...
-  return &PL_sv_undef;
+  int i;
+  SV *val;
+  HV *perl_hash = newHV();
+  amqp_table_entry_t *hash_entry = (amqp_table_entry_t*)NULL;
+
+  for( i=0; i < mq_table->num_entries; ++i ) {
+    hash_entry = &(mq_table->entries[i]);
+
+    if( hash_entry->value.kind == AMQP_FIELD_KIND_I32 ) {
+      hv_store( perl_hash,
+          hash_entry->key.bytes, hash_entry->key.len,
+          newSViv(hash_entry->value.value.i32),
+          0
+      );
+    }
+
+    // Handle kind UTF8 and kind BYTES
+    else if(
+      hash_entry->value.kind == AMQP_FIELD_KIND_UTF8
+      ||
+      hash_entry->value.kind == AMQP_FIELD_KIND_BYTES
+    ) {
+      SV *hvalue = newSVpvn(
+        hash_entry->value.value.bytes.bytes,
+        hash_entry->value.value.bytes.len
+      );
+
+      /* If it's UTF8, set the flag on... */
+      if (hash_entry->value.kind == AMQP_FIELD_KIND_UTF8) {
+        SvUTF8_on(hvalue);
+      }
+
+      hv_store( perl_hash,
+          hash_entry->key.bytes, hash_entry->key.len,
+          hvalue,
+          0
+      );
+    }
+
+    // Handle arrays
+    else if ( mq_table->entries[i].value.kind == AMQP_FIELD_KIND_ARRAY ) {
+      hv_store(
+        perl_hash,
+        hash_entry->key.bytes, hash_entry->key.len,
+        mq_array_to_arrayref( &hash_entry->value.value.array ),
+        0
+      );
+    }
+
+    // Handle tables (hashes when translated to Perl)
+    else if ( hash_entry->value.kind == AMQP_FIELD_KIND_TABLE) {
+      hv_store(
+        perl_hash,
+        hash_entry->key.bytes, hash_entry->key.len,
+        mq_table_to_hashref( &hash_entry->value.value.table ),
+        0
+      );
+    }
+  }
+  return newRV_noinc((SV*)perl_hash);
 }
 
 void hash_to_amqp_table(HV *hash, amqp_table_t *table) {
@@ -440,7 +499,6 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table) {
   hv_iterinit(hash);
   while (NULL != (he = hv_iternext(hash))) {
     key = hv_iterkey(he, &retlen);
-    warn("HASH KEY: %s",key);
     value = hv_iterval(hash, he);
 
     if (SvGMAGICAL(value))
@@ -453,6 +511,7 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table) {
 
       entry->key = amqp_cstring_bytes(key);
       entry->value.kind = AMQP_FIELD_KIND_UTF8;
+
       entry->value.value.bytes = amqp_cstring_bytes(SvPV_nolen(value));
     } else if (SvIOK(value)) {
       entry = &table->entries[table->num_entries];
@@ -462,8 +521,6 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table) {
       entry->value.kind = AMQP_FIELD_KIND_I32;
       entry->value.value.i32 = (int32_t) SvIV(value);
     } else if (SvROK(value)) {
-      warn("Dumping for ref in table");
-      sv_dump(value);
       /* We've got a reference */
       switch (SvTYPE(SvRV(value))) {
         // Array Reference
@@ -880,9 +937,6 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
       }
       if (NULL != (v = hv_fetch(props, "headers", strlen("headers"), 0))) {
         hash_to_amqp_table((HV *)SvRV(*v), &properties.headers);
-        warn("<<< HEADERS BEING PUBLISHED >>>");
-        sv_dump(*v);
-        warn("<<< END HEADERS BEING PUBLISHED >>>");
         properties._flags |= AMQP_BASIC_HEADERS_FLAG;
       }
     }
