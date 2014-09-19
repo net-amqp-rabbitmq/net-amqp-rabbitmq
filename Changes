@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.006002 - 2014-09-19
+    - Add MANIFEST to dist
+
 0.006001 - 2014-09-19
     - Doc fixes (autarch)
 
