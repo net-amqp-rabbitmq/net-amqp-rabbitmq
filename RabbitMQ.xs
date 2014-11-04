@@ -6,6 +6,9 @@
 #include "amqp_tcp_socket.h"
 #include "amqp_private.h"
 
+#define __REAL__DEBUG__(X)  X
+#define __DEBUG__(X) /* NOOP */
+
 typedef amqp_connection_state_t Net__AMQP__RabbitMQ;
 
 amqp_pool_t hash_pool;
@@ -88,6 +91,79 @@ void die_on_amqp_error(pTHX_ amqp_rpc_reply_t x, amqp_connection_state_t conn, c
   }
 }
 
+/*
+ * amqp_kind_for_sv(SV**)
+ * Note: We could handle more types here... but we're trying to take Perl and go to
+ *       C. We don't really need to handle much more than this from what I can tell.
+ */
+amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value) {
+  switch (SvTYPE( *perl_value ))
+  {
+    // Integer
+    case SVt_IV:
+      // References
+      if ( SvROK( *perl_value ) ) {
+        // Array Reference
+        if ( SvTYPE( SvRV( *perl_value ) ) == SVt_PVAV ) {
+          return AMQP_FIELD_KIND_ARRAY;
+        }
+
+        // Hash Reference
+        if ( SvTYPE( SvRV( *perl_value ) ) == SVt_PVHV ) {
+          return AMQP_FIELD_KIND_TABLE;
+        }
+        Perl_croak(
+          aTHX_ "Unsupported Perl Reference Type: %d",
+          SvTYPE( SvRV( *perl_value ) )
+        );
+      }
+
+      // Regular integers
+      // In the event that it could be unsigned
+      if ( SvUOK( *perl_value ) ) {
+        return AMQP_FIELD_KIND_U64;
+      }
+      return AMQP_FIELD_KIND_I64;
+
+    // Numeric type
+    case SVt_NV:
+      return AMQP_FIELD_KIND_F64;
+
+    // String (handle types which are upgraded to handle IV/UV/NV as well as PV)
+    case SVt_PVIV:
+      // It could be a PV or an IV/UV!
+      if ( SvIOK( *perl_value ) ) {
+        if ( SvUOK( *perl_value ) ) {
+          return AMQP_FIELD_KIND_U64;
+        }
+        return AMQP_FIELD_KIND_I64;
+      }
+
+    case SVt_PVNV:
+      // It could be a PV or an NV
+      if ( SvNOK( *perl_value ) ) {
+        return AMQP_FIELD_KIND_F64;
+      }
+
+    case SVt_PV:
+      // UTF-8?
+      if ( SvUTF8( *perl_value ) ) {
+        return AMQP_FIELD_KIND_UTF8;
+      }
+      return AMQP_FIELD_KIND_BYTES;
+
+    default:
+      Perl_croak(
+        aTHX_ "Unsupported scalar type detected >%s<(%d)",
+        *perl_value,
+        SvTYPE( *perl_value )
+      );
+  }
+
+  /* If we're still here... wtf */
+  Perl_croak( aTHX_ "The wheels have fallen off. Please call for help." );
+}
+
 int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
   amqp_frame_t frame;
   amqp_basic_deliver_t *d;
@@ -96,8 +172,6 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
   size_t body_received;
   int result;
   int is_utf8_body = 1; // The body is UTF-8 by default
-
-  amqp_table_entry_t *header_entry = (amqp_table_entry_t*)NULL;
 
   result = 0;
   while (1) {
@@ -206,63 +280,173 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
     }
 
     if (p->_flags & AMQP_BASIC_HEADERS_FLAG) {
+      __DEBUG__( dump_table( p->headers ) );
+
       int i;
       SV *val;
+      SV *hvalue;
       HV *headers = newHV();
+      amqp_table_entry_t *header_entry = (amqp_table_entry_t*)NULL;
+
       hv_store( props, "headers", strlen("headers"), newRV_noinc((SV *)headers), 0 );
 
       for( i=0; i < p->headers.num_entries; ++i ) {
         header_entry = &(p->headers.entries[i]);
 
-        if( header_entry->value.kind == AMQP_FIELD_KIND_I32 ) {
-          hv_store( headers,
+        __DEBUG__(
+          fprintf(stderr,
+            "~~~ Length: %ld/%d, Key: %.*s, Kind: %c\n",
+            header_entry->key.len,
+            (int)header_entry->key.len,
+            (int)header_entry->key.len,
+            (char*)header_entry->key.bytes,
+            header_entry->value.kind
+          )
+        );
+
+        switch (header_entry->value.kind) {
+
+          // Integer types
+          case AMQP_FIELD_KIND_I8:
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                newSViv(header_entry->value.value.i8),
+                0
+            );
+            break;
+
+          case AMQP_FIELD_KIND_I16:
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                newSViv(header_entry->value.value.i16),
+                0
+            );
+            break;
+
+          case AMQP_FIELD_KIND_I32:
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                newSViv(header_entry->value.value.i32),
+                0
+            );
+            break;
+
+          case AMQP_FIELD_KIND_I64:
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                newSViv(header_entry->value.value.i64),
+                0
+            );
+            break;
+
+          case AMQP_FIELD_KIND_U8:
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                newSVuv(header_entry->value.value.u8),
+                0
+            );
+            break;
+
+          case AMQP_FIELD_KIND_U16:
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                newSVuv(header_entry->value.value.u16),
+                0
+            );
+            break;
+
+          case AMQP_FIELD_KIND_U32:
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                newSVuv(header_entry->value.value.u32),
+                0
+            );
+            break;
+
+          case AMQP_FIELD_KIND_U64:
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                newSVuv(header_entry->value.value.u64),
+                0
+            );
+            break;
+
+          // Floating point precision
+          case AMQP_FIELD_KIND_F32:
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                newSVnv(header_entry->value.value.f32),
+                0
+            );
+            break;
+
+          case AMQP_FIELD_KIND_F64:
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                newSVnv(header_entry->value.value.f64),
+                0
+            );
+            break;
+
+          // Handle kind UTF8 and kind BYTES
+          case AMQP_FIELD_KIND_UTF8:
+            hvalue = newSVpvn(
+              header_entry->value.value.bytes.bytes,
+              header_entry->value.value.bytes.len
+            );
+            /* If it's UTF8, set the flag on... */
+            if (header_entry->value.kind == AMQP_FIELD_KIND_UTF8) {
+              SvUTF8_on(hvalue);
+            }
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                hvalue,
+                0
+            );
+            break;
+
+          case AMQP_FIELD_KIND_BYTES:
+            hvalue = newSVpvn(
+              header_entry->value.value.bytes.bytes,
+              header_entry->value.value.bytes.len
+            );
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                hvalue,
+                0
+            );
+            break;
+
+          // Handle arrays
+          case AMQP_FIELD_KIND_ARRAY:
+            __DEBUG__(
+              fprintf(stderr, "ARRAY KIND FOR KEY:>%.*s< KIND:>%c< AMQP_FIELD_KIND_ARRAY:[%c].\n",
+                (int)header_entry->key.len,
+                (char*)header_entry->key.bytes,
+                header_entry->value.kind,
+                AMQP_FIELD_KIND_ARRAY
+              )
+            );
+            hv_store(
+              headers,
               header_entry->key.bytes, header_entry->key.len,
-              newSViv(header_entry->value.value.i32),
+              mq_array_to_arrayref( &header_entry->value.value.array ),
               0
-          );
-        }
+            );
+            break;
 
-        // Handle kind UTF8 and kind BYTES
-        else if(
-          header_entry->value.kind == AMQP_FIELD_KIND_UTF8
-          ||
-          header_entry->value.kind == AMQP_FIELD_KIND_BYTES
-        ) {
-          SV *hvalue = newSVpvn(
-            header_entry->value.value.bytes.bytes,
-            header_entry->value.value.bytes.len
-          );
-
-          /* If it's UTF8, set the flag on... */
-          if (header_entry->value.kind == AMQP_FIELD_KIND_UTF8) {
-            SvUTF8_on(hvalue);
-          }
-
-          hv_store( headers,
+          // Handle tables (hashes when translated to Perl)
+          case AMQP_FIELD_KIND_TABLE:
+            hv_store(
+              headers,
               header_entry->key.bytes, header_entry->key.len,
-              hvalue,
+              mq_table_to_hashref( &header_entry->value.value.table ),
               0
-          );
-        }
+            );
+            break;
 
-        // Handle arrays
-        else if ( p->headers.entries[i].value.kind == AMQP_FIELD_KIND_ARRAY ) {
-          hv_store(
-            headers,
-            header_entry->key.bytes, header_entry->key.len,
-            mq_array_to_arrayref( &header_entry->value.value.array ),
-            0
-          );
-        }
-
-        // Handle tables (hashes when translated to Perl)
-        else if ( header_entry->value.kind == AMQP_FIELD_KIND_TABLE) {
-          hv_store(
-            headers,
-            header_entry->key.bytes, header_entry->key.len,
-            mq_table_to_hashref( &header_entry->value.value.table ),
-            0
-          );
+          default:
+            Perl_croak(aTHX_ "Unsupported AMQP kind '%c' detected.", (unsigned char)header_entry->value.kind);
         }
       }
     }
@@ -321,53 +505,43 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array) {
     // We really should never see NULL here.
     assert(value != NULL);
 
-    /* Determine type of *value */
-    if (SvIOK(*value)) {
-      element = &mq_array->entries[mq_array->num_entries];
-      mq_array->num_entries += 1;
+    // Let's start getting the type...
+    element = &mq_array->entries[mq_array->num_entries];
+    mq_array->num_entries += 1;
+    element->kind = amqp_kind_for_sv(value);
 
-      element->kind = AMQP_FIELD_KIND_I32;
-      element->value.i32 = (int32_t) SvIV(*value);
+    __DEBUG__( warn("%d KIND >%c<", __LINE__, (unsigned char)element->kind) );
 
-    } else if (SvPOK(*value)) {
-      element = &mq_array->entries[mq_array->num_entries];
-      mq_array->num_entries += 1;
+    switch (element->kind) {
 
-      element->kind = AMQP_FIELD_KIND_UTF8;
-      element->value.bytes = amqp_cstring_bytes(SvPV_nolen(*value));
+      case AMQP_FIELD_KIND_I64:
+        element->value.i64 = (int64_t) SvIV(*value);
+        break;
 
-    } else if (SvROK(*value)) {
-      /* Is it a hashref or another array? */
-      switch (SvTYPE(SvRV(*value))) {
-        // Array Reference
-        case SVt_PVAV:
-          element = &mq_array->entries[mq_array->num_entries];
-          mq_array->num_entries += 1;
+      case AMQP_FIELD_KIND_U64:
+        element->value.u64 = (uint64_t) SvUV(*value);
+        break;
 
-          element->kind = AMQP_FIELD_KIND_ARRAY;
-          array_to_amqp_array((AV*)SvRV(*value), &(element->value.array));
+      case AMQP_FIELD_KIND_F64:
+        element->value.f64 = (double) SvNV(*value);
+        break;
 
-          break;
+      case AMQP_FIELD_KIND_UTF8:
+      case AMQP_FIELD_KIND_BYTES:
+        element->value.bytes = amqp_cstring_bytes(SvPV_nolen(*value));
+        break;
 
-        case SVt_PVHV:
-          element = &mq_array->entries[mq_array->num_entries];
-          mq_array->num_entries += 1;
+      case AMQP_FIELD_KIND_ARRAY:
+        array_to_amqp_array((AV*)SvRV(*value), &(element->value.array));
+        break;
 
-          element->kind = AMQP_FIELD_KIND_ARRAY;
-          hash_to_amqp_table((HV*)SvRV(*value), &(element->value.table));
+      case AMQP_FIELD_KIND_TABLE:
+        hash_to_amqp_table((HV*)SvRV(*value), &(element->value.table));
+        break;
 
-          break;
-
-        default:
-          Perl_croak( aTHX_ "Unsupported reference type for array index %ld", idx );
-      }
-
-    } else {
-      Perl_croak( aTHX_ "Unsupported SvType for array index %ld", idx );
+      default:
+        Perl_croak( aTHX_ "Unsupported SvType for array index %ld", idx );
     }
-    /* Assign it to the field value */
-
-    /* Append it to the array */
   }
 }
 
@@ -382,12 +556,47 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
 
   for (; current_entry < mq_array->num_entries; current_entry += 1) {
     mq_element = &mq_array->entries[current_entry];
+
+    __DEBUG__( warn("%d KIND >%c<", __LINE__, mq_element->kind) );
+
     switch (mq_element->kind) {
-      // Number
+      // Signed values
+      case AMQP_FIELD_KIND_I8:
+        perl_element = newSViv(mq_element->value.i8);
+        break;
+      case AMQP_FIELD_KIND_I16:
+        perl_element = newSViv(mq_element->value.i16);
+        break;
       case AMQP_FIELD_KIND_I32:
         perl_element = newSViv(mq_element->value.i32);
         break;
+      case AMQP_FIELD_KIND_I64:
+        perl_element = newSViv(mq_element->value.i64);
+        break;
 
+      // Unsigned values
+      case AMQP_FIELD_KIND_U8:
+        perl_element = newSViv(mq_element->value.u8);
+        break;
+      case AMQP_FIELD_KIND_U16:
+        perl_element = newSViv(mq_element->value.u16);
+        break;
+      case AMQP_FIELD_KIND_U32:
+        perl_element = newSVuv(mq_element->value.u32);
+        break;
+      case AMQP_FIELD_KIND_U64:
+        perl_element = newSVuv(mq_element->value.u64);
+        break;
+
+      // Floats
+      case AMQP_FIELD_KIND_F32:
+        perl_element = newSVnv(mq_element->value.f32);
+        break;
+      case AMQP_FIELD_KIND_F64:
+        perl_element = newSVnv(mq_element->value.f64);
+        break;
+
+      // Strings and bytes
       case AMQP_FIELD_KIND_BYTES:
         perl_element = newSVpvn(
           mq_element->value.bytes.bytes,
@@ -395,6 +604,7 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
         );
         break;
 
+      // UTF-8 strings
       case AMQP_FIELD_KIND_UTF8:
         perl_element = newSVpvn(
           mq_element->value.bytes.bytes,
@@ -403,17 +613,24 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
         SvUTF8_on(perl_element); // It's UTF-8!
         break;
 
+      // Arrays
       case AMQP_FIELD_KIND_ARRAY:
         perl_element = mq_array_to_arrayref(&(mq_element->value.array));
         break;
 
+      // Tables
       case AMQP_FIELD_KIND_TABLE:
         perl_element = mq_table_to_hashref(&(mq_element->value.table));
         break;
 
+      // WTF
       default:
         // ACK!
-        Perl_croak(aTHX_ "Unsupported reference type for array element %c", mq_element->kind);
+        Perl_croak(
+          aTHX_ "Unsupported Perl type >%c< at index %d",
+          (unsigned char)mq_element->kind,
+          current_entry
+        );
     }
 
     av_push(perl_array, perl_element);
@@ -425,64 +642,99 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
 SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
   // Iterate over the table keys and decode them to Perl...
   int i;
-  SV *val;
+  SV *perl_element;
   HV *perl_hash = newHV();
   amqp_table_entry_t *hash_entry = (amqp_table_entry_t*)NULL;
 
-  for( i=0; i < mq_table->num_entries; ++i ) {
+  for( i=0; i < mq_table->num_entries; i += 1 ) {
     hash_entry = &(mq_table->entries[i]);
-
-    if( hash_entry->value.kind == AMQP_FIELD_KIND_I32 ) {
-      hv_store( perl_hash,
-          hash_entry->key.bytes, hash_entry->key.len,
-          newSViv(hash_entry->value.value.i32),
-          0
+    __DEBUG__(
+      fprintf(
+        stderr,
+        "!!! Key: >%.*s< Kind: >%c<\n",
+        (int)hash_entry->key.len,
+        (char*)hash_entry->key.bytes,
+        hash_entry->value.kind
       );
+    );
+
+    switch (hash_entry->value.kind) {
+      // Integers
+      case AMQP_FIELD_KIND_I8:
+        perl_element = newSViv(hash_entry->value.value.i8);
+        break;
+      case AMQP_FIELD_KIND_I16:
+        perl_element = newSViv(hash_entry->value.value.i16);
+        break;
+      case AMQP_FIELD_KIND_I32:
+        perl_element = newSViv(hash_entry->value.value.i32);
+        break;
+      case AMQP_FIELD_KIND_I64:
+        perl_element = newSViv(hash_entry->value.value.i64);
+        break;
+      case AMQP_FIELD_KIND_U8:
+        perl_element = newSViv(hash_entry->value.value.u8);
+        break;
+      case AMQP_FIELD_KIND_U16:
+        perl_element = newSViv(hash_entry->value.value.u16);
+        break;
+      case AMQP_FIELD_KIND_U32:
+        perl_element = newSVuv(hash_entry->value.value.u32);
+        break;
+      case AMQP_FIELD_KIND_U64:
+        perl_element = newSVuv(hash_entry->value.value.u64);
+        break;
+
+      // Foats
+      case AMQP_FIELD_KIND_F32:
+        perl_element = newSVnv(hash_entry->value.value.f32);
+        break;
+      case AMQP_FIELD_KIND_F64:
+        perl_element = newSVnv(hash_entry->value.value.f64);
+        break;
+
+      case AMQP_FIELD_KIND_BYTES:
+        perl_element = newSVpvn(
+          hash_entry->value.value.bytes.bytes,
+          hash_entry->value.value.bytes.len
+        );
+        break;
+
+      case AMQP_FIELD_KIND_UTF8:
+        perl_element = newSVpvn(
+          hash_entry->value.value.bytes.bytes,
+          hash_entry->value.value.bytes.len
+        );
+        SvUTF8_on(perl_element); // It's UTF-8!
+        break;
+
+      case AMQP_FIELD_KIND_ARRAY:
+        perl_element = mq_array_to_arrayref(&(hash_entry->value.value.array));
+        break;
+
+      case AMQP_FIELD_KIND_TABLE:
+        perl_element = mq_table_to_hashref(&(hash_entry->value.value.table));
+        break;
+
+      default:
+        // ACK!
+        Perl_croak(
+          aTHX_ "Unsupported Perl type >%c< at index %d",
+          (unsigned char)hash_entry->value.kind,
+          i
+        );
     }
 
-    // Handle kind UTF8 and kind BYTES
-    else if(
-      hash_entry->value.kind == AMQP_FIELD_KIND_UTF8
-      ||
-      hash_entry->value.kind == AMQP_FIELD_KIND_BYTES
-    ) {
-      SV *hvalue = newSVpvn(
-        hash_entry->value.value.bytes.bytes,
-        hash_entry->value.value.bytes.len
-      );
+    // Stash this in our hash.
+    hv_store(
+      perl_hash,
+      hash_entry->key.bytes, hash_entry->key.len,
+      perl_element,
+      0
+    );
 
-      /* If it's UTF8, set the flag on... */
-      if (hash_entry->value.kind == AMQP_FIELD_KIND_UTF8) {
-        SvUTF8_on(hvalue);
-      }
-
-      hv_store( perl_hash,
-          hash_entry->key.bytes, hash_entry->key.len,
-          hvalue,
-          0
-      );
-    }
-
-    // Handle arrays
-    else if ( mq_table->entries[i].value.kind == AMQP_FIELD_KIND_ARRAY ) {
-      hv_store(
-        perl_hash,
-        hash_entry->key.bytes, hash_entry->key.len,
-        mq_array_to_arrayref( &hash_entry->value.value.array ),
-        0
-      );
-    }
-
-    // Handle tables (hashes when translated to Perl)
-    else if ( hash_entry->value.kind == AMQP_FIELD_KIND_TABLE) {
-      hv_store(
-        perl_hash,
-        hash_entry->key.bytes, hash_entry->key.len,
-        mq_table_to_hashref( &hash_entry->value.value.table ),
-        0
-      );
-    }
   }
+
   return newRV_noinc((SV*)perl_hash);
 }
 
@@ -499,56 +751,70 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table) {
   hv_iterinit(hash);
   while (NULL != (he = hv_iternext(hash))) {
     key = hv_iterkey(he, &retlen);
+    __DEBUG__( warn("Key: %s\n", key) );
     value = hv_iterval(hash, he);
 
-    if (SvGMAGICAL(value))
+    if (SvGMAGICAL(value)) {
       mg_get(value);
-
-
-    if (SvPOK(value)) {
-      entry = &table->entries[table->num_entries];
-      table->num_entries++;
-
-      entry->key = amqp_cstring_bytes(key);
-      entry->value.kind = AMQP_FIELD_KIND_UTF8;
-
-      entry->value.value.bytes = amqp_cstring_bytes(SvPV_nolen(value));
-    } else if (SvIOK(value)) {
-      entry = &table->entries[table->num_entries];
-      table->num_entries++;
-
-      entry->key = amqp_cstring_bytes(key);
-      entry->value.kind = AMQP_FIELD_KIND_I32;
-      entry->value.value.i32 = (int32_t) SvIV(value);
-    } else if (SvROK(value)) {
-      /* We've got a reference */
-      switch (SvTYPE(SvRV(value))) {
-        // Array Reference
-        case SVt_PVAV:
-          entry = &table->entries[table->num_entries];
-          table->num_entries++;
-
-          entry->key = amqp_cstring_bytes(key);
-          entry->value.kind = AMQP_FIELD_KIND_ARRAY;
-          array_to_amqp_array((AV*)SvRV(value), &(entry->value.value.array));
-          break;
-
-        case SVt_PVHV:
-          entry = &table->entries[table->num_entries];
-          table->num_entries++;
-
-          entry->key = amqp_cstring_bytes(key);
-          entry->value.kind = AMQP_FIELD_KIND_TABLE;
-          hash_to_amqp_table((HV*)SvRV(value), &(entry->value.value.table));
-          break;
-
-        default:
-          Perl_croak( aTHX_ "Unsupported reference type for hash key %s", key );
-      }
-    } else {
-      Perl_croak( aTHX_ "Unsupported SvType for hash key: %s", key );
     }
+
+    entry = &table->entries[table->num_entries];
+    entry->key = amqp_cstring_bytes( key );
+    entry->value.kind = amqp_kind_for_sv( &value );
+
+    __DEBUG__(
+      warn_sv( value );
+      fprintf(
+        stderr,
+        "Key: >%.*s< Kind: >%c<\n",
+        (int)entry->key.len,
+        (char*)entry->key.bytes,
+        entry->value.kind
+      );
+    );
+
+    switch ( entry->value.kind ) {
+      case AMQP_FIELD_KIND_I64:
+        entry->value.value.i64 = (int64_t) SvIV( value );
+        break;
+
+      case AMQP_FIELD_KIND_U64:
+        entry->value.value.u64 = (uint64_t) SvUV( value );
+        break;
+
+      case AMQP_FIELD_KIND_F64:
+        entry->value.value.f64 = (double) SvNV( value );
+        break;
+
+      case AMQP_FIELD_KIND_BYTES:
+      case AMQP_FIELD_KIND_UTF8:
+        entry->value.value.bytes = amqp_cstring_bytes( SvPV_nolen( value )
+        );
+        break;
+
+      case AMQP_FIELD_KIND_ARRAY:
+        array_to_amqp_array(
+          (AV*) SvRV(value),
+          &(entry->value.value.array)
+        );
+        break;
+
+      case AMQP_FIELD_KIND_TABLE:
+        hash_to_amqp_table(
+          (HV*) SvRV(value),
+          &(entry->value.value.table)
+        );
+        break;
+
+      default:
+        Perl_croak( aTHX_ "amqp_kind_for_sv() returned a type I don't understand." );
+    }
+
+    // Successfully (we think) added an entry to the table.
+    table->num_entries++;
   }
+
+  return;
 }
 
 MODULE = Net::AMQP::RabbitMQ PACKAGE = Net::AMQP::RabbitMQ PREFIX = net_amqp_rabbitmq_
@@ -635,15 +901,28 @@ net_amqp_rabbitmq_exchange_declare(conn, channel, exchange, options = NULL, args
     char *exchange_type = "direct";
     int passive = 0;
     int durable = 0;
+    // int auto_delete = 0; // Will be needed soonish
+    // int internal = 0;    // Will be needed soonish
     amqp_table_t arguments = amqp_empty_table;
   CODE:
     if(options) {
       str_from_hv(options, exchange_type);
       int_from_hv(options, passive);
       int_from_hv(options, durable);
+      // int_from_hv(options, auto_delete); // Will be needed soonish
+      // int_from_hv(options, internal);    // Will be needed soonish
     }
-    amqp_exchange_declare(conn, channel, amqp_cstring_bytes(exchange), amqp_cstring_bytes(exchange_type),
-                          passive, durable, arguments);
+    amqp_exchange_declare(
+      conn,
+      channel,
+      amqp_cstring_bytes(exchange),
+      amqp_cstring_bytes(exchange_type),
+      passive,
+      (amqp_boolean_t)durable,
+      // (amqp_boolean_t)auto_delete, // Will be needed soonish
+      // (amqp_boolean_t)internal,    // Will be needed soonish
+      arguments
+    );
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Declaring exchange");
 
 void
@@ -940,6 +1219,7 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
         properties._flags |= AMQP_BASIC_HEADERS_FLAG;
       }
     }
+    __DEBUG__( warn("PUBLISHING HEADERS..."); dump_table( properties.headers ) );
     rv = amqp_basic_publish(conn, channel, exchange_b, routing_key_b, mandatory, immediate, &properties, body_b);
 
     /* If the connection failed, blast the file descriptor! */

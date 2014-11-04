@@ -1,5 +1,11 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.007000 - 2014-11-03
+    - Major re-factoring done to how Perl-to-C type inferences are done
+    - Most AMQP header data types from AMQP into Perl should be supported.
+    - Upgraded the librabbitmq-c version to the latest stable v0.5.2
+    - Nested headers are now working
+
 0.006002 - 2014-09-19
     - Add MANIFEST to dist
 

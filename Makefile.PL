@@ -17,10 +17,11 @@ WriteMakefile(
     VERSION_FROM    => 'RabbitMQ.pm',
     LICENSE         => 'mozilla_1_1',
     ABSTRACT_FROM   => 'RabbitMQ.pm',
-    AUTHOR          => 'Mark Ellis <nobody@cpan.org>',
+    AUTHOR          => 'Mark Ellis <nobody@cpan.org>, Michael Stemle, Jr. <nobody@cpan.org>',
     OBJECT          => "RabbitMQ.o ${ofiles}",
     OPTIMIZE        => $ENV{'OPTIMIZE'},
     CCFLAGS         => "$Config{ccflags} -I${Bin}",
+    DEFINE          => "-DAMQ_PLATFORM='\"Perl_$^O_$^V\"'",
     LIBS            =>['-lrt'],
     META_MERGE        => {
         "meta-spec" => { version => 2 },
