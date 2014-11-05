@@ -100,7 +100,10 @@ amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value) {
   switch (SvTYPE( *perl_value ))
   {
     // Integer
+
+#if SVt_RV != SVt_IV
     case SVt_RV:
+#endif
     case SVt_IV:
       // References
       if ( SvROK( *perl_value ) ) {
