@@ -99,13 +99,27 @@ void die_on_amqp_error(pTHX_ amqp_rpc_reply_t x, amqp_connection_state_t conn, c
 amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value) {
   switch (SvTYPE( *perl_value ))
   {
-    // Integer
 
 // In Perls 5.10 and below, SVt_RV and SVt_IV different. Beyond those they're the
 // same. We need to cover both of these cases though, thus the condition.
 #if SVt_RV != SVt_IV
     case SVt_RV:
+      // Array Reference
+      if ( SvTYPE( SvRV( *perl_value ) ) == SVt_PVAV ) {
+        return AMQP_FIELD_KIND_ARRAY;
+      }
+
+      // Hash Reference
+      if ( SvTYPE( SvRV( *perl_value ) ) == SVt_PVHV ) {
+        return AMQP_FIELD_KIND_TABLE;
+      }
+      Perl_croak(
+        aTHX_ "Unsupported Perl Reference Type: %d",
+        SvTYPE( SvRV( *perl_value ) )
+      );
 #endif
+
+    // Integer types (and references beyond 5.10)
     case SVt_IV:
       // References
       if ( SvROK( *perl_value ) ) {
