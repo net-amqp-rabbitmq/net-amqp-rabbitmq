@@ -101,6 +101,8 @@ amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value) {
   {
     // Integer
 
+// In Perls 5.10 and below, SVt_RV and SVt_IV different. Beyond those they're the
+// same. We need to cover both of these cases though, thus the condition.
 #if SVt_RV != SVt_IV
     case SVt_RV:
 #endif
