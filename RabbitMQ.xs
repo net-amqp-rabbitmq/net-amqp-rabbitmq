@@ -97,28 +97,9 @@ void die_on_amqp_error(pTHX_ amqp_rpc_reply_t x, amqp_connection_state_t conn, c
  *       C. We don't really need to handle much more than this from what I can tell.
  */
 amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value) {
+
   switch (SvTYPE( *perl_value ))
   {
-
-// In Perls 5.10 and below, SVt_RV and SVt_IV different. Beyond those they're the
-// same. We need to cover both of these cases though, thus the condition.
-#if SVt_RV != SVt_IV
-    case SVt_RV:
-      // Array Reference
-      if ( SvTYPE( SvRV( *perl_value ) ) == SVt_PVAV ) {
-        return AMQP_FIELD_KIND_ARRAY;
-      }
-
-      // Hash Reference
-      if ( SvTYPE( SvRV( *perl_value ) ) == SVt_PVHV ) {
-        return AMQP_FIELD_KIND_TABLE;
-      }
-      Perl_croak(
-        aTHX_ "Unsupported Perl Reference Type: %d",
-        SvTYPE( SvRV( *perl_value ) )
-      );
-#endif
-
     // Integer types (and references beyond 5.10)
     case SVt_IV:
       // References
@@ -173,6 +154,22 @@ amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value) {
       return AMQP_FIELD_KIND_BYTES;
 
     default:
+      if ( SvROK( *perl_value ) ) {
+        // Array Reference
+        if ( SvTYPE( SvRV( *perl_value ) ) == SVt_PVAV ) {
+          return AMQP_FIELD_KIND_ARRAY;
+        }
+
+        // Hash Reference
+        if ( SvTYPE( SvRV( *perl_value ) ) == SVt_PVHV ) {
+          return AMQP_FIELD_KIND_TABLE;
+        }
+        Perl_croak(
+          aTHX_ "Unsupported Perl Reference Type: %d",
+          SvTYPE( SvRV( *perl_value ) )
+        );
+      }
+
       Perl_croak(
         aTHX_ "Unsupported scalar type detected >%s<(%d)",
         *perl_value,
@@ -192,6 +189,12 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
   size_t body_received;
   int result;
   int is_utf8_body = 1; // The body is UTF-8 by default
+  HV *props = (HV*)&PL_sv_undef;
+  int i;
+  SV *val = (SV*)&PL_sv_undef;
+  SV *hvalue = (SV*)&PL_sv_undef;
+  HV *headers = (HV*)&PL_sv_undef;
+  amqp_table_entry_t *header_entry = (amqp_table_entry_t*)NULL;
 
   result = 0;
   while (1) {
@@ -232,7 +235,6 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
     if (frame.frame_type != AMQP_FRAME_HEADER)
       Perl_croak(aTHX_ "Unexpected header %d!", frame.frame_type);
 
-    HV *props;
     props = newHV();
     hv_store(RETVAL, "props", strlen("props"), newRV_noinc((SV *)props), 0);
 
@@ -302,11 +304,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
     if (p->_flags & AMQP_BASIC_HEADERS_FLAG) {
       __DEBUG__( dump_table( p->headers ) );
 
-      int i;
-      SV *val;
-      SV *hvalue;
-      HV *headers = newHV();
-      amqp_table_entry_t *header_entry = (amqp_table_entry_t*)NULL;
+      headers = newHV();
 
       hv_store( props, "headers", strlen("headers"), newRV_noinc((SV *)headers), 0 );
 
@@ -968,12 +966,13 @@ void net_amqp_rabbitmq_queue_delete(conn, channel, queuename, options = NULL)
   PREINIT:
     int if_unused = 1;
     int if_empty = 1;
+    amqp_queue_delete_ok_t *reply = (amqp_queue_delete_ok_t*)NULL;
   CODE:
     if(options) {
       int_from_hv(options, if_unused);
       int_from_hv(options, if_empty);
     }
-    amqp_queue_delete_ok_t *reply = amqp_queue_delete(
+    reply = amqp_queue_delete(
             conn,
             channel,
             amqp_cstring_bytes(queuename),
@@ -999,6 +998,7 @@ net_amqp_rabbitmq_queue_declare(conn, channel, queuename, options = NULL, args =
     int auto_delete = 1;
     amqp_table_t arguments = amqp_empty_table;
     amqp_bytes_t queuename_b = amqp_empty_bytes;
+    amqp_queue_declare_ok_t *r = (amqp_queue_declare_ok_t*)NULL;
   PPCODE:
     if(queuename && strcmp(queuename, "")) queuename_b = amqp_cstring_bytes(queuename);
     if(options) {
@@ -1009,7 +1009,7 @@ net_amqp_rabbitmq_queue_declare(conn, channel, queuename, options = NULL, args =
     }
     if(args)
       hash_to_amqp_table(args, &arguments);
-    amqp_queue_declare_ok_t *r = amqp_queue_declare(conn, channel, queuename_b, passive,
+    r = amqp_queue_declare(conn, channel, queuename_b, passive,
                                                     durable, exclusive, auto_delete,
                                                     arguments);
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Declaring queue");

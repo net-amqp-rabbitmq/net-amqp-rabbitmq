@@ -1,9 +1,6 @@
 use Test::More tests => 12;
 use strict;
 use warnings;
-use utf8;
-
-use 5.010;
 
 use Data::Dumper;
 use Sys::Hostname;
@@ -61,7 +58,5 @@ is_deeply($rv,
           'consumer_tag' => 'ctag',
           'props' => { 'headers' => $headers },
           }, "payload");
-
-done_testing();
 
 1;

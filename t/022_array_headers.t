@@ -79,6 +79,4 @@ is_deeply($rv,
           'props' => { 'headers' => $headers },
           }, "payload");
 
-done_testing();
-
 1;

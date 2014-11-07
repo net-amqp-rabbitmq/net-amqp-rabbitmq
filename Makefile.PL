@@ -17,7 +17,7 @@ WriteMakefile(
     VERSION_FROM    => 'RabbitMQ.pm',
     LICENSE         => 'mozilla_1_1',
     ABSTRACT_FROM   => 'RabbitMQ.pm',
-    AUTHOR          => 'Mark Ellis <nobody@cpan.org>, Michael Stemle, Jr. <nobody@cpan.org>',
+    AUTHOR          => 'Mark Ellis <nobody@cpan.org>, Michael Stemle, Jr. <mstemle@cpan.org>',
     OBJECT          => "RabbitMQ.o ${ofiles}",
     OPTIMIZE        => $ENV{'OPTIMIZE'},
     CCFLAGS         => "$Config{ccflags} -I${Bin}",
