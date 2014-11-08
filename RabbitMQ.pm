@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '0.006002';
+our $VERSION = '0.007000';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -210,6 +210,7 @@ C<$props> is an optional hash (the AMQP 'props') respecting the following keys:
        delivery_mode => $integer,
        priority => $integer,
        timestamp => $integer,
+       header => $headers # This should be a hashref of keys and values.
      }
 
 =head2 consume($channel, $queuename, $options)
