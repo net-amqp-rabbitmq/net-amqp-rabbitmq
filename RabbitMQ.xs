@@ -602,6 +602,7 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
       case AMQP_FIELD_KIND_U32:
         perl_element = newSVuv(mq_element->value.u32);
         break;
+      case AMQP_FIELD_KIND_TIMESTAMP: /* Timestamps */
       case AMQP_FIELD_KIND_U64:
         perl_element = newSVuv(mq_element->value.u64);
         break;
@@ -699,6 +700,7 @@ SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
       case AMQP_FIELD_KIND_U32:
         perl_element = newSVuv(hash_entry->value.value.u32);
         break;
+      case AMQP_FIELD_KIND_TIMESTAMP: /* Timestamps */
       case AMQP_FIELD_KIND_U64:
         perl_element = newSVuv(hash_entry->value.value.u64);
         break;
