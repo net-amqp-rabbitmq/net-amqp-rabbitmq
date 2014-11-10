@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '0.007000';
+our $VERSION = '0.007001';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -270,15 +270,48 @@ This command runs an amqp_basic_get which returns undef immediately
 if no messages are available on the queue and returns a hash as follows
 if a message is available:
 
-     {
-       body => 'Magic Transient Payload', # the reconstructed body
-       routing_key => 'nr_test_q',        # route the message took
-       exchange => 'nr_test_x',           # exchange used
-       content_type => 'foo',             # (only if specified)
-       delivery_tag => 1,                 # (used for acks)
-       redelivered => 0,                  # if message is redelivered
-       message_count => 0,                # message count
-     }
+    {
+      body => 'Magic Transient Payload', # the reconstructed body
+      routing_key => 'nr_test_q',        # route the message took
+      exchange => 'nr_test_x',           # exchange used
+      content_type => 'foo',             # (only if specified)
+      delivery_tag => 1,                 # (used for acks)
+      redelivered => 0,                  # if message is redelivered
+      message_count => 0,                # message count
+
+      # Not all of these will be present. Consult the RabbitMQ reference for more details.
+      props => {
+        content_type => 'text/plain',
+        content_encoding => 'none',
+        correlation_id => '123',
+        reply_to => 'somequeue',
+        expiration => 1000,
+        message_id => 'ABC',
+        type => 'notmytype',
+        user_id => 'guest',
+        app_id => 'idd',
+        delivery_mode => 1,
+        priority => 2,
+        timestamp => 1271857990,
+        headers => {
+          unsigned_integer => 12345,
+          signed_integer   => -12345,
+          double           => 3.141,
+          string           => "string here",
+
+          # The x-death header is a special header for dead-lettered messages (rejected or timed out).
+          'x-death' => [
+            {
+              time           => 1271857954,
+              exchange       => $exchange,
+              queue          => $exchange,
+              reason         => 'expired',
+              'routing-keys' => [q{}],
+            },
+          ],
+        },
+      },
+    }
 
 C<$channel> is a channel that has been opened with C<channel_open>.
 

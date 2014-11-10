@@ -1,5 +1,10 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.007001 - 2014-11-09
+	- Added timestamp types to the supported types, they are converted to unsigned 64-bit integers.
+	- Added the `manual_tests` directory for some manual testing I did for development.
+	- Added some documentation about headers to the `get()` method.
+
 0.007000 - 2014-11-03
     - Major re-factoring done to how Perl-to-C type inferences are done
     - Most AMQP header data types from AMQP into Perl should be supported.
