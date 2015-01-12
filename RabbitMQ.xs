@@ -216,6 +216,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
       if (frame.payload.method.id != AMQP_BASIC_DELIVER_METHOD) continue;
       d = (amqp_basic_deliver_t *) frame.payload.method.decoded;
       hv_store(RETVAL, "delivery_tag", strlen("delivery_tag"), newSVpvn((const char *)&d->delivery_tag, sizeof(d->delivery_tag)), 0);
+      hv_store(RETVAL, "redelivered", strlen("redelivered"), newSViv(d->redelivered), 0);
       hv_store(RETVAL, "exchange", strlen("exchange"), newSVpvn(d->exchange.bytes, d->exchange.len), 0);
       hv_store(RETVAL, "consumer_tag", strlen("consumer_tag"), newSVpvn(d->consumer_tag.bytes, d->consumer_tag.len), 0);
       hv_store(RETVAL, "routing_key", strlen("routing_key"), newSVpvn(d->routing_key.bytes, d->routing_key.len), 0);

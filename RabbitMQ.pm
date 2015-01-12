@@ -243,6 +243,7 @@ containing the following information:
        routing_key => 'nr_test_q',        # route the message took
        exchange => 'nr_test_x',           # exchange used
        delivery_tag => 1,                 # (used for acks)
+       redelivered => $boolean            # if message is redelivered
        consumer_tag => 'c_tag',           # tag from consume()
        props => $props,                   # hashref sent in
      }

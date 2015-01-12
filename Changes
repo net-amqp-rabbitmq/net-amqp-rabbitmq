@@ -1,5 +1,7 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+    - Added the `redelivered` key to the message hashref returned by the `recv()` method (Dave Rolsky)
+
 0.007001 - 2014-11-09
 	- Added timestamp types to the supported types, they are converted to unsigned 64-bit integers.
 	- Added the `manual_tests` directory for some manual testing I did for development.
