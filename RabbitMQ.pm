@@ -264,6 +264,17 @@ C<$props> is the hash sent by publish()  respecting the following keys:
        timestamp => $integer,
      }
 
+=head2 cancel($channel, $consumer_tag)
+
+C<$channel> is a channel that has been opened with C<channel_open>.
+
+C<$consumer_tag> is a tag previously passed to C<consume()> or one that was
+generated automatically as a result of calling C<consume()> without an
+explicit tag.
+
+This method returns true or false indicating whether we got the expected
+"cancel-ok" response from the server.
+
 =head2 get($channel, $queuename, $options)
 
 This command runs an amqp_basic_get which returns undef immediately

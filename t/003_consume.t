@@ -1,4 +1,4 @@
-use Test::More tests => 7;
+use Test::More tests => 8;
 use strict;
 use warnings;
 
@@ -20,7 +20,9 @@ eval { $mq->connect($host, { user => "guest", password => "guest" }); };
 is($@, '', "connect");
 eval { $mq->channel_open(1); };
 is($@, '', "channel_open");
-eval { $mq->consume(1, $queuename, {consumer_tag=>'ctag', no_local=>0,no_ack=>1,exclusive=>0}); };
+
+my $consumer_tag = 'ctag';
+eval { $mq->consume(1, $queuename, {consumer_tag=>$consumer_tag, no_local=>0,no_ack=>1,exclusive=>0}); };
 is($@, '', "consume");
 
 my $rv = {};
@@ -34,7 +36,7 @@ is_deeply($rv,
           'routing_key' => $routekey,
           'delivery_tag' => $dtag,
           'exchange' => $exchange,
-          'consumer_tag' => 'ctag',
+          'consumer_tag' => $consumer_tag,
           'props' => {
                 content_type => 'text/plain',
                 content_encoding => 'none',
@@ -50,5 +52,8 @@ is_deeply($rv,
                 timestamp => 1271857990,
             },
           }, "payload");
+
+eval { $mq->cancel(1, $consumer_tag); };
+is($@, '', 'cancel');
 
 1;
