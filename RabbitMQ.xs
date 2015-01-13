@@ -1095,6 +1095,23 @@ net_amqp_rabbitmq_consume(conn, channel, queuename, options = NULL)
   OUTPUT:
     RETVAL
 
+int
+net_amqp_rabbitmq_cancel(conn, channel, consumer_tag)
+  Net::AMQP::RabbitMQ conn
+  int channel
+  char *consumer_tag
+  PREINIT:
+    amqp_basic_cancel_ok_t *r;
+  CODE:
+    r = amqp_basic_cancel(conn, channel, amqp_cstring_bytes(consumer_tag));
+    if(strlen(consumer_tag) == r->consumer_tag.len && 0 == strcmp(consumer_tag, (char *)r->consumer_tag.bytes)) {
+      RETVAL = 1;
+    } else {
+      RETVAL = 0;
+    }
+  OUTPUT:
+    RETVAL
+
 HV *
 net_amqp_rabbitmq_recv(conn)
   Net::AMQP::RabbitMQ conn

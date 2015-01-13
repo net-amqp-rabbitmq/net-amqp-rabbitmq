@@ -1,6 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
     - Added the `redelivered` key to the message hashref returned by the `recv()` method (Dave Rolsky)
+    - Added a `cancel()` method to cancel an existing consumer tag, as provided to or returned by the `consume()` method. (Dave Rolsky)
+>>>>>>> caa6c1afaaadbc3d5971d69d99a608ca32b7b319
 
 0.007001 - 2014-11-09
 	- Added timestamp types to the supported types, they are converted to unsigned 64-bit integers.
