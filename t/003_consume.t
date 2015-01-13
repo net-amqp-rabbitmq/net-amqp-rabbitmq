@@ -33,6 +33,7 @@ is_deeply($rv,
           'body' => 'Magic Payload',
           'routing_key' => $routekey,
           'delivery_tag' => $dtag,
+          'redelivered' => 0,
           'exchange' => $exchange,
           'consumer_tag' => 'ctag',
           'props' => {
