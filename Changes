@@ -1,7 +1,7 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.009000 - 2015-01-14
     - Added support for specifying an optional timeout for `recv()`.
-
 
 0.008000 - 2015-01-13
     - Added the `redelivered` key to the message hashref returned by the `recv()` method (Dave Rolsky)
