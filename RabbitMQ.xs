@@ -220,7 +220,6 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
       hv_store(RETVAL, "exchange", strlen("exchange"), newSVpvn(d->exchange.bytes, d->exchange.len), 0);
       hv_store(RETVAL, "consumer_tag", strlen("consumer_tag"), newSVpvn(d->consumer_tag.bytes, d->consumer_tag.len), 0);
       hv_store(RETVAL, "routing_key", strlen("routing_key"), newSVpvn(d->routing_key.bytes, d->routing_key.len), 0);
-      piggyback = 0;
     }
 
     result = amqp_simple_wait_frame(conn, &frame);
