@@ -56,6 +56,10 @@ is_deeply($rv,
             },
           }, "payload");
 
+eval { local $SIG{ALRM} = sub {die}; alarm 5; $rv = $mq->recv(1000); alarm 0};
+is($@, '', 'recv with timeout');
+is($rv, undef, 'recv with timeout returns undef');
+
 eval { $mq->cancel(1, $consumer_tag); };
 is($@, '', 'cancel');
 
