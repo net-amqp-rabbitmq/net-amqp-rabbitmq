@@ -4,6 +4,8 @@
 
 #include "amqp.h"
 #include "amqp_tcp_socket.h"
+/* For struct timeval */
+#include "amqp_timer.h"
 #include "amqp_private.h"
 
 #define __REAL__DEBUG__(X)  X
@@ -181,7 +183,7 @@ amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value) {
   Perl_croak( aTHX_ "The wheels have fallen off. Please call for help." );
 }
 
-int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
+int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int timeout) {
   amqp_frame_t frame;
   amqp_basic_deliver_t *d;
   amqp_basic_properties_t *p;
@@ -195,6 +197,12 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
   SV *hvalue = (SV*)&PL_sv_undef;
   HV *headers = (HV*)&PL_sv_undef;
   amqp_table_entry_t *header_entry = (amqp_table_entry_t*)NULL;
+  struct timeval timeout_tv;
+
+  if (timeout > 0) {
+      timeout_tv.tv_sec = timeout / 1000;
+      timeout_tv.tv_usec = timeout % 1000;
+  }
 
   result = 0;
   while (1) {
@@ -202,7 +210,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
 
     if(!piggyback) {
       amqp_maybe_release_buffers(conn);
-      result = amqp_simple_wait_frame(conn, &frame);
+      result = amqp_simple_wait_frame_noblock(conn, &frame, timeout ? &timeout_tv : NULL);
       if (result != AMQP_STATUS_OK) break;
       if (frame.frame_type == AMQP_FRAME_HEARTBEAT) {
         // Well, let's send the heartbeat frame back, shouldn't we?
@@ -220,10 +228,9 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback) {
       hv_store(RETVAL, "exchange", strlen("exchange"), newSVpvn(d->exchange.bytes, d->exchange.len), 0);
       hv_store(RETVAL, "consumer_tag", strlen("consumer_tag"), newSVpvn(d->consumer_tag.bytes, d->consumer_tag.len), 0);
       hv_store(RETVAL, "routing_key", strlen("routing_key"), newSVpvn(d->routing_key.bytes, d->routing_key.len), 0);
-      piggyback = 0;
     }
 
-    result = amqp_simple_wait_frame(conn, &frame);
+    result = amqp_simple_wait_frame_noblock(conn, &frame, timeout ? &timeout_tv : NULL);
     if (frame.frame_type == AMQP_FRAME_HEARTBEAT) {
       amqp_frame_t hb_resp;
       hb_resp.frame_type = AMQP_FRAME_HEARTBEAT;
@@ -1112,21 +1119,27 @@ net_amqp_rabbitmq_cancel(conn, channel, consumer_tag)
   OUTPUT:
     RETVAL
 
-HV *
-net_amqp_rabbitmq_recv(conn)
+SV *
+net_amqp_rabbitmq_recv(conn, timeout = 0)
   Net::AMQP::RabbitMQ conn
+  int timeout
   PREINIT:
     amqp_status_enum status = AMQP_STATUS_OK;
+    HV *message;
   CODE:
-    RETVAL = newHV();
+    message = newHV();
 
     /* We want to detect whether we were disconnected by the remote host during the internal_recv(). */
-    status = internal_recv(RETVAL, conn, 0);
+    status = internal_recv(message, conn, 0, timeout);
     if ( status == AMQP_STATUS_CONNECTION_CLOSED || status == AMQP_STATUS_SOCKET_ERROR ) {
         amqp_socket_close( amqp_get_socket( conn ) );
         Perl_croak(aTHX_ "AMQP socket connection was closed.");
+    } else if (timeout > 0 && status != 0) {
+        SvREFCNT_dec(message);
+        RETVAL = newSV(0);
+    } else {
+        RETVAL = newRV_noinc((SV*)message);
     }
-    sv_2mortal((SV*)RETVAL);
   OUTPUT:
     RETVAL
 
@@ -1299,7 +1312,7 @@ net_amqp_rabbitmq_get(conn, channel, queuename, options = NULL)
       hv_store(hv, "message_count", strlen("message_count"), newSViv(ok->message_count), 0);
       if(amqp_data_in_buffer(conn)) {
         int rv;
-        rv = internal_recv(hv, conn, 1);
+        rv = internal_recv(hv, conn, 1, 0);
         if ( rv == AMQP_STATUS_CONNECTION_CLOSED || rv == AMQP_STATUS_SOCKET_ERROR ) {
           amqp_socket_close( amqp_get_socket( conn ) );
           Perl_croak(aTHX_ "Failed to get(), AMQP socket connection was closed.");

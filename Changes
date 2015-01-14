@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+    - Added support for specifying an optional timeout for `recv()`.
+
+
 0.008000 - 2015-01-13
     - Added the `redelivered` key to the message hashref returned by the `recv()` method (Dave Rolsky)
     - Added a `cancel()` method to cancel an existing consumer tag, as provided to or returned by the `consume()` method. (Dave Rolsky)

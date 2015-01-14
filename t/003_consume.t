@@ -1,4 +1,4 @@
-use Test::More tests => 8;
+use Test::More 0.88;
 use strict;
 use warnings;
 
@@ -22,8 +22,10 @@ eval { $mq->channel_open(1); };
 is($@, '', "channel_open");
 
 my $consumer_tag = 'ctag';
-eval { $mq->consume(1, $queuename, {consumer_tag=>$consumer_tag, no_local=>0,no_ack=>1,exclusive=>0}); };
+my $tag_back;
+eval { $tag_back = $mq->consume(1, $queuename, {consumer_tag=>$consumer_tag, no_local=>0,no_ack=>1,exclusive=>0}); };
 is($@, '', "consume");
+is($consumer_tag, $tag_back, 'consume returns the tag we gave it');
 
 my $rv = {};
 eval { local $SIG{ALRM} = sub {die}; alarm 5; $rv = $mq->recv(); alarm 0};
@@ -54,7 +56,11 @@ is_deeply($rv,
             },
           }, "payload");
 
+eval { local $SIG{ALRM} = sub {die}; alarm 5; $rv = $mq->recv(1000); alarm 0};
+is($@, '', 'recv with timeout');
+is($rv, undef, 'recv with timeout returns undef');
+
 eval { $mq->cancel(1, $consumer_tag); };
 is($@, '', 'cancel');
 
-1;
+done_testing;

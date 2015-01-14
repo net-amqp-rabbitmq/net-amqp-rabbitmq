@@ -233,7 +233,11 @@ The consumer_tag is returned.  This command does B<not> return AMQP
 frames, it simply notifies RabbitMQ that messages for this queue should
 be delivered down the specified channel.
 
-=head2 recv()
+=head2 recv($timeout)
+
+C<$timeout> is a positive integer, specifying the number of milliseconds to
+wait for a message. If you do not provide a timeout (or set it to 0), then
+this call will block until it receives a message.
 
 This command receives and reconstructs AMQP frames and returns a hash
 containing the following information:
@@ -264,6 +268,9 @@ C<$props> is the hash sent by publish()  respecting the following keys:
        priority => $integer,
        timestamp => $integer,
      }
+
+If you provide a timeout, then the C<recv()> method returns C<undef> if the
+timeout expires before a message is received from the server.
 
 =head2 cancel($channel, $consumer_tag)
 
