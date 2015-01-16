@@ -332,6 +332,14 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
 
         switch (header_entry->value.kind) {
 
+	    case AMQP_FIELD_KIND_BOOLEAN:
+            hv_store( headers,
+                header_entry->key.bytes, header_entry->key.len,
+                newSViv(header_entry->value.value.boolean),
+                0
+            );
+            break;
+
           // Integer types
           case AMQP_FIELD_KIND_I8:
             hv_store( headers,
