@@ -2,11 +2,13 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '0.009000';
+our $VERSION = '0.010000';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
 use Scalar::Util qw(blessed);
+
+=encoding UTF-8
 
 =head1 NAME
 
@@ -414,13 +416,17 @@ the connection has been closed by the remote host, or otherwise invalidated,
 the socket will also be closed and should be re-opened before any additional
 calls are made.
 
-=head1 ORIGINAL AUTHOR
+=head1 CONTRIBUTORS
 
-Theo Schlossnagle <jesus@omniti.com>
+jesus - Theo Schlossnagle E<lt>jesus@omniti.comE<gt>
 
-=head1 MAINTAINER
+n0body - Mark Ellis E<lt>markellis@cpan.orgE<gt>
 
-Mark Ellis E<lt>markellis@cpan.orgE<gt>, Michael "manchicken" Stemle, Jr. E<lt>themanchicken@gmail.comE<gt>
+manchicken - Michael Stemle, Jr. E<lt>themanchicken@gmail.comE<gt>
+
+autarch - Dave Dave Rolsky E<lt>autarch@urth.orgE<gt>
+
+eserte - Slaven Rezić
 
 =head1 LICENSE
 
