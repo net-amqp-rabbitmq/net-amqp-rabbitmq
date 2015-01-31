@@ -1,4 +1,4 @@
-use Test::More tests => 8;
+use Test::More tests => 9;
 use strict;
 use warnings;
 
@@ -28,4 +28,25 @@ is($@, '', "queue_declare");
 is($queuename, $expect_qn, "queue_declare -> $queuename = $expect_qn");
 is($message_count, 0, "got message count back");
 is($consumer_count, 0, "got consumer count back");
+
+
+my $original_queue = 'test1';
+my $messageTTL = 10;
+
+my $queue_options = {
+        'x-dead-letter-exchange'    => 'amq.direct',
+        'x-dead-letter-routing-key' => $expect_qn,
+        'x-message-ttl'             => 10000,
+        'x-expires'                 => 20000,
+        };
+my $delay_queue = eval {
+	$mq->queue_declare(1,
+        	"",
+        	{ auto_delete => 1, },
+        	$queue_options,
+        	);
+};
+
+is($@, '', "queue_declare");
+
 1;
