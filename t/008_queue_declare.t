@@ -30,9 +30,6 @@ is($message_count, 0, "got message count back");
 is($consumer_count, 0, "got consumer count back");
 
 
-my $original_queue = 'test1';
-my $messageTTL = 10;
-
 my $queue_options = {
         'x-dead-letter-exchange'    => 'amq.direct',
         'x-dead-letter-routing-key' => $expect_qn,
