@@ -18,10 +18,11 @@ my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
 my $exchange = "nr_test_x-boolean_header_fields-$unique";
 my $routekey = "nr_test_q-boolean_header_fields-$unique";
 
-my @dtags=(
-    (unpack("L",pack("N",1)) != 1)?'0100000000000000':'0000000000000001',
-    (unpack("L",pack("N",1)) != 1)?'0200000000000000':'0000000000000002',
-);
+#my @dtags=(
+#    (unpack("L",pack("N",1)) != 1)?'0100000000000000':'0000000000000001',
+#    (unpack("L",pack("N",1)) != 1)?'0200000000000000':'0000000000000002',
+#);
+my @dtags=(1,2);
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
 
 use_ok('Net::AMQP::RabbitMQ');
@@ -61,7 +62,7 @@ EOF
     my $rv = {};
     eval { $rv = $mq->recv(); };
     is($@, '', "recv");
-    $rv->{delivery_tag} =~ s/(.)/sprintf("%02x", ord($1))/esg;
+#    $rv->{delivery_tag} =~ s/(.)/sprintf("%02x", ord($1))/esg;
     my $expected_dtag = shift @dtags;
     is_deeply($rv,
 	      {
