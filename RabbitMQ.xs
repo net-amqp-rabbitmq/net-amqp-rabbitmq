@@ -8,6 +8,8 @@
 #include "amqp_timer.h"
 #include "amqp_private.h"
 
+#include <stdlib.h>
+
 #define __REAL__DEBUG__(X)  X
 #define __DEBUG__(X) /* NOOP */
 
@@ -198,6 +200,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
   HV *headers = (HV*)&PL_sv_undef;
   amqp_table_entry_t *header_entry = (amqp_table_entry_t*)NULL;
   struct timeval timeout_tv;
+  char buf[32];
 
   if (timeout > 0) {
       timeout_tv.tv_sec = timeout / 1000;
@@ -223,7 +226,9 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
       if (frame.frame_type != AMQP_FRAME_METHOD) continue;
       if (frame.payload.method.id != AMQP_BASIC_DELIVER_METHOD) continue;
       d = (amqp_basic_deliver_t *) frame.payload.method.decoded;
-      hv_store(RETVAL, "delivery_tag", strlen("delivery_tag"), newSVpvn((const char *)&d->delivery_tag, sizeof(d->delivery_tag)), 0);
+      memset(buf, 0, sizeof(buf));
+      snprintf(buf, sizeof(buf), "%llu", (unsigned long long)d->delivery_tag);
+      hv_store(RETVAL, "delivery_tag", strlen("delivery_tag"), newSVpvn(buf, strlen(buf)), 0);
       hv_store(RETVAL, "redelivered", strlen("redelivered"), newSViv(d->redelivered), 0);
       hv_store(RETVAL, "exchange", strlen("exchange"), newSVpvn(d->exchange.bytes, d->exchange.len), 0);
       hv_store(RETVAL, "consumer_tag", strlen("consumer_tag"), newSVpvn(d->consumer_tag.bytes, d->consumer_tag.len), 0);
@@ -1160,11 +1165,18 @@ net_amqp_rabbitmq_ack(conn, channel, delivery_tag, multiple = 0)
   PREINIT:
     STRLEN len;
     uint64_t tag;
-    unsigned char *l;
+    char *str, *end;
   CODE:
-    l = SvPV(delivery_tag, len);
-    if(len != sizeof(tag)) Perl_croak(aTHX_ "bad tag");
-    memcpy(&tag, l, sizeof(tag));
+    str = SvPV(delivery_tag, len);
+    errno = 0;
+    tag = strtoull(str, &end, 10);
+    if (tag == 0 && end == str) {
+	Perl_croak(aTHX_ "bad tag: not a number");
+    } else if (tag == ULLONG_MAX && errno) {
+	Perl_croak(aTHX_ "bad tag: value too big");
+    } else if (*end) {
+	Perl_croak(aTHX_ "bad tag: bad number");
+    }
     die_on_error(aTHX_ amqp_basic_ack(conn, channel, tag, multiple), conn,
                  "ack");
 
@@ -1178,11 +1190,18 @@ net_amqp_rabbitmq_reject(conn, channel, delivery_tag, requeue = 0)
  PREINIT:
    STRLEN len;
    uint64_t tag;
-   unsigned char *l;
+   char *str, *end;
  CODE:
-   l = SvPV(delivery_tag, len);
-   if(len != sizeof(tag)) Perl_croak(aTHX_ "bad tag");
-   memcpy(&tag, l, sizeof(tag));
+    str = SvPV(delivery_tag, len);
+    errno = 0;
+    tag = strtoull(str, &end, 10);
+    if (tag == 0 && end == str) {
+	Perl_croak(aTHX_ "bad tag: not a number");
+    } else if (tag == ULLONG_MAX && errno) {
+	Perl_croak(aTHX_ "bad tag: value too big");
+    } else if (*end) {
+	Perl_croak(aTHX_ "bad tag: bad number");
+    }
    die_on_error(aTHX_ amqp_basic_reject(conn, channel, tag, requeue), conn,
                 "reject");
 
@@ -1304,6 +1323,7 @@ net_amqp_rabbitmq_get(conn, channel, queuename, options = NULL)
     amqp_rpc_reply_t r;
     int no_ack = 1;
   CODE:
+    char buf[32];
     if(options)
       int_from_hv(options, no_ack);
     amqp_maybe_release_buffers(conn);
@@ -1313,7 +1333,9 @@ net_amqp_rabbitmq_get(conn, channel, queuename, options = NULL)
       HV *hv;
       amqp_basic_get_ok_t *ok = (amqp_basic_get_ok_t *)r.reply.decoded;
       hv = newHV();
-      hv_store(hv, "delivery_tag", strlen("delivery_tag"), newSVpvn((const char *)&ok->delivery_tag, sizeof(ok->delivery_tag)), 0);
+      memset(buf, 0, sizeof(buf));
+      snprintf(buf, sizeof(buf), "%llu", (unsigned long long)ok->delivery_tag);
+      hv_store(hv, "delivery_tag", strlen("delivery_tag"), newSVpvn(buf, strlen(buf)), 0);
       hv_store(hv, "redelivered", strlen("redelivered"), newSViv(ok->redelivered), 0);
       hv_store(hv, "exchange", strlen("exchange"), newSVpvn(ok->exchange.bytes, ok->exchange.len), 0);
       hv_store(hv, "routing_key", strlen("routing_key"), newSVpvn(ok->routing_key.bytes, ok->routing_key.len), 0);
