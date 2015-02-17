@@ -8,6 +8,9 @@
 #include "amqp_timer.h"
 #include "amqp_private.h"
 
+/* This is for the Math::UInt64 integration */
+#include "perl_math_int64.h"
+
 #define __REAL__DEBUG__(X)  X
 #define __DEBUG__(X) /* NOOP */
 
@@ -174,7 +177,7 @@ amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value) {
 
       Perl_croak(
         aTHX_ "Unsupported scalar type detected >%s<(%d)",
-        *perl_value,
+        SvPV_nolen(*perl_value),
         SvTYPE( *perl_value )
       );
   }
@@ -223,7 +226,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
       if (frame.frame_type != AMQP_FRAME_METHOD) continue;
       if (frame.payload.method.id != AMQP_BASIC_DELIVER_METHOD) continue;
       d = (amqp_basic_deliver_t *) frame.payload.method.decoded;
-      hv_store(RETVAL, "delivery_tag", strlen("delivery_tag"), newSVpvn((const char *)&d->delivery_tag, sizeof(d->delivery_tag)), 0);
+      hv_store(RETVAL, "delivery_tag", strlen("delivery_tag"), newSVu64(d->delivery_tag), 0);
       hv_store(RETVAL, "redelivered", strlen("redelivered"), newSViv(d->redelivered), 0);
       hv_store(RETVAL, "exchange", strlen("exchange"), newSVpvn(d->exchange.bytes, d->exchange.len), 0);
       hv_store(RETVAL, "consumer_tag", strlen("consumer_tag"), newSVpvn(d->consumer_tag.bytes, d->consumer_tag.len), 0);
@@ -574,7 +577,7 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array) {
         break;
 
       default:
-        Perl_croak( aTHX_ "Unsupported SvType for array index %ld", idx );
+        Perl_croak( aTHX_ "Unsupported SvType for array index %d", idx );
     }
   }
 }
@@ -857,6 +860,9 @@ MODULE = Net::AMQP::RabbitMQ PACKAGE = Net::AMQP::RabbitMQ PREFIX = net_amqp_rab
 
 REQUIRE:        1.9505
 PROTOTYPES:     DISABLE
+
+BOOT:
+  PERL_MATH_INT64_LOAD_OR_CROAK;
 
 int
 net_amqp_rabbitmq_connect(conn, hostname, options)
@@ -1155,17 +1161,10 @@ void
 net_amqp_rabbitmq_ack(conn, channel, delivery_tag, multiple = 0)
   Net::AMQP::RabbitMQ conn
   int channel
-  SV *delivery_tag
+  uint64_t delivery_tag
   int multiple
-  PREINIT:
-    STRLEN len;
-    uint64_t tag;
-    unsigned char *l;
   CODE:
-    l = SvPV(delivery_tag, len);
-    if(len != sizeof(tag)) Perl_croak(aTHX_ "bad tag");
-    memcpy(&tag, l, sizeof(tag));
-    die_on_error(aTHX_ amqp_basic_ack(conn, channel, tag, multiple), conn,
+    die_on_error(aTHX_ amqp_basic_ack(conn, channel, delivery_tag, multiple), conn,
                  "ack");
 
 
@@ -1173,17 +1172,14 @@ void
 net_amqp_rabbitmq_reject(conn, channel, delivery_tag, requeue = 0)
  Net::AMQP::RabbitMQ conn
  int channel
- SV *delivery_tag
+ uint64_t delivery_tag
  int requeue
  PREINIT:
    STRLEN len;
    uint64_t tag;
    unsigned char *l;
  CODE:
-   l = SvPV(delivery_tag, len);
-   if(len != sizeof(tag)) Perl_croak(aTHX_ "bad tag");
-   memcpy(&tag, l, sizeof(tag));
-   die_on_error(aTHX_ amqp_basic_reject(conn, channel, tag, requeue), conn,
+   die_on_error(aTHX_ amqp_basic_reject(conn, channel, delivery_tag, requeue), conn,
                 "reject");
 
 
@@ -1313,7 +1309,7 @@ net_amqp_rabbitmq_get(conn, channel, queuename, options = NULL)
       HV *hv;
       amqp_basic_get_ok_t *ok = (amqp_basic_get_ok_t *)r.reply.decoded;
       hv = newHV();
-      hv_store(hv, "delivery_tag", strlen("delivery_tag"), newSVpvn((const char *)&ok->delivery_tag, sizeof(ok->delivery_tag)), 0);
+      hv_store(hv, "delivery_tag", strlen("delivery_tag"), newSVu64(ok->delivery_tag), 0);
       hv_store(hv, "redelivered", strlen("redelivered"), newSViv(ok->redelivered), 0);
       hv_store(hv, "exchange", strlen("exchange"), newSVpvn(ok->exchange.bytes, ok->exchange.len), 0);
       hv_store(hv, "routing_key", strlen("routing_key"), newSVpvn(ok->routing_key.bytes, ok->routing_key.len), 0);

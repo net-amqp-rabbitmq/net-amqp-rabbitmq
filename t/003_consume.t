@@ -3,12 +3,13 @@ use strict;
 use warnings;
 
 use Sys::Hostname;
+
 my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
 my $exchange = "nr_test_x-$unique";
 my $queuename = "nr_test_hole-$unique";
 my $routekey = "nr_test_route-$unique";
 
-my $dtag=(unpack("L",pack("N",1)) != 1)?'0100000000000000':'0000000000000001';
+my $dtag=1;
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
 
 use_ok('Net::AMQP::RabbitMQ');
@@ -31,7 +32,6 @@ my $rv = {};
 eval { local $SIG{ALRM} = sub {die}; alarm 5; $rv = $mq->recv(); alarm 0};
 is($@, '', "recv");
 
-$rv->{delivery_tag} =~ s/(.)/sprintf("%02x", ord($1))/esg;
 is_deeply($rv,
           {
           'body' => 'Magic Payload',

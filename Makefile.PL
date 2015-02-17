@@ -23,6 +23,9 @@ WriteMakefile(
     CCFLAGS         => "$Config{ccflags} -I${Bin}",
     DEFINE          => "-DAMQ_PLATFORM='\"Perl_$^O_$^V\"'",
     LIBS            =>['-lrt'],
+    PREREQ_PM       => {
+        'Math::Int64'      => 0.34,
+    },
     META_MERGE        => {
         "meta-spec" => { version => 2 },
         resources => {

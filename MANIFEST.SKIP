@@ -16,6 +16,7 @@
 \..+?\.swp$
 
 ^rabbitmq-c
+^p5-Math-Int64
 RabbitMQ\.c
 pm_to_blib
 amqp_debug.c
