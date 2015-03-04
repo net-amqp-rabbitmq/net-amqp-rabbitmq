@@ -371,7 +371,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
           case AMQP_FIELD_KIND_I64:
             hv_store( headers,
                 header_entry->key.bytes, header_entry->key.len,
-                newSViv(header_entry->value.value.i64),
+                newSVi64(header_entry->value.value.i64),
                 0
             );
             break;
@@ -403,7 +403,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
           case AMQP_FIELD_KIND_U64:
             hv_store( headers,
                 header_entry->key.bytes, header_entry->key.len,
-                newSVuv(header_entry->value.value.u64),
+                newSVu64(header_entry->value.value.u64),
                 0
             );
             break;
@@ -418,6 +418,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
             break;
 
           case AMQP_FIELD_KIND_F64:
+            // TODO: I don't think this is a natively supported type on all Perls.
             hv_store( headers,
                 header_entry->key.bytes, header_entry->key.len,
                 newSVnv(header_entry->value.value.f64),
@@ -552,14 +553,15 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array) {
     switch (element->kind) {
 
       case AMQP_FIELD_KIND_I64:
-        element->value.i64 = (int64_t) SvIV(*value);
+        element->value.i64 = (int64_t) SvI64(*value);
         break;
 
       case AMQP_FIELD_KIND_U64:
-        element->value.u64 = (uint64_t) SvUV(*value);
+        element->value.u64 = (uint64_t) SvU64(*value);
         break;
 
       case AMQP_FIELD_KIND_F64:
+        // TODO: I don't think this is a native type on all Perls
         element->value.f64 = (double) SvNV(*value);
         break;
 
@@ -608,7 +610,7 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
         perl_element = newSViv(mq_element->value.i32);
         break;
       case AMQP_FIELD_KIND_I64:
-        perl_element = newSViv(mq_element->value.i64);
+        perl_element = newSVi64(mq_element->value.i64);
         break;
 
       // Unsigned values
@@ -623,7 +625,7 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
         break;
       case AMQP_FIELD_KIND_TIMESTAMP: /* Timestamps */
       case AMQP_FIELD_KIND_U64:
-        perl_element = newSVuv(mq_element->value.u64);
+        perl_element = newSVu64(mq_element->value.u64);
         break;
 
       // Floats
@@ -631,6 +633,7 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
         perl_element = newSVnv(mq_element->value.f32);
         break;
       case AMQP_FIELD_KIND_F64:
+        // TODO: I don't think this is a native type on all Perls
         perl_element = newSVnv(mq_element->value.f64);
         break;
 
@@ -708,7 +711,7 @@ SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
         perl_element = newSViv(hash_entry->value.value.i32);
         break;
       case AMQP_FIELD_KIND_I64:
-        perl_element = newSViv(hash_entry->value.value.i64);
+        perl_element = newSVi64(hash_entry->value.value.i64);
         break;
       case AMQP_FIELD_KIND_U8:
         perl_element = newSViv(hash_entry->value.value.u8);
@@ -721,7 +724,7 @@ SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
         break;
       case AMQP_FIELD_KIND_TIMESTAMP: /* Timestamps */
       case AMQP_FIELD_KIND_U64:
-        perl_element = newSVuv(hash_entry->value.value.u64);
+        perl_element = newSVu64(hash_entry->value.value.u64);
         break;
 
       // Foats
@@ -729,6 +732,7 @@ SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
         perl_element = newSVnv(hash_entry->value.value.f32);
         break;
       case AMQP_FIELD_KIND_F64:
+        // TODO: I don't think this is a native type on all Perls.
         perl_element = newSVnv(hash_entry->value.value.f64);
         break;
 
@@ -814,14 +818,15 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table) {
 
     switch ( entry->value.kind ) {
       case AMQP_FIELD_KIND_I64:
-        entry->value.value.i64 = (int64_t) SvIV( value );
+        entry->value.value.i64 = (int64_t) SvI64( value );
         break;
 
       case AMQP_FIELD_KIND_U64:
-        entry->value.value.u64 = (uint64_t) SvUV( value );
+        entry->value.value.u64 = (uint64_t) SvU64( value );
         break;
 
       case AMQP_FIELD_KIND_F64:
+        // TODO: I don't think this is a native type on all Perls.
         entry->value.value.f64 = (double) SvNV( value );
         break;
 
@@ -1176,8 +1181,6 @@ net_amqp_rabbitmq_reject(conn, channel, delivery_tag, requeue = 0)
  int requeue
  PREINIT:
    STRLEN len;
-   uint64_t tag;
-   unsigned char *l;
  CODE:
    die_on_error(aTHX_ amqp_basic_reject(conn, channel, delivery_tag, requeue), conn,
                 "reject");
@@ -1268,7 +1271,7 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
         properties._flags |= AMQP_BASIC_PRIORITY_FLAG;
       }
       if (NULL != (v = hv_fetch(props, "timestamp", strlen("timestamp"), 0))) {
-        properties.timestamp        = (uint64_t) SvIV(*v);
+        properties.timestamp        = (uint64_t) SvI64(*v);
         properties._flags |= AMQP_BASIC_TIMESTAMP_FLAG;
       }
       if (NULL != (v = hv_fetch(props, "headers", strlen("headers"), 0))) {
