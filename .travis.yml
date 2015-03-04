@@ -9,9 +9,8 @@ perl:
   - "5.8"
 services: rabbitmq
 before_install:
-  - cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta Module::CAPIMaker Math::Int64
+  - cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64
 before_script:
-  - cd p5-Math-Int64 && perl Makefile.PL && make && cd ..
   - perl Makefile.PL
   - cpanm -n --installdeps .
   - make manifest
