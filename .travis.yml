@@ -1,5 +1,6 @@
 language: perl
 perl:
+  - "5.20"
   - "5.18"
   - "5.16"
   - "5.14"
@@ -8,7 +9,7 @@ perl:
   - "5.8"
 services: rabbitmq
 before_install:
-  - cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta
+  - cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64
 before_script:
   - perl Makefile.PL
   - cpanm -n --installdeps .

@@ -8,6 +8,9 @@
 #include "amqp_timer.h"
 #include "amqp_private.h"
 
+/* This is for the Math::UInt64 integration */
+#include "perl_math_int64.h"
+
 #define __REAL__DEBUG__(X)  X
 #define __DEBUG__(X) /* NOOP */
 
@@ -174,7 +177,7 @@ amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value) {
 
       Perl_croak(
         aTHX_ "Unsupported scalar type detected >%s<(%d)",
-        *perl_value,
+        SvPV_nolen(*perl_value),
         SvTYPE( *perl_value )
       );
   }
@@ -223,7 +226,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
       if (frame.frame_type != AMQP_FRAME_METHOD) continue;
       if (frame.payload.method.id != AMQP_BASIC_DELIVER_METHOD) continue;
       d = (amqp_basic_deliver_t *) frame.payload.method.decoded;
-      hv_store(RETVAL, "delivery_tag", strlen("delivery_tag"), newSVpvn((const char *)&d->delivery_tag, sizeof(d->delivery_tag)), 0);
+      hv_store(RETVAL, "delivery_tag", strlen("delivery_tag"), newSVu64(d->delivery_tag), 0);
       hv_store(RETVAL, "redelivered", strlen("redelivered"), newSViv(d->redelivered), 0);
       hv_store(RETVAL, "exchange", strlen("exchange"), newSVpvn(d->exchange.bytes, d->exchange.len), 0);
       hv_store(RETVAL, "consumer_tag", strlen("consumer_tag"), newSVpvn(d->consumer_tag.bytes, d->consumer_tag.len), 0);
@@ -368,7 +371,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
           case AMQP_FIELD_KIND_I64:
             hv_store( headers,
                 header_entry->key.bytes, header_entry->key.len,
-                newSViv(header_entry->value.value.i64),
+                newSVi64(header_entry->value.value.i64),
                 0
             );
             break;
@@ -400,7 +403,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
           case AMQP_FIELD_KIND_U64:
             hv_store( headers,
                 header_entry->key.bytes, header_entry->key.len,
-                newSVuv(header_entry->value.value.u64),
+                newSVu64(header_entry->value.value.u64),
                 0
             );
             break;
@@ -415,6 +418,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
             break;
 
           case AMQP_FIELD_KIND_F64:
+            // TODO: I don't think this is a natively supported type on all Perls.
             hv_store( headers,
                 header_entry->key.bytes, header_entry->key.len,
                 newSVnv(header_entry->value.value.f64),
@@ -549,14 +553,15 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array) {
     switch (element->kind) {
 
       case AMQP_FIELD_KIND_I64:
-        element->value.i64 = (int64_t) SvIV(*value);
+        element->value.i64 = (int64_t) SvI64(*value);
         break;
 
       case AMQP_FIELD_KIND_U64:
-        element->value.u64 = (uint64_t) SvUV(*value);
+        element->value.u64 = (uint64_t) SvU64(*value);
         break;
 
       case AMQP_FIELD_KIND_F64:
+        // TODO: I don't think this is a native type on all Perls
         element->value.f64 = (double) SvNV(*value);
         break;
 
@@ -574,7 +579,7 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array) {
         break;
 
       default:
-        Perl_croak( aTHX_ "Unsupported SvType for array index %ld", idx );
+        Perl_croak( aTHX_ "Unsupported SvType for array index %d", idx );
     }
   }
 }
@@ -605,7 +610,7 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
         perl_element = newSViv(mq_element->value.i32);
         break;
       case AMQP_FIELD_KIND_I64:
-        perl_element = newSViv(mq_element->value.i64);
+        perl_element = newSVi64(mq_element->value.i64);
         break;
 
       // Unsigned values
@@ -620,7 +625,7 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
         break;
       case AMQP_FIELD_KIND_TIMESTAMP: /* Timestamps */
       case AMQP_FIELD_KIND_U64:
-        perl_element = newSVuv(mq_element->value.u64);
+        perl_element = newSVu64(mq_element->value.u64);
         break;
 
       // Floats
@@ -628,6 +633,7 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
         perl_element = newSVnv(mq_element->value.f32);
         break;
       case AMQP_FIELD_KIND_F64:
+        // TODO: I don't think this is a native type on all Perls
         perl_element = newSVnv(mq_element->value.f64);
         break;
 
@@ -705,7 +711,7 @@ SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
         perl_element = newSViv(hash_entry->value.value.i32);
         break;
       case AMQP_FIELD_KIND_I64:
-        perl_element = newSViv(hash_entry->value.value.i64);
+        perl_element = newSVi64(hash_entry->value.value.i64);
         break;
       case AMQP_FIELD_KIND_U8:
         perl_element = newSViv(hash_entry->value.value.u8);
@@ -718,7 +724,7 @@ SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
         break;
       case AMQP_FIELD_KIND_TIMESTAMP: /* Timestamps */
       case AMQP_FIELD_KIND_U64:
-        perl_element = newSVuv(hash_entry->value.value.u64);
+        perl_element = newSVu64(hash_entry->value.value.u64);
         break;
 
       // Foats
@@ -726,6 +732,7 @@ SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
         perl_element = newSVnv(hash_entry->value.value.f32);
         break;
       case AMQP_FIELD_KIND_F64:
+        // TODO: I don't think this is a native type on all Perls.
         perl_element = newSVnv(hash_entry->value.value.f64);
         break;
 
@@ -811,14 +818,15 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table) {
 
     switch ( entry->value.kind ) {
       case AMQP_FIELD_KIND_I64:
-        entry->value.value.i64 = (int64_t) SvIV( value );
+        entry->value.value.i64 = (int64_t) SvI64( value );
         break;
 
       case AMQP_FIELD_KIND_U64:
-        entry->value.value.u64 = (uint64_t) SvUV( value );
+        entry->value.value.u64 = (uint64_t) SvU64( value );
         break;
 
       case AMQP_FIELD_KIND_F64:
+        // TODO: I don't think this is a native type on all Perls.
         entry->value.value.f64 = (double) SvNV( value );
         break;
 
@@ -857,6 +865,9 @@ MODULE = Net::AMQP::RabbitMQ PACKAGE = Net::AMQP::RabbitMQ PREFIX = net_amqp_rab
 
 REQUIRE:        1.9505
 PROTOTYPES:     DISABLE
+
+BOOT:
+  PERL_MATH_INT64_LOAD_OR_CROAK;
 
 int
 net_amqp_rabbitmq_connect(conn, hostname, options)
@@ -1155,17 +1166,10 @@ void
 net_amqp_rabbitmq_ack(conn, channel, delivery_tag, multiple = 0)
   Net::AMQP::RabbitMQ conn
   int channel
-  SV *delivery_tag
+  uint64_t delivery_tag
   int multiple
-  PREINIT:
-    STRLEN len;
-    uint64_t tag;
-    unsigned char *l;
   CODE:
-    l = SvPV(delivery_tag, len);
-    if(len != sizeof(tag)) Perl_croak(aTHX_ "bad tag");
-    memcpy(&tag, l, sizeof(tag));
-    die_on_error(aTHX_ amqp_basic_ack(conn, channel, tag, multiple), conn,
+    die_on_error(aTHX_ amqp_basic_ack(conn, channel, delivery_tag, multiple), conn,
                  "ack");
 
 
@@ -1173,17 +1177,12 @@ void
 net_amqp_rabbitmq_reject(conn, channel, delivery_tag, requeue = 0)
  Net::AMQP::RabbitMQ conn
  int channel
- SV *delivery_tag
+ uint64_t delivery_tag
  int requeue
  PREINIT:
    STRLEN len;
-   uint64_t tag;
-   unsigned char *l;
  CODE:
-   l = SvPV(delivery_tag, len);
-   if(len != sizeof(tag)) Perl_croak(aTHX_ "bad tag");
-   memcpy(&tag, l, sizeof(tag));
-   die_on_error(aTHX_ amqp_basic_reject(conn, channel, tag, requeue), conn,
+   die_on_error(aTHX_ amqp_basic_reject(conn, channel, delivery_tag, requeue), conn,
                 "reject");
 
 
@@ -1272,7 +1271,7 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
         properties._flags |= AMQP_BASIC_PRIORITY_FLAG;
       }
       if (NULL != (v = hv_fetch(props, "timestamp", strlen("timestamp"), 0))) {
-        properties.timestamp        = (uint64_t) SvIV(*v);
+        properties.timestamp        = (uint64_t) SvI64(*v);
         properties._flags |= AMQP_BASIC_TIMESTAMP_FLAG;
       }
       if (NULL != (v = hv_fetch(props, "headers", strlen("headers"), 0))) {
@@ -1313,7 +1312,7 @@ net_amqp_rabbitmq_get(conn, channel, queuename, options = NULL)
       HV *hv;
       amqp_basic_get_ok_t *ok = (amqp_basic_get_ok_t *)r.reply.decoded;
       hv = newHV();
-      hv_store(hv, "delivery_tag", strlen("delivery_tag"), newSVpvn((const char *)&ok->delivery_tag, sizeof(ok->delivery_tag)), 0);
+      hv_store(hv, "delivery_tag", strlen("delivery_tag"), newSVu64(ok->delivery_tag), 0);
       hv_store(hv, "redelivered", strlen("redelivered"), newSViv(ok->redelivered), 0);
       hv_store(hv, "exchange", strlen("exchange"), newSVpvn(ok->exchange.bytes, ok->exchange.len), 0);
       hv_store(hv, "routing_key", strlen("routing_key"), newSVpvn(ok->routing_key.bytes, ok->routing_key.len), 0);

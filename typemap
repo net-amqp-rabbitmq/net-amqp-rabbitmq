@@ -1,3 +1,18 @@
 TYPEMAP
 Net::AMQP::RabbitMQ T_PTROBJ
+int64_t         T_INT64
+uint64_t        T_UINT64
 
+INPUT
+T_INT64
+        $var = SvI64($arg);
+
+T_UINT64
+        $var = SvU64($arg);
+
+OUTPUT
+T_INT64
+        $arg = newSVi64($var);
+
+T_UINT64
+        $arg = newSVu64($var);

@@ -1,3 +1,6 @@
 [submodule "rabbitmq-c"]
 	path = rabbitmq-c
 	url = https://github.com/alanxz/rabbitmq-c.git
+[submodule "p5-Math-Int64"]
+	path = p5-Math-Int64
+	url = https://github.com/salva/p5-Math-Int64.git

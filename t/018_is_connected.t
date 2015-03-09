@@ -1,6 +1,7 @@
 use Test::More tests => 6;
 use strict;
 
+use Math::UInt64 qw/uint64/;
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
 
 use_ok('Net::AMQP::RabbitMQ');
