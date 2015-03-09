@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.100000 - 2015-03-09
+    - Support for 64-bit delivery tags via Math::Int64 (manchicken)
+
 0.010000 - 2015-01-14
     - Addded support for decoding boolean header values - Slaven Rezić
     - Updated Contributors
@@ -12,9 +15,9 @@ Revision history for perl module Net::AMQP::RabbitMQ
     - Added a `cancel()` method to cancel an existing consumer tag, as provided to or returned by the `consume()` method. (Dave Rolsky)
 
 0.007001 - 2014-11-09
-	- Added timestamp types to the supported types, they are converted to unsigned 64-bit integers.
-	- Added the `manual_tests` directory for some manual testing I did for development.
-	- Added some documentation about headers to the `get()` method.
+    - Added timestamp types to the supported types, they are converted to unsigned 64-bit integers.
+    - Added the `manual_tests` directory for some manual testing I did for development.
+    - Added some documentation about headers to the `get()` method.
 
 0.007000 - 2014-11-03
     - Major re-factoring done to how Perl-to-C type inferences are done
@@ -83,93 +86,93 @@ Revision history for perl module Net::AMQP::RabbitMQ
     - client send a heartbeat back whenever it receives one.
 
 v0.2.6 - 2012-07-13
-	- make the heartbeat test a bit more tolerant (neophenix)
+    - make the heartbeat test a bit more tolerant (neophenix)
 
 v0.2.5 - 2012-07-12
-	- wish CPAN versioning made sense.
+    - wish CPAN versioning made sense.
 
 v0.2.4 - 2012-07-12
-	- add basic reject (jpfrigerio)
-	- conditional variable::magic tests (mfowler)
+    - add basic reject (jpfrigerio)
+    - conditional variable::magic tests (mfowler)
 
 v0.2.3 - 2011-09-12
-	- fix a few documentation typos
-	- support binding to an exchange with headers (RabbitMQ feature)
+    - fix a few documentation typos
+    - support binding to an exchange with headers (RabbitMQ feature)
 
 v0.2.2 - 2011-08-29
-	- note https://github.com/omniti-labs/Net--RabbitMQ as the
-		authoritative repository.
-	- set and get header proporties from Aaron Schrab and Andy Wick
+    - note https://github.com/omniti-labs/Net--RabbitMQ as the
+        authoritative repository.
+    - set and get header proporties from Aaron Schrab and Andy Wick
 
 v0.2.1 - 2011-05-18
-	- fixed up tests.
+    - fixed up tests.
 
 v0.2.0 - 2011-04-19
-	- fixed memory leak in amqp_table
-	- add a connect timeout that both times out connect() calls and
-		sets SO_{SND.RCV}TIMEO on the socket
-	- add a heartbeat method
-	- a hearbeat frame can be received in the internal_recv function
-		causing an unexpected failure consuming; these are now ignored.
-	- make queue_declare return message and consumer counts (additionally)
-		when called in array context.
+    - fixed memory leak in amqp_table
+    - add a connect timeout that both times out connect() calls and
+        sets SO_{SND.RCV}TIMEO on the socket
+    - add a heartbeat method
+    - a hearbeat frame can be received in the internal_recv function
+        causing an unexpected failure consuming; these are now ignored.
+    - make queue_declare return message and consumer counts (additionally)
+        when called in array context.
 
 v0.1.9 - 2011-02-14
-	- add a basic return callback registration point
-	- add basic qos support
+    - add a basic return callback registration point
+    - add basic qos support
 
 v0.1.8 - 2010-10-09
-	- missed a gratuitous memory leak somehow
+    - missed a gratuitous memory leak somehow
 
 v0.1.7 - 2010-10-09
-	- amqp_exchange_delete prototype
-	- memory leak fix from Trevor Little
+    - amqp_exchange_delete prototype
+    - memory leak fix from Trevor Little
 
 v0.1.6 - 2010-07-18
-	- fix for uninitialized exchange when no options are passed.
-	- add consumer tags and docs
-	- add delete_exchange from Richard Wallman
-	- enhance delete_exchange with if_unused and nowait options
-		from Brian Clapper
+    - fix for uninitialized exchange when no options are passed.
+    - add consumer tags and docs
+    - add delete_exchange from Richard Wallman
+    - enhance delete_exchange with if_unused and nowait options
+        from Brian Clapper
 
 v0.1.5 - 2010-04-22
-	- support for properties from Bob Goldstein < bobg at uic dot edu >
-	- retarded and seemingly futile attempt to compensate for no pack Q
+    - support for properties from Bob Goldstein < bobg at uic dot edu >
+    - retarded and seemingly futile attempt to compensate for no pack Q
 
 v0.1.4 - 2010-04-08
-	- another attempt at getting CPAN testers is_deeply to accept truth
-	- memory leak with basic consume
+    - another attempt at getting CPAN testers is_deeply to accept truth
+    - memory leak with basic consume
 
 v0.1.3 - 2010-03-30
-	- allow support for overriding OPTIMIZE.
-		Sun C 5.10 SunOS_i386 2009/06/03 requires -xO1 in my tests.
-	- fix MANIFEST file.
+    - allow support for overriding OPTIMIZE.
+        Sun C 5.10 SunOS_i386 2009/06/03 requires -xO1 in my tests.
+    - fix MANIFEST file.
 
 v0.1.2 - 2010-03-30
-	- use perl's USE_ITHREADS as a define to enable thread safety or not.
-	- Fix some macro use that was certainly wrong yet gcc silently allowed.
+    - use perl's USE_ITHREADS as a define to enable thread safety or not.
+    - Fix some macro use that was certainly wrong yet gcc silently allowed.
 
 v0.1.1 - 2010-02-22
-	- [rt.cpan.org #53800] make distclean removes files needed for build
-	- manually encode the 64bit delivery_tag to work croass platform for poorly
-		configured perls (no 64bit ints)
-	- add a get method (amqp_basic_get)
+    - [rt.cpan.org #53800] make distclean removes files needed for build
+    - manually encode the 64bit delivery_tag to work croass platform for poorly
+        configured perls (no 64bit ints)
+    - add a get method (amqp_basic_get)
 
 v0.1.0 - 2010-01-17
-	- Update test suite to use dev.rabbitmq.com by default; still overridden with MQHOST environment variable.
-	- Bumped minor release number as things seem happy and stable.
+    - Update test suite to use dev.rabbitmq.com by default; still overridden with MQHOST environment variable.
+    - Bumped minor release number as things seem happy and stable.
 
 v0.0.4 - 2009-12-29
-	- make the tests use pack 'LL' instead of 'Q' for those that compile there perls incorrectly or cannot afford enough bits to make Q happen.
+    - make the tests use pack 'LL' instead of 'Q' for those that compile there perls incorrectly or cannot afford enough bits to make Q happen.
 
 v0.0.3 - 2009-12-25
-	- added tests for the txn support
-	- fixed file descriptor leak
+    - added tests for the txn support
+    - fixed file descriptor leak
 
 v0.0.2 - 2009-12-19
-	- Thread safety added.
-	- txn support from Joshua Kronengold
-	- some docs bugs.
+    - Thread safety added.
+    - txn support from Joshua Kronengold
+    - some docs bugs.
 
 v0.0.0.1 - 2009-11-12
-	- Initial release
+    - Initial release

@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '0.010000';
+our $VERSION = '0.100000';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -416,7 +416,7 @@ the connection has been closed by the remote host, or otherwise invalidated,
 the socket will also be closed and should be re-opened before any additional
 calls are made.
 
-=head1 CONTRIBUTORS
+=head1 AUTHORS
 
 jesus - Theo Schlossnagle E<lt>jesus@omniti.comE<gt>
 
@@ -424,7 +424,7 @@ n0body - Mark Ellis E<lt>markellis@cpan.orgE<gt>
 
 manchicken - Michael Stemle, Jr. E<lt>themanchicken@gmail.comE<gt>
 
-autarch - Dave Dave Rolsky E<lt>autarch@urth.orgE<gt>
+autarch - Dave Rolsky E<lt>autarch@urth.orgE<gt>
 
 eserte - Slaven Rezić
 
