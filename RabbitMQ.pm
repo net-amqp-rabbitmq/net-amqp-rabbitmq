@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '0.300000';
+our $VERSION = '0.310000';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -91,7 +91,7 @@ C<$channel> is a positive integer describing the channel you which to close.
 
 Returns the maximum allowed channel number.
 
-=head2 exchange_declare($channel, $exchange, $options)
+=head2 exchange_declare($channel, $exchange, $options, $arguments)
 
 C<$channel> is a channel that has been opened with C<channel_open>.
 
@@ -104,6 +104,13 @@ C<$options> is an optional hash respecting the following keys:
        passive => $boolean,     #default 0
        durable => $boolean,     #default 0
        auto_delete => $boolean, #default 1
+     }
+
+C<$arguments> is an optional hash of additional arguments to the RabbitMQ server, such as:
+
+     {
+       # exchange to try if no routes apply on this exchange
+       alternate_exchange => 'alternate_exchange_name',
      }
 
 =head2 exchange_delete($channel, $exchange, $options)
