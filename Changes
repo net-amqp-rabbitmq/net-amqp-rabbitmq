@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.300000 - 2015-03-12
+    - Fixing an issue with queue-declare assuming things were byte arrays when we really wanted them to be UTF-8, per constraints within RabbitMQ. (manchicken)
+
 0.100000 - 2015-03-09
     - Support for 64-bit delivery tags via Math::Int64 (manchicken)
 

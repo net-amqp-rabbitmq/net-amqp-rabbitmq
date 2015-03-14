@@ -28,6 +28,13 @@ WriteMakefile(
     },
     META_MERGE        => {
         "meta-spec" => { version => 2 },
+        "x_contributors" => [
+            'jesus - Theo Schlossnagle <jesus@omniti.com>',
+            'n0body - Mark Ellis <markellis@cpan.org>',
+            'manchicken - Michael Stemle, Jr. <themanchicken@gmail.com>',
+            'autarch - Dave Rolsky <autarch@urth.org>',
+            'eserte - Slaven Rezić',
+        ],
         resources => {
             bugtracker  => {
                 web    => 'https://github.com/markwellis/net-amqp-rabbitmq/issues',
