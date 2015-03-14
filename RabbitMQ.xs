@@ -14,9 +14,9 @@
 #define __DEBUG_ENABLED__ 0
 
 #if __DEBUG_ENABLED__ == 0
-# define __DEBUG__(X) /* NOOP */
+ #define __DEBUG__(X) /* NOOP */
 #else
-# define __DEBUG__(X)  X
+ #define __DEBUG__(X)  X
 #endif
 
 typedef amqp_connection_state_t Net__AMQP__RabbitMQ;
@@ -965,6 +965,10 @@ net_amqp_rabbitmq_exchange_declare(conn, channel, exchange, options = NULL, args
       int_from_hv(options, durable);
       // int_from_hv(options, auto_delete); // Will be needed soonish
       // int_from_hv(options, internal);    // Will be needed soonish
+    }
+    if(args)
+    {
+      hash_to_amqp_table(args, &arguments, 1); // Force UTF-8 for things that look like strings
     }
     amqp_exchange_declare(
       conn,

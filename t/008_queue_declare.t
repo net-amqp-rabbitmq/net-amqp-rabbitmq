@@ -33,7 +33,6 @@ is($consumer_count, 0, "got consumer count back");
 
 
 my $dlx = 'amq.direct';
-utf8::upgrade($dlx);
 my $queue_options = {
         'x-dead-letter-exchange'    => $dlx,
         'x-dead-letter-routing-key' => $expect_qn,
