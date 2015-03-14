@@ -142,6 +142,12 @@ amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value, short force_utf8) {
 
     // String (handle types which are upgraded to handle IV/UV/NV as well as PV)
     case SVt_PVIV:
+      if ( SvI64OK( *perl_value ) ) {
+        return AMQP_FIELD_KIND_I64;
+      }
+      if ( SvU64OK( *perl_value ) ) {
+        return AMQP_FIELD_KIND_U64;
+      }
       // It could be a PV or an IV/UV!
       if ( SvIOK( *perl_value ) ) {
         if ( SvUOK( *perl_value ) ) {
@@ -811,6 +817,7 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8) {
     entry->value.kind = amqp_kind_for_sv( &value, force_utf8 );
 
     __DEBUG__(
+      warn("hash_to_amqp_table()");
       warn_sv( value );
       fprintf(
         stderr,
@@ -955,16 +962,16 @@ net_amqp_rabbitmq_exchange_declare(conn, channel, exchange, options = NULL, args
     char *exchange_type = "direct";
     int passive = 0;
     int durable = 0;
-    // int auto_delete = 0; // Will be needed soonish
-    // int internal = 0;    // Will be needed soonish
+    int auto_delete = 0; // Will be needed soonish
+    int internal = 0;    // Will be needed soonish
     amqp_table_t arguments = amqp_empty_table;
   CODE:
     if(options) {
       str_from_hv(options, exchange_type);
       int_from_hv(options, passive);
       int_from_hv(options, durable);
-      // int_from_hv(options, auto_delete); // Will be needed soonish
-      // int_from_hv(options, internal);    // Will be needed soonish
+      int_from_hv(options, auto_delete);
+      int_from_hv(options, internal);
     }
     amqp_exchange_declare(
       conn,
@@ -973,8 +980,8 @@ net_amqp_rabbitmq_exchange_declare(conn, channel, exchange, options = NULL, args
       amqp_cstring_bytes(exchange_type),
       passive,
       (amqp_boolean_t)durable,
-      // (amqp_boolean_t)auto_delete, // Will be needed soonish
-      // (amqp_boolean_t)internal,    // Will be needed soonish
+      (amqp_boolean_t)auto_delete,
+      (amqp_boolean_t)internal,
       arguments
     );
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Declaring exchange");
