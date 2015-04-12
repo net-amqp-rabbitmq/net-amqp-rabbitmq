@@ -20,7 +20,7 @@ is($@, '', "connect");
 eval { $mq->channel_open(1); };
 is($@, '', "channel_open");
 
-my $delete = 1;
+my $delete = 0;
 my $queue;
 eval { $queue = $mq->queue_declare(1, "", { auto_delete => $delete } ); };
 is($@, '', "queue_declare");

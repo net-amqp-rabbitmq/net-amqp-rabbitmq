@@ -2,7 +2,7 @@ use Test::More tests => 12;
 use strict;
 use warnings;
 
-use Math::UInt64 qw/uint64/;
+use Math::UInt64 qw/int64 uint64/;
 use Sys::Hostname;
 my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
 my $exchange = "nr_test_x-numeric_header_fields-$unique";
@@ -36,6 +36,8 @@ my $headers = {
 	signed_integer   => -12345,
 	double           => 3.141,
 	string           => "string here",
+     math_int64       => int64(-42 * 1_000_000_000_000),
+     math_uint64      => uint64(42 * 1_000_000_000_000),
 };
 
 eval { $mq->publish(1, $routekey, $payload, { exchange => $exchange }, { headers => $headers }); };
