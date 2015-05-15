@@ -215,7 +215,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
 
   if (timeout > 0) {
       timeout_tv.tv_sec = timeout / 1000;
-      timeout_tv.tv_usec = timeout % 1000;
+      timeout_tv.tv_usec = (timeout % 1000) * 1000;
   }
 
   result = 0;

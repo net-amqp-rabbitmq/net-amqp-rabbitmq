@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use Sys::Hostname;
+use Time::HiRes qw(gettimeofday tv_interval);
 
 my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
 my $exchange = "nr_test_x-$unique";
@@ -56,7 +57,17 @@ is_deeply($rv,
             },
           }, "payload");
 
+my $start;
+
+$start = [gettimeofday];
 eval { local $SIG{ALRM} = sub {die}; alarm 5; $rv = $mq->recv(1000); alarm 0};
+ok(abs(tv_interval($start) - 1) < 0.01, "Timeout about 1 second");
+is($@, '', 'recv with timeout');
+is($rv, undef, 'recv with timeout returns undef');
+
+$start = [gettimeofday];
+eval { local $SIG{ALRM} = sub {die}; alarm 5; $rv = $mq->recv(1200); alarm 0};
+ok(abs(tv_interval($start) - 1.2) < 0.01, "Timeout about 1.2 second");
 is($@, '', 'recv with timeout');
 is($rv, undef, 'recv with timeout returns undef');
 
