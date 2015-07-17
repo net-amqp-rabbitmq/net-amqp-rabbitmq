@@ -1,5 +1,11 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+0.900000 - 2015-06-17
+    - Fix receive with timeout - tv_usec is microsecods, not milliseconds (iron-s)
+
+0.310000 - 2015-04-12
+    - V0.6.0+exchange declare support (manchicken)
+
 0.300000 - 2015-03-12
     - Fixing an issue with queue-declare assuming things were byte arrays when we really wanted them to be UTF-8, per constraints within RabbitMQ. (manchicken)
 
