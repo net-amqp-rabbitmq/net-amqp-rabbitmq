@@ -197,7 +197,7 @@ amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value, short force_utf8) {
   Perl_croak( aTHX_ "The wheels have fallen off. Please call for help." );
 }
 
-int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int timeout) {
+int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, SV *timeout_sv) {
   amqp_frame_t frame;
   amqp_basic_deliver_t *d;
   amqp_basic_properties_t *p;
@@ -211,9 +211,10 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
   SV *hvalue = (SV*)&PL_sv_undef;
   HV *headers = (HV*)&PL_sv_undef;
   amqp_table_entry_t *header_entry = (amqp_table_entry_t*)NULL;
+  int timeout = SvOK(timeout_sv) ? SvIV(timeout_sv) : 0;
   struct timeval timeout_tv;
 
-  if (timeout > 0) {
+  if (SvOK(timeout_sv) && timeout >= 0) {
       timeout_tv.tv_sec = timeout / 1000;
       timeout_tv.tv_usec = (timeout % 1000) * 1000;
   }
@@ -224,7 +225,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
 
     if(!piggyback) {
       amqp_maybe_release_buffers(conn);
-      result = amqp_simple_wait_frame_noblock(conn, &frame, timeout ? &timeout_tv : NULL);
+      result = amqp_simple_wait_frame_noblock(conn, &frame, SvOK(timeout_sv) ? &timeout_tv : NULL);
       if (result != AMQP_STATUS_OK) break;
       if (frame.frame_type == AMQP_FRAME_HEARTBEAT) {
         // Well, let's send the heartbeat frame back, shouldn't we?
@@ -244,7 +245,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
       hv_store(RETVAL, "routing_key", strlen("routing_key"), newSVpvn(d->routing_key.bytes, d->routing_key.len), 0);
     }
 
-    result = amqp_simple_wait_frame_noblock(conn, &frame, timeout ? &timeout_tv : NULL);
+    result = amqp_simple_wait_frame_noblock(conn, &frame, SvOK(timeout_sv) ? &timeout_tv : NULL);
     if (frame.frame_type == AMQP_FRAME_HEARTBEAT) {
       amqp_frame_t hb_resp;
       hb_resp.frame_type = AMQP_FRAME_HEARTBEAT;
@@ -528,7 +529,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
     if (is_utf8_body) {
       SvUTF8_on(payload);
     }
-    
+
     hv_store(RETVAL, "body", strlen("body"), payload, 0);
     break;
   }
@@ -1161,9 +1162,9 @@ net_amqp_rabbitmq_cancel(conn, channel, consumer_tag)
     RETVAL
 
 SV *
-net_amqp_rabbitmq_recv(conn, timeout = 0)
+net_amqp_rabbitmq_recv(conn, timeout = &PL_sv_undef)
   Net::AMQP::RabbitMQ conn
-  int timeout
+  SV *timeout
   PREINIT:
     amqp_status_enum status = AMQP_STATUS_OK;
     HV *message;
@@ -1341,7 +1342,7 @@ net_amqp_rabbitmq_get(conn, channel, queuename, options = NULL)
       hv_store(hv, "message_count", strlen("message_count"), newSViv(ok->message_count), 0);
       if(amqp_data_in_buffer(conn)) {
         int rv;
-        rv = internal_recv(hv, conn, 1, 0);
+        rv = internal_recv(hv, conn, 1, &PL_sv_undef);
         if ( rv == AMQP_STATUS_CONNECTION_CLOSED || rv == AMQP_STATUS_SOCKET_ERROR ) {
           amqp_socket_close( amqp_get_socket( conn ) );
           Perl_croak(aTHX_ "Failed to get(), AMQP socket connection was closed.");
@@ -1472,6 +1473,6 @@ net_amqp_rabbitmq_basic_qos(conn, channel, args = NULL)
       if(NULL != (v = hv_fetch(args, "prefetch_count", strlen("prefetch_count"), 0))) prefetch_count = SvIV(*v);
       if(NULL != (v = hv_fetch(args, "global", strlen("global"), 0))) global = SvIV(*v) ? 1 : 0;
     }
-    amqp_basic_qos(conn, channel, 
+    amqp_basic_qos(conn, channel,
                    prefetch_size, prefetch_count, global);
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Basic QoS");
