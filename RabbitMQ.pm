@@ -245,7 +245,7 @@ be delivered down the specified channel.
 =head2 recv($timeout)
 
 C<$timeout> is a positive integer, specifying the number of milliseconds to
-wait for a message. If you do not provide a timeout then
+wait for a message. If you do not provide a timeout (or set it to 0), then
 this call will block until it receives a message.
 
 This command receives and reconstructs AMQP frames and returns a hash
