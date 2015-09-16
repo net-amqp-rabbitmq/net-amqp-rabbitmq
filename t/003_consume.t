@@ -71,6 +71,12 @@ ok(abs(tv_interval($start) - 1.2) < 0.01, "Timeout about 1.2 second");
 is($@, '', 'recv with timeout');
 is($rv, undef, 'recv with timeout returns undef');
 
+$start = [gettimeofday];
+eval { local $SIG{ALRM} = sub {die}; alarm 5; $rv = $mq->recv(-1); alarm 0};
+ok(abs(tv_interval($start)) < 0.01, "Timeout about immediate");
+is($@, '', 'immediate recv');
+is($rv, undef, 'immediate recv returns undef');
+
 eval { $mq->cancel(1, $consumer_tag); };
 is($@, '', 'cancel');
 
