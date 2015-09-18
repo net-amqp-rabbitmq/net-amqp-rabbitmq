@@ -528,7 +528,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
     if (is_utf8_body) {
       SvUTF8_on(payload);
     }
-    
+
     hv_store(RETVAL, "body", strlen("body"), payload, 0);
     break;
   }
@@ -1367,6 +1367,24 @@ net_amqp_rabbitmq_get_channel_max(conn)
     RETVAL
 
 SV*
+net_amqp_rabbitmq_get_sockfd(conn)
+  Net::AMQP::RabbitMQ conn
+  CODE:
+    if (
+      amqp_get_socket( conn ) != NULL
+      &&
+      amqp_get_sockfd( conn ) > -1
+    ) {
+      RETVAL = newSViv( amqp_get_sockfd(conn) );
+    }
+    else {
+      // We don't have a connection, we're still here.
+      RETVAL = &PL_sv_undef;
+    }
+  OUTPUT:
+    RETVAL
+
+SV*
 net_amqp_rabbitmq_is_connected(conn)
   Net::AMQP::RabbitMQ conn
   CODE:
@@ -1472,6 +1490,6 @@ net_amqp_rabbitmq_basic_qos(conn, channel, args = NULL)
       if(NULL != (v = hv_fetch(args, "prefetch_count", strlen("prefetch_count"), 0))) prefetch_count = SvIV(*v);
       if(NULL != (v = hv_fetch(args, "global", strlen("global"), 0))) global = SvIV(*v) ? 1 : 0;
     }
-    amqp_basic_qos(conn, channel, 
+    amqp_basic_qos(conn, channel,
                    prefetch_size, prefetch_count, global);
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Basic QoS");
