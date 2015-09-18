@@ -407,9 +407,9 @@ C<$options> is an optional hash respecting the following keys:
 
 Set quality of service flags on the current $channel.
 
-=head2 hearbeat()
+=head2 heartbeat()
 
-Send a hearbeat frame.  If you've connected with a heartbeat parameter,
+Send a heartbeat frame.  If you've connected with a heartbeat parameter,
 you must send a heartbeat periodically matching connection parameter or
 the server may snip the connection.
 
