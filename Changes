@@ -1,5 +1,9 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+    - Fix a memory leak when setting headers on publish
+    - Made transaction commit safer (it probably had a potential use after free error)
+    - Free connection memory as soon as we can
+
 0.900000 - 2015-06-17
     - Fix receive with timeout - tv_usec is microsecods, not milliseconds (iron-s)
 

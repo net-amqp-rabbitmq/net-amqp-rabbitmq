@@ -31,15 +31,15 @@ eval { $mq->queue_bind(1, $queuename, $exchange, $routekey); };
 is($@, '', "queue_bind");
 
 my $start_mem = get_mem();
-my $i = 0;
-while ( $i < 50_000 ) {
-    $mq->tx_select(1);
-    $mq->publish(1, $routekey, "Magic Transient Payload (Commit)", { exchange => $exchange });
-    $mq->tx_commit(1);
-    if ( ( $i % 10_000 ) == 0 ) {
-        diag ( sprintf("%i - used: %.2fmb, diff: %.2fmb", $i, get_mem(), get_mem() - $start_mem ) );
+for ( 1..50_000 ) {
+    $mq->publish(1, $routekey, "meh", { exchange => $exchange }, {
+        headers => {
+            leakMe => "Hello World, I'm leaking!",
+        },
+    });
+    if ( ( $_ % 10_000 ) == 0 ) {
+        diag ( sprintf("%i - used: %.2fmb, diff: %.2fmb", $_, get_mem(), get_mem() - $start_mem ) );
     }
-    ++$i;
 }
 my $diff = get_mem() - $start_mem;
 ok( $diff < 1, "memory usage hasn't risen by more than 1mb (${diff}mb)" );

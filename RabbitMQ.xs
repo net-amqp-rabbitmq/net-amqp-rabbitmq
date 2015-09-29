@@ -21,8 +21,17 @@
 
 typedef amqp_connection_state_t Net__AMQP__RabbitMQ;
 
-amqp_pool_t hash_pool;
-amqp_pool_t array_pool;
+/* this is a place to put some stuff that we convert from perl, it's transient and we recycle it as soon as it's finished being used, which means we keep memory we've used with the aim of reusing it */
+amqp_pool_t temp_memory_pool;
+
+//mashup of things to free memory, also temp_memory_pool is ugly and code smell
+void maybe_recycle_memory(amqp_connection_state_t conn)
+{
+    if (amqp_release_buffers_ok(conn)) {
+        amqp_release_buffers(conn);
+        recycle_amqp_pool( &temp_memory_pool );
+    }
+}
 
 #define int_from_hv(hv,name) \
  do { SV **v; if(NULL != (v = hv_fetch(hv, #name, strlen(#name), 0))) name = SvIV(*v); } while(0)
@@ -30,6 +39,17 @@ amqp_pool_t array_pool;
  do { SV **v; if(NULL != (v = hv_fetch(hv, #name, strlen(#name), 0))) name = SvNV(*v); } while(0)
 #define str_from_hv(hv,name) \
  do { SV **v; if(NULL != (v = hv_fetch(hv, #name, strlen(#name), 0))) name = SvPV_nolen(*v); } while(0)
+
+//taken from amqp_connection.c
+#define ENFORCE_STATE(statevec, statenum)                                                 \
+  {                                                                                       \
+    amqp_connection_state_t _check_state = (statevec);                                    \
+    size_t _wanted_state = (statenum);                                                    \
+    if (_check_state->state != _wanted_state)                                             \
+      amqp_abort("Programming error: invalid AMQP connection state: expected %d, got %d", \
+                 _wanted_state,                                                           \
+                 _check_state->state);                                                    \
+  }
 
 void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8);
 void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array, short force_utf8);
@@ -223,7 +243,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
     SV *payload;
 
     if(!piggyback) {
-      amqp_maybe_release_buffers(conn);
+      maybe_recycle_memory( conn );
       result = amqp_simple_wait_frame_noblock(conn, &frame, timeout ? &timeout_tv : NULL);
       if (result != AMQP_STATUS_OK) break;
       if (frame.frame_type == AMQP_FRAME_HEARTBEAT) {
@@ -540,7 +560,7 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array, short force_utf
   SV  **value;
 
   amqp_field_value_t *new_elements = amqp_pool_alloc(
-    &array_pool,
+    &temp_memory_pool,
     ((av_len(perl_array)+1) * sizeof(amqp_field_value_t))
   );
   amqp_field_value_t *element;
@@ -799,7 +819,7 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8) {
   I32  retlen;
   amqp_table_entry_t *entry;
 
-  amqp_table_entry_t *new_entries = amqp_pool_alloc( &hash_pool, HvKEYS(hash) * sizeof(amqp_table_entry_t) );
+  amqp_table_entry_t *new_entries = amqp_pool_alloc( &temp_memory_pool, HvKEYS(hash) * sizeof(amqp_table_entry_t) );
   table->entries = new_entries;
 
   hv_iterinit(hash);
@@ -921,10 +941,7 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
     die_on_error(aTHX_ amqp_socket_open_noblock(sock, hostname, port, (timeout<0)?NULL:&to), conn, "opening TCP socket");
 
     die_on_amqp_error(aTHX_ amqp_login(conn, vhost, channel_max, frame_max, heartbeat, AMQP_SASL_METHOD_PLAIN, user, password), conn, "Logging in");
-    empty_amqp_pool( &hash_pool );
-    init_amqp_pool( &hash_pool, 512 );
-    empty_amqp_pool( &array_pool );
-    init_amqp_pool( &hash_pool, 512 );
+    maybe_recycle_memory( conn );
 
     RETVAL = 1;
   OUTPUT:
@@ -988,6 +1005,7 @@ net_amqp_rabbitmq_exchange_declare(conn, channel, exchange, options = NULL, args
       (amqp_boolean_t)internal,
       arguments
     );
+    maybe_recycle_memory( conn );
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Declaring exchange");
 
 void
@@ -1089,6 +1107,7 @@ net_amqp_rabbitmq_queue_bind(conn, channel, queuename, exchange, bindingkey, arg
                     amqp_cstring_bytes(exchange),
                     amqp_cstring_bytes(bindingkey),
                     arguments);
+    maybe_recycle_memory( conn );
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Binding queue");
 
 void
@@ -1114,6 +1133,7 @@ net_amqp_rabbitmq_queue_unbind(conn, channel, queuename, exchange, bindingkey, a
                       amqp_cstring_bytes(exchange),
                     amqp_cstring_bytes(bindingkey),
                     arguments);
+    maybe_recycle_memory( conn );
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Unbinding queue");
 
 SV *
@@ -1303,6 +1323,7 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
     }
     __DEBUG__( warn("PUBLISHING HEADERS..."); dump_table( properties.headers ) );
     rv = amqp_basic_publish(conn, channel, exchange_b, routing_key_b, mandatory, immediate, &properties, body_b);
+    maybe_recycle_memory( conn );
 
     /* If the connection failed, blast the file descriptor! */
     if ( rv == AMQP_STATUS_CONNECTION_CLOSED || rv == AMQP_STATUS_SOCKET_ERROR ) {
@@ -1327,7 +1348,7 @@ net_amqp_rabbitmq_get(conn, channel, queuename, options = NULL)
   CODE:
     if(options)
       int_from_hv(options, no_ack);
-    amqp_maybe_release_buffers(conn);
+    maybe_recycle_memory( conn );
     r = amqp_basic_get(conn, channel, queuename ? amqp_cstring_bytes(queuename) : amqp_empty_bytes, no_ack);
     die_on_amqp_error(aTHX_ r, conn, "basic_get");
     if(r.reply.id == AMQP_BASIC_GET_OK_METHOD) {
@@ -1428,8 +1449,7 @@ net_amqp_rabbitmq_DESTROY(conn)
     if ( conn->socket != NULL ) {
         amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
     }
-    empty_amqp_pool( &hash_pool );
-    empty_amqp_pool( &array_pool );
+    empty_amqp_pool( &temp_memory_pool );
     amqp_destroy_connection(conn);
 
 void
@@ -1461,7 +1481,7 @@ net_amqp_rabbitmq_tx_commit(conn, channel, args = NULL)
   CODE:
     amqp_tx_commit(conn, channel);
     channel_pool = amqp_get_or_create_channel_pool(conn, channel);
-    empty_amqp_pool( channel_pool );
+    maybe_recycle_memory( conn );
 
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Commiting transaction");
 
