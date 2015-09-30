@@ -40,17 +40,6 @@ void maybe_recycle_memory(amqp_connection_state_t conn)
 #define str_from_hv(hv,name) \
  do { SV **v; if(NULL != (v = hv_fetch(hv, #name, strlen(#name), 0))) name = SvPV_nolen(*v); } while(0)
 
-//taken from amqp_connection.c
-#define ENFORCE_STATE(statevec, statenum)                                                 \
-  {                                                                                       \
-    amqp_connection_state_t _check_state = (statevec);                                    \
-    size_t _wanted_state = (statenum);                                                    \
-    if (_check_state->state != _wanted_state)                                             \
-      amqp_abort("Programming error: invalid AMQP connection state: expected %d, got %d", \
-                 _wanted_state,                                                           \
-                 _check_state->state);                                                    \
-  }
-
 void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8);
 void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array, short force_utf8);
 SV*  mq_array_to_arrayref(amqp_array_t *array);

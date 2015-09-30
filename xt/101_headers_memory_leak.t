@@ -35,6 +35,7 @@ for ( 1..50_000 ) {
     $mq->publish(1, $routekey, "meh", { exchange => $exchange }, {
         headers => {
             leakMe => "Hello World, I'm leaking!",
+            array  => [1..100],
         },
     });
     if ( ( $_ % 10_000 ) == 0 ) {
