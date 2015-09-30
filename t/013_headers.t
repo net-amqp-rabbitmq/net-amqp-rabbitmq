@@ -78,7 +78,13 @@ is( exists $msg->{props}{headers}, 1, "Headers exist" );
 is_deeply( $msg->{props}{headers}, $headers, "Received headers" );
 
 $headers = {
-	blah => TestBlessings->new('foo'),
+    blah   => TestBlessings->new('foo'),
+    array  => [1..100],
+    hash   => {
+        foo       => 'bar',
+        something => 1234,
+        another   => [qw/bacon double cheese burger please/, {test => 123, testing => 'testing'}],
+    }
 };
 eval { $mq->publish( 1, $routekey, "Header Test",
 		{ exchange => $exchange },
