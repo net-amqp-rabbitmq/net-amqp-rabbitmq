@@ -37,12 +37,12 @@ WriteMakefile(
         ],
         resources => {
             bugtracker  => {
-                web    => 'https://github.com/markwellis/net-amqp-rabbitmq/issues',
+                web    => 'https://github.com/net-amqp-rabbitmq/net-amqp-rabbitmq/issues',
             },
             repository => {
                 type => 'git',
-                url => 'git://github.com/markwellis/net-amqp-rabbitmq.git',
-                web => 'https://github.com/markwellis/net-amqp-rabbitmq',
+                url => 'git://github.com/net-amqp-rabbitmq/net-amqp-rabbitmq.git',
+                web => 'https://github.com/net-amqp-rabbitmq/net-amqp-rabbitmq',
             },
         },
     },

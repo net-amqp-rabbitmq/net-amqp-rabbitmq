@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/markwellis/net-amqp-rabbitmq.png)](https://travis-ci.org/markwellis/net-amqp-rabbitmq)
-[![Coverage Status](https://coveralls.io/repos/markwellis/net-amqp-rabbitmq/badge.png)](https://coveralls.io/r/markwellis/net-amqp-rabbitmq)
+[![Build Status](https://travis-ci.org/net-amqp-rabbitmq/net-amqp-rabbitmq.png)](https://travis-ci.org/net-amqp-rabbitmq/net-amqp-rabbitmq)
+[![Coverage Status](https://coveralls.io/repos/net-amqp-rabbitmq/net-amqp-rabbitmq/badge.png)](https://coveralls.io/r/net-amqp-rabbitmq/net-amqp-rabbitmq)
 
 You can install this using in the usual Perl fashion:
 
