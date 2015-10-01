@@ -30,10 +30,14 @@ WriteMakefile(
         "meta-spec" => { version => 2 },
         "x_contributors" => [
             'jesus - Theo Schlossnagle <jesus@omniti.com>',
-            'n0body - Mark Ellis <markellis@cpan.org>',
-            'manchicken - Michael Stemle, Jr. <themanchicken@gmail.com>',
-            'autarch - Dave Rolsky <autarch@urth.org>',
-            'eserte - Slaven Rezić',
+            'markellis - Mark Ellis <markellis@cpan.org>',
+            'mstemle - Michael Stemle, Jr. <themanchicken@gmail.com>',
+            'drolsky - Dave Rolsky <autarch@urth.org>',
+            'srezic - Slaven Rezić <slaven@rezic.de>',
+            'armand - Armand Leclercq <marman.email@gmail.com>',
+            'dburke - Daniel W Burke <dburke@addictmud.org>',
+            'davsx - Dávid Kovács',
+            'iron-s - Alexey Sheynuk',
         ],
         resources => {
             bugtracker  => {
