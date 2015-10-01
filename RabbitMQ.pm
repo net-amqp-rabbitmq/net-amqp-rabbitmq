@@ -246,7 +246,8 @@ be delivered down the specified channel.
 
 C<$timeout> is a positive integer, specifying the number of milliseconds to
 wait for a message. If you do not provide a timeout (or set it to 0), then
-this call will block until it receives a message.
+this call will block until it receives a message. If you set it to -1 it will
+return immediately (waiting 0 ms).
 
 This command receives and reconstructs AMQP frames and returns a hash
 containing the following information:

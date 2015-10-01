@@ -227,6 +227,12 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
       timeout_tv.tv_usec = (timeout % 1000) * 1000;
   }
 
+  // Set the waiting time to 0
+  if (timeout == -1) {
+    timeout_tv.tv_sec = 0;
+    timeout_tv.tv_usec = 0;
+  }
+
   result = 0;
   while (1) {
     SV *payload;
@@ -1184,7 +1190,7 @@ net_amqp_rabbitmq_recv(conn, timeout = 0)
     if ( status == AMQP_STATUS_CONNECTION_CLOSED || status == AMQP_STATUS_SOCKET_ERROR ) {
         amqp_socket_close( amqp_get_socket( conn ) );
         Perl_croak(aTHX_ "AMQP socket connection was closed.");
-    } else if (timeout > 0 && status != 0) {
+    } else if ((timeout > 0 || timeout == -1) && status != 0) {
         SvREFCNT_dec(message);
         RETVAL = newSV(0);
     } else {
