@@ -1312,7 +1312,7 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
         properties._flags |= AMQP_BASIC_TIMESTAMP_FLAG;
       }
       if (NULL != (v = hv_fetch(props, "headers", strlen("headers"), 0))) {
-        hash_to_amqp_table((HV *)SvRV(*v), &properties.headers, 0);
+        hash_to_amqp_table((HV *)SvRV(*v), &properties.headers, 1);
         properties._flags |= AMQP_BASIC_HEADERS_FLAG;
       }
     }
