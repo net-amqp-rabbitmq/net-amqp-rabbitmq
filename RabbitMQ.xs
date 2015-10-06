@@ -1097,7 +1097,7 @@ net_amqp_rabbitmq_queue_bind(conn, channel, queuename, exchange, bindingkey, arg
     if(bindingkey == NULL && args == NULL)
       Perl_croak(aTHX_ "bindingkey or args must be specified");
     if(args)
-      hash_to_amqp_table(args, &arguments, 0);
+      hash_to_amqp_table(args, &arguments, 1);
     amqp_queue_bind(conn, channel, amqp_cstring_bytes(queuename),
                     amqp_cstring_bytes(exchange),
                     amqp_cstring_bytes(bindingkey),
@@ -1122,7 +1122,7 @@ net_amqp_rabbitmq_queue_unbind(conn, channel, queuename, exchange, bindingkey, a
       Perl_croak(aTHX_ "bindingkey or args must be specified");
     if(args)
     {
-      hash_to_amqp_table(args, &arguments, 0);
+      hash_to_amqp_table(args, &arguments, 1);
     }
     amqp_queue_unbind(conn, channel, amqp_cstring_bytes(queuename),
                       amqp_cstring_bytes(exchange),
