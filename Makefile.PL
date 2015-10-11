@@ -2,15 +2,25 @@ use strict;
 use warnings;
 require 5.008 ;
 
+use lib qw(inc);
 use ExtUtils::MakeMaker 5.16 ;
 use Config;
 use FindBin qw/$Bin/;
+use Devel::CheckLib;
 
 my $ofiles = '';
 foreach ( <$Bin/*.c> ){
     $_ =~ s/.c$/.o/;
     $ofiles .= "$_ ";
 }
+
+# This will help make the library compile on OSX
+# (and hopefully Solaris as well, but I don't have one of those)
+my $has_htonll = check_lib(
+    function => 'return htonll(0);',
+    header   => 'arpa/inet.h',
+);
+my $htonll_ccflag = ($has_htonll) ? '-DHAVE_HTONLL' : '';
 
 WriteMakefile(
     NAME            => 'Net::AMQP::RabbitMQ',
@@ -20,7 +30,7 @@ WriteMakefile(
     AUTHOR          => 'Mark Ellis <nobody@cpan.org>, Michael Stemle, Jr. <mstemle@cpan.org>',
     OBJECT          => "RabbitMQ.o ${ofiles}",
     OPTIMIZE        => $ENV{'OPTIMIZE'},
-    CCFLAGS         => "$Config{ccflags} -I${Bin}",
+    CCFLAGS         => "$Config{ccflags} ${htonll_ccflag} -I${Bin}",
     DEFINE          => "-DAMQ_PLATFORM='\"Perl_$^O_$^V\"'",
     LIBS            =>['-lrt'],
     PREREQ_PM       => {
