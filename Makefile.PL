@@ -10,6 +10,9 @@ use Devel::CheckLib;
 
 my $ofiles = '';
 foreach ( <$Bin/*.c> ){
+
+    continue if ( $_ =~ m/assertlib/ );
+
     $_ =~ s/.c$/.o/;
     $ofiles .= "$_ ";
 }
@@ -30,8 +33,8 @@ WriteMakefile(
     AUTHOR          => 'Mark Ellis <nobody@cpan.org>, Michael Stemle, Jr. <mstemle@cpan.org>',
     OBJECT          => "RabbitMQ.o ${ofiles}",
     OPTIMIZE        => $ENV{'OPTIMIZE'},
-    CCFLAGS         => "$Config{ccflags} ${htonll_ccflag} -I${Bin}",
-    DEFINE          => "-DAMQ_PLATFORM='\"Perl_$^O_$^V\"'",
+    CCFLAGS         => "$Config{ccflags} -I${Bin}",
+    DEFINE          => "-DAMQ_PLATFORM='\"Perl_$^O_$^V\"' ${htonll_ccflag}",
     LIBS            =>['-lrt'],
     PREREQ_PM       => {
         'Math::Int64'      => 0.34,
