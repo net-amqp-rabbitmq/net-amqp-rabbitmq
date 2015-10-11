@@ -16,20 +16,40 @@ sub new {
     my $username = $ENV{'MQUSERNAME'} || "nartest";
     my $password = $ENV{'MQPASSWORD'} || "reallysecure";
 
-    my $port = 5672;
+    my $ssl = $ENV{MQSSL} ? 1 : 0;
+    my $ssl_cacert = defined $ENV{MQSSLCACERT} ? $ENV{MQSSLCACERT} : '';
+    my $ssl_verify_host = $ENV{MQSSLVERIFYHOST} ? 1 : 0;
+    my $ssl_init = $ENV{MQSSLINIT} ? 1 : 0;
+
+    #XXX we don't use this one yet, waiting on a librabbitmq upgrade
+    my $ssl_verify_peer = $ENV{MQSSLVERIFYPEER} ? 1 : 0;
+
+    my $port;
+    if ( $ssl ) {
+        Test::More::note( "ssl mode" );
+        $port = $ENV{MQPORT} || 5673;
+    }
+    else {
+        $port = $ENV{MQPORT} || 5672;
+    }
 
     my $self = {
-        unique       => $unique,
-        exchange     => "nar_excahnge-$unique",
-        queue        => "nar_queue-$unique",
-        routekey     => "nar_key-$unique",
-        username     => $username,
-        password     => $password,
-        consumer_tag => 'ctag',
-        channel      => 1,
-        port         => $port,
-        host         => $host,
-        mq           => $mq,
+        unique          => $unique,
+        exchange        => "nar_excahnge-$unique",
+        queue           => "nar_queue-$unique",
+        routekey        => "nar_key-$unique",
+        username        => $username,
+        password        => $password,
+        consumer_tag    => 'ctag',
+        channel         => 1,
+        port            => $port,
+        host            => $host,
+        mq              => $mq,
+        ssl             => $ssl,
+        ssl_verify_host => $ssl_verify_host,
+        ssl_verify_peer => $ssl_verify_peer,
+        ssl_cacert      => $ssl_cacert,
+        ssl_init        => $ssl_init,
         %options,
     };
 
@@ -65,9 +85,14 @@ sub connect {
     my ( $self, $heartbeat, $timeout ) = @_;
 
     my $options = {
-        user      => $self->{username},
-        password  => $self->{password},
-        port      => $self->{port},
+        user            => $self->{username},
+        password        => $self->{password},
+        port            => $self->{port},
+        ssl             => $self->{ssl},
+        ssl_verify_host => $self->{ssl_verify_host},
+        ssl_verify_peer => $self->{ssl_verify_peer},
+        ssl_cacert      => $self->{ssl_cacert},
+        ssl_init        => $self->{ssl_init},
     };
     if ( defined $heartbeat ) {
         $options->{heartbeat} = $heartbeat;

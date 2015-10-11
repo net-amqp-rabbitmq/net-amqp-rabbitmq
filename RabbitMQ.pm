@@ -64,16 +64,25 @@ C<$hostname> is the host to which a connection will be attempted.
 
 C<$options> is an optional hash respecting the following keys:
 
-     {
-       user => $user,           #default 'guest'
-       password => $password,   #default 'guest'
-       port => $port,           #default 5672
-       vhost => $vhost,         #default '/'
-       channel_max => $cmax,    #default 0
-       frame_max => $fmax,      #default 131072
-       heartbeat => $hearbeat,  #default 0
-       timeout => $seconds      #default undef (no timeout)
-     }
+    {
+        user            => $user,        #default 'guest'
+        password        => $password,    #default 'guest'
+        port            => $port,        #default 5672
+        vhost           => $vhost,       #default '/'
+        channel_max     => $cmax,        #default 0
+        frame_max       => $fmax,        #default 131072
+        heartbeat       => $hearbeat,    #default 0
+        timeout         => $seconds      #default undef (no timeout)
+
+        ssl             => 1 | 0         #default 0
+        ssl_verify_host => 1 | 0         #default 1
+        ssl_cacert      => $caert_path   #needed for ssl
+        ssl_init        => 1 | 0         #default 1, initilise the openssl library
+    }
+
+You probably don't want to touch C<ssl_init>, unless you know what it does.
+
+For now there is no option to disable ssl peer checking, meaning to use C<ssl>, C<ssl_cacert> is required.
 
 =head2 disconnect()
 

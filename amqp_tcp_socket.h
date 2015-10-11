@@ -1,1 +1,0 @@
-rabbitmq-c/librabbitmq/amqp_tcp_socket.h
