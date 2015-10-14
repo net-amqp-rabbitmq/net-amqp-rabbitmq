@@ -14,6 +14,7 @@ os:
 services: rabbitmq
 before_install:
   - if [[ "$(which brew)" != "" ]]; then brew upgrade; brew install cpanminus; fi
+  - if [[ "$(which brew)" = "" ]]; then export LOCAL_MQHOST="localhost" fi
   - cpanm -n Devel::Cover Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64
   - export PATH="$HOME/perl5/bin:$PATH"
   - export PERL5LIB="$HOME/perl5/lib/perl5:$PERL5LIB"
@@ -27,6 +28,6 @@ before_script:
   - perl Makefile.PL
 script:
   - make
-  - MQHOST=localhost cover -test -report coveralls -ignore_re "\.c|\.h"
-  - MQHOST=localhost perl -I blib/lib -I blib/arch xt/100_transaction_memory_leak.t
-  - MQHOST=localhost perl -I blib/lib -I blib/arch xt/101_headers_memory_leak.t
+  - MQHOST=$LOCAL_MQHOST cover -test -report coveralls -ignore_re "\.c|\.h"
+  - MQHOST=$LOCAL_MQHOST perl -I blib/lib -I blib/arch xt/100_transaction_memory_leak.t
+  - MQHOST=$LOCAL_MQHOST perl -I blib/lib -I blib/arch xt/101_headers_memory_leak.t
