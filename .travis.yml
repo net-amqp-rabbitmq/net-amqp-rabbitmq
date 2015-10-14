@@ -13,7 +13,7 @@ os:
 services: rabbitmq
 before_install:
   - if [[ "$(which brew)" != "" ]]; then brew upgrade; brew install cpanminus; fi
-  - cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64
+  - cpanm -n Devel::Cover Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64
 before_script:
   - perl Makefile.PL
   - cpanm -n JSON
