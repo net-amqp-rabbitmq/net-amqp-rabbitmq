@@ -11,7 +11,7 @@ use Devel::CheckLib;
 my $ofiles = '';
 foreach ( <$Bin/*.c> ){
 
-    continue if ( $_ =~ m/assertlib/ );
+    next if ( $_ =~ m/assertlib/ );
 
     $_ =~ s/.c$/.o/;
     $ofiles .= "$_ ";
@@ -20,12 +20,17 @@ foreach ( <$Bin/*.c> ){
 # This will help make the library compile on OSX
 # (and hopefully Solaris as well, but I don't have one of those)
 my $has_htonll = check_lib(
-    function => 'return htonll(0);',
-    header   => 'arpa/inet.h',
+    'function' => '
+#ifdef htonll
+return 0;
+#else
+return -1;
+#endif
+',
+    'header'   => ['arpa/inet.h','stdio.h'],
+    'lib' => 'c',
 );
-print "THE DHAVE_HTONLL VALUE IS >$has_htonll<\n";
 my $htonll_ccflag = ($has_htonll) ? '-DHAVE_HTONLL' : '';
-$htonll_ccflag .= " -DDUMMY='$has_htonll'"
 
 WriteMakefile(
     NAME            => 'Net::AMQP::RabbitMQ',
