@@ -25,6 +25,7 @@ my $has_htonll = check_lib(
 );
 print "THE DHAVE_HTONLL VALUE IS >$has_htonll<\n";
 my $htonll_ccflag = ($has_htonll) ? '-DHAVE_HTONLL' : '';
+$htonll_ccflag .= " -DDUMMY='$has_htonll'"
 
 WriteMakefile(
     NAME            => 'Net::AMQP::RabbitMQ',
