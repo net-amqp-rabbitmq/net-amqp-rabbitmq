@@ -16,6 +16,7 @@ before_install:
   - if [[ "$(which brew)" != "" ]]; then brew upgrade; brew install cpanminus; fi
   - cpanm -n Devel::Cover Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64
   - export PATH="$HOME/perl5/bin:$PATH"
+  - export PERL5LIB="$HOME/perl5/lib/perl5:$PERL5LIB"
 before_script:
   - perl Makefile.PL
   - cpanm -n JSON
