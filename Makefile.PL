@@ -23,7 +23,7 @@ my $has_htonll = check_lib(
     function => 'return htonll(0);',
     header   => 'arpa/inet.h',
 );
-print STDERR "THE DHAVE_HTONLL VALUE IS >$has_htonll<\n";
+print "THE DHAVE_HTONLL VALUE IS >$has_htonll<\n";
 my $htonll_ccflag = ($has_htonll) ? '-DHAVE_HTONLL' : '';
 
 WriteMakefile(
