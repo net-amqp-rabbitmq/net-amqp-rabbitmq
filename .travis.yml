@@ -28,6 +28,7 @@ before_script:
   - perl Makefile.PL
 script:
   - make
-  - MQHOST=$LOCAL_MQHOST cover -test -report coveralls -ignore_re "\.c|\.h"
-  - MQHOST=$LOCAL_MQHOST perl -I blib/lib -I blib/arch xt/100_transaction_memory_leak.t
-  - MQHOST=$LOCAL_MQHOST perl -I blib/lib -I blib/arch xt/101_headers_memory_leak.t
+  - export MQHOST="$LOCAL_MQHOST"
+  - cover -test -report coveralls -ignore_re "\.c|\.h"
+  - if [[ "$MQHOST" != "" ]]; then perl -I blib/lib -I blib/arch xt/100_transaction_memory_leak.t; fi
+  - if [[ "$MQHOST" != "" ]]; then perl -I blib/lib -I blib/arch xt/101_headers_memory_leak.t; fi
