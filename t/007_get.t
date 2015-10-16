@@ -1,4 +1,4 @@
-use Test::More tests => 13;
+use Test::More tests => 17;
 use strict;
 use warnings;
 
@@ -34,7 +34,7 @@ is($getr, undef, "get should return empty");
 
 eval { $mq->publish(1, $routekey, "Magic Transient Payload", { exchange => $exchange }); };
 
-eval { $getr = $mq->get(1, $queuename); };
+eval { $getr = $mq->get(1, $queuename, {no_ack=>0}); };
 is($@, '', "get");
 
 is_deeply($getr,
@@ -48,6 +48,26 @@ is_deeply($getr,
             body => 'Magic Transient Payload',
           }, "get should see message");
 
+# Let's close the channel, forcing the unacknowledged message to be re-delivered.
+eval { $mq->channel_close(1); };
+is($@, '', "channel_close");
+eval { $mq->channel_open(1); };
+is($@, '', "channel_open again");
+
+# Get the message again and prove it was redelivered
+eval { $getr = $mq->get(1, $queuename, {no_ack=>1}); };
+is($@, '', "get");
+
+is_deeply($getr,
+          {
+            redelivered => 1,
+            routing_key => $routekey,
+            exchange => $exchange,
+            message_count => 0,
+            delivery_tag => $dtag,
+            'props' => {},
+            body => 'Magic Transient Payload',
+          }, "get should see redelivered message");
 
 eval { $mq->publish(1, $routekey, "Magic Transient Payload 2", 
                      { exchange => $exchange }, 

@@ -947,8 +947,17 @@ net_amqp_rabbitmq_channel_open(conn, channel)
   Net::AMQP::RabbitMQ conn
   int channel
   CODE:
-    amqp_channel_open(conn, channel);
-    die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Opening channel");
+    if (
+      amqp_get_socket( conn ) != NULL
+      &&
+      amqp_get_sockfd( conn ) > -1
+    ) {
+      amqp_channel_open(conn, channel);
+      die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Opening channel");
+    }
+    else {
+      Perl_croak(aTHX_ "Cannot open channel while disconnected");
+    }
 
 void
 net_amqp_rabbitmq_channel_close(conn, channel)
@@ -1092,7 +1101,14 @@ net_amqp_rabbitmq_queue_bind(conn, channel, queuename, exchange, bindingkey, arg
   PREINIT:
     amqp_table_t arguments = amqp_empty_table;
   CODE:
-    if(queuename == NULL || exchange == NULL)
+    if(queuename == NULL
+      ||
+      exchange == NULL
+      ||
+      0 == strlen(queuename)
+      ||
+      0 == strlen(exchange)
+    )
       Perl_croak(aTHX_ "queuename and exchange must both be specified");
     if(bindingkey == NULL && args == NULL)
       Perl_croak(aTHX_ "bindingkey or args must be specified");
