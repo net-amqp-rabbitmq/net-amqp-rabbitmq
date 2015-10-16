@@ -21,6 +21,8 @@ Net::AMQP::RabbitMQ - interact with RabbitMQ over AMQP using librabbitmq
 	$mq->connect("localhost", { user => "guest", password => "guest" });
 	$mq->channel_open(1);
 	$mq->publish(1, "queuename", "Hi there!");
+  my $gotten = $mq->get(1, "queuename");
+  print $gotten->{body} . "\n";
 	$mq->disconnect();
 
 =head1 VERSION COMPATIBILITY
@@ -28,7 +30,7 @@ Net::AMQP::RabbitMQ - interact with RabbitMQ over AMQP using librabbitmq
 This module was forked from L<Net::RabbitMQ> version 0.2.6 which uses an older
 version of librabbitmq, and doesn't work correctly with newer versions of RabbitMQ.
 The main change between this module and the original is this library uses
-a newer, unforked, version of librabbitmq. Version 0.4.1 to be precise.
+a newer, unforked, version of librabbitmq. Version 0.7.1 to be precise.
 
 This means this module only works with the AMQP 0.9.1 protocol, so requires RabbitMQ
 version 2+. Also, since the version of librabbitmq used is not a custom fork, it
@@ -41,7 +43,7 @@ and fixes some bugs. It provides a simple wrapper around the librabbitmq library
 that allows connecting, declaring exchanges and queues, binding and unbinding
 queues, publishing, consuming and receiving events.
 
-Error handling in this module is primarily achieve by Perl_croak (die). You
+Error handling in this module is primarily achieve by C<Perl_croak> (die). You
 should be making good use of eval around these methods to ensure that you
 appropriately catch the errors.
 
