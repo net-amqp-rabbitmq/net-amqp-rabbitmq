@@ -36,8 +36,8 @@ my $headers = {
 	signed_integer   => -12345,
 	double           => 3.141,
 	string           => "string here",
-     math_int64       => int64(-42 * 1_000_000_000_000),
-     math_uint64      => uint64(42 * 1_000_000_000_000),
+     math_int64       => int64("−9223372036854775808"),
+     math_uint64      => uint64("18446744073709551615"),
 };
 
 eval { $mq->publish(1, $routekey, $payload, { exchange => $exchange }, { headers => $headers }); };

@@ -34,6 +34,12 @@ is($@, '', "queue_bind");
 
 my $payload = "Message payload";
 my $headers = {
+	nested_array_1 => [
+		123,
+		{
+			"inner_hash_1" => "value"
+		}
+	],
 	array_1 => [
 		qw/
 			array_1_a

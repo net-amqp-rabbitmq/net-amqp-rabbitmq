@@ -26,4 +26,4 @@ my $rv = 0;
 eval { $mq->publish(1, $routekey, "Magic Transient Payload", { exchange => $exchange, "immediate" => 1, "mandatory" => 1 }); };
 sleep(1);
 eval { $mq->publish(1, $routekey, "Magic Transient Payload", { exchange => $exchange, "immediate" => 1, "mandatory" => 1 }); };
-like( $@, qr/Publish failed, error code -17/, "publish fails with error code" );
+like( $@, qr/AMQP socket not connected/, "publish fails with error code" );

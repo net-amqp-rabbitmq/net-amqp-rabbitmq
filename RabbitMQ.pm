@@ -50,6 +50,8 @@ appropriately catch the errors.
 All methods, unless specifically stated, return nothing on success
 and die on failure.
 
+Failure to be connected is a fatal failure for most methods.
+
 =head2 new()
 
 Creates a new Net::AMQP::RabbitMQ object.
@@ -199,10 +201,16 @@ C<$body> is the payload to enqueue.
 C<$options> is an optional hash respecting the following keys:
 
      {
-       exchange => $exchange,   #default 'amq.direct'
-       mandatory => $boolean,   #default 0
-       immediate => $boolean,   #default 0
+       exchange => $exchange,                     #default 'amq.direct'
+       mandatory => $boolean,                     #default 0
+       immediate => $boolean,                     #default 0
+       force_utf8_in_header_strings => $boolean,  #default 0
      }
+
+The C<force_utf8_in_header_strings> option causes all headers which look like
+strings to be treated as UTF-8. In an attempt to make this a non-breaking change,
+this option is disabled by default. However, for all headers beginning with
+C<x->, those are treated as UTF-8 regardless of this option (per spec).
 
 C<$props> is an optional hash (the AMQP 'props') respecting the following keys:
 
