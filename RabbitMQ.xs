@@ -39,6 +39,14 @@ void maybe_recycle_memory(amqp_connection_state_t conn)
  do { SV **v; if(NULL != (v = hv_fetch(hv, #name, strlen(#name), 0))) name = SvNV(*v); } while(0)
 #define str_from_hv(hv,name) \
  do { SV **v; if(NULL != (v = hv_fetch(hv, #name, strlen(#name), 0))) name = SvPV_nolen(*v); } while(0)
+#define has_valid_connection(conn) \
+ ( amqp_get_socket( conn ) != NULL && amqp_get_sockfd( conn ) > -1 )
+#define assert_amqp_connected(conn) \
+ do { \
+  if ( ! has_valid_connection(conn) ) { \
+    Perl_croak(aTHX_ "AMQP socket not connected"); \
+  } \
+ } while(0)
 
 void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8);
 void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array, short force_utf8);
@@ -947,17 +955,10 @@ net_amqp_rabbitmq_channel_open(conn, channel)
   Net::AMQP::RabbitMQ conn
   int channel
   CODE:
-    if (
-      amqp_get_socket( conn ) != NULL
-      &&
-      amqp_get_sockfd( conn ) > -1
-    ) {
-      amqp_channel_open(conn, channel);
-      die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Opening channel");
-    }
-    else {
-      Perl_croak(aTHX_ "Cannot open channel while disconnected");
-    }
+    assert_amqp_connected(conn);
+
+    amqp_channel_open(conn, channel);
+    die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Opening channel");
 
 void
 net_amqp_rabbitmq_channel_close(conn, channel)
@@ -965,9 +966,7 @@ net_amqp_rabbitmq_channel_close(conn, channel)
   int channel
   CODE:
     /* If we don't have a socket, just return. */
-    if (
-      ! amqp_get_socket( conn )
-    ) {
+    if ( ! has_valid_connection( conn ) ) {
       return;
     }
     die_on_amqp_error(aTHX_ amqp_channel_close(conn, channel, AMQP_REPLY_SUCCESS), conn, "Closing channel");
@@ -987,6 +986,8 @@ net_amqp_rabbitmq_exchange_declare(conn, channel, exchange, options = NULL, args
     int internal = 0;    // Will be needed soonish
     amqp_table_t arguments = amqp_empty_table;
   CODE:
+    assert_amqp_connected(conn);
+
     if(options) {
       str_from_hv(options, exchange_type);
       int_from_hv(options, passive);
@@ -1021,6 +1022,8 @@ net_amqp_rabbitmq_exchange_delete(conn, channel, exchange, options = NULL)
   PREINIT:
     int if_unused = 1;
   CODE:
+    assert_amqp_connected(conn);
+
     if(options) {
       int_from_hv(options, if_unused);
     }
@@ -1037,6 +1040,8 @@ void net_amqp_rabbitmq_queue_delete(conn, channel, queuename, options = NULL)
     int if_empty = 1;
     amqp_queue_delete_ok_t *reply = (amqp_queue_delete_ok_t*)NULL;
   CODE:
+    assert_amqp_connected(conn);
+
     if(options) {
       int_from_hv(options, if_unused);
       int_from_hv(options, if_empty);
@@ -1069,6 +1074,8 @@ net_amqp_rabbitmq_queue_declare(conn, channel, queuename, options = NULL, args =
     amqp_bytes_t queuename_b = amqp_empty_bytes;
     amqp_queue_declare_ok_t *r = (amqp_queue_declare_ok_t*)NULL;
   PPCODE:
+    assert_amqp_connected(conn);
+
     if(queuename && strcmp(queuename, "")) queuename_b = amqp_cstring_bytes(queuename);
     if(options) {
       int_from_hv(options, passive);
@@ -1101,6 +1108,8 @@ net_amqp_rabbitmq_queue_bind(conn, channel, queuename, exchange, bindingkey, arg
   PREINIT:
     amqp_table_t arguments = amqp_empty_table;
   CODE:
+    assert_amqp_connected(conn);
+
     if(queuename == NULL
       ||
       exchange == NULL
@@ -1132,6 +1141,8 @@ net_amqp_rabbitmq_queue_unbind(conn, channel, queuename, exchange, bindingkey, a
   PREINIT:
     amqp_table_t arguments = amqp_empty_table;
   CODE:
+    assert_amqp_connected(conn);
+
     if(queuename == NULL || exchange == NULL)
       Perl_croak(aTHX_ "queuename and exchange must both be specified");
     if(bindingkey == NULL && args == NULL)
@@ -1160,6 +1171,8 @@ net_amqp_rabbitmq_consume(conn, channel, queuename, options = NULL)
     int no_ack = 1;
     int exclusive = 0;
   CODE:
+    assert_amqp_connected(conn);
+
     if(options) {
       str_from_hv(options, consumer_tag);
       int_from_hv(options, no_local);
@@ -1182,6 +1195,8 @@ net_amqp_rabbitmq_cancel(conn, channel, consumer_tag)
   PREINIT:
     amqp_basic_cancel_ok_t *r;
   CODE:
+    assert_amqp_connected(conn);
+
     r = amqp_basic_cancel(conn, channel, amqp_cstring_bytes(consumer_tag));
     if(strlen(consumer_tag) == r->consumer_tag.len && 0 == strcmp(consumer_tag, (char *)r->consumer_tag.bytes)) {
       RETVAL = 1;
@@ -1199,6 +1214,8 @@ net_amqp_rabbitmq_recv(conn, timeout = 0)
     amqp_status_enum status = AMQP_STATUS_OK;
     HV *message;
   CODE:
+    assert_amqp_connected(conn);
+
     message = newHV();
 
     /* We want to detect whether we were disconnected by the remote host during the internal_recv(). */
@@ -1222,6 +1239,8 @@ net_amqp_rabbitmq_ack(conn, channel, delivery_tag, multiple = 0)
   uint64_t delivery_tag
   int multiple
   CODE:
+    assert_amqp_connected(conn);
+
     die_on_error(aTHX_ amqp_basic_ack(conn, channel, delivery_tag, multiple), conn,
                  "ack");
 
@@ -1235,8 +1254,10 @@ net_amqp_rabbitmq_reject(conn, channel, delivery_tag, requeue = 0)
  PREINIT:
    STRLEN len;
  CODE:
-   die_on_error(aTHX_ amqp_basic_reject(conn, channel, delivery_tag, requeue), conn,
-                "reject");
+    assert_amqp_connected(conn);
+
+    die_on_error(aTHX_ amqp_basic_reject(conn, channel, delivery_tag, requeue), conn,
+                 "reject");
 
 
 void
@@ -1245,6 +1266,8 @@ net_amqp_rabbitmq_purge(conn, channel, queuename)
   int channel
   char *queuename
   CODE:
+    assert_amqp_connected(conn);
+
     amqp_queue_purge(conn, channel, amqp_cstring_bytes(queuename));
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Purging queue");
 
@@ -1268,6 +1291,8 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
     struct amqp_basic_properties_t_ properties;
     STRLEN len;
   CODE:
+    assert_amqp_connected(conn);
+
     routing_key_b = amqp_cstring_bytes(routing_key);
     body_b.bytes = SvPV(body, len);
     body_b.len = len;
@@ -1357,6 +1382,8 @@ net_amqp_rabbitmq_get(conn, channel, queuename, options = NULL)
     amqp_rpc_reply_t r;
     int no_ack = 1;
   CODE:
+    assert_amqp_connected(conn);
+
     if(options)
       int_from_hv(options, no_ack);
     maybe_recycle_memory( conn );
@@ -1402,11 +1429,7 @@ SV*
 net_amqp_rabbitmq_get_sockfd(conn)
   Net::AMQP::RabbitMQ conn
   CODE:
-    if (
-      amqp_get_socket( conn ) != NULL
-      &&
-      amqp_get_sockfd( conn ) > -1
-    ) {
+    if ( has_valid_connection( conn ) ) {
       RETVAL = newSViv( amqp_get_sockfd(conn) );
     }
     else {
@@ -1420,11 +1443,7 @@ SV*
 net_amqp_rabbitmq_is_connected(conn)
   Net::AMQP::RabbitMQ conn
   CODE:
-    if (
-      amqp_get_socket( conn ) != NULL
-      &&
-      amqp_get_sockfd( conn ) > -1
-    ) {
+    if ( has_valid_connection( conn ) ) {
       RETVAL = newSViv(1);
     }
     else {
