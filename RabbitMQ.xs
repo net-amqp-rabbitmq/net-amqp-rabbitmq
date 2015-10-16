@@ -829,7 +829,25 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8) {
 
     entry = &table->entries[table->num_entries];
     entry->key = amqp_cstring_bytes( key );
-    entry->value.kind = amqp_kind_for_sv( &value, force_utf8 );
+
+    // Reserved headers, per spec must force UTF-8 for strings.
+    // Other headers aren't necessarily required to do so.
+    if (
+      // "x-*" exchanges
+      (
+        strlen(key) > 2
+        &&
+        key[0] == 'x'
+        &&
+        key[1] == '-'
+      )
+    ) {
+      entry->value.kind = amqp_kind_for_sv( &value, 1 );
+    }
+    else {
+      entry->value.kind = amqp_kind_for_sv( &value, force_utf8 );
+    }
+
 
     __DEBUG__(
       warn("hash_to_amqp_table()");
@@ -974,8 +992,8 @@ net_amqp_rabbitmq_exchange_declare(conn, channel, exchange, options = NULL, args
     char *exchange_type = "direct";
     int passive = 0;
     int durable = 0;
-    int auto_delete = 0; // Will be needed soonish
-    int internal = 0;    // Will be needed soonish
+    int auto_delete = 0;
+    int internal = 0;
     amqp_table_t arguments = amqp_empty_table;
   CODE:
     if(options) {
@@ -987,7 +1005,7 @@ net_amqp_rabbitmq_exchange_declare(conn, channel, exchange, options = NULL, args
     }
     if(args)
     {
-      hash_to_amqp_table(args, &arguments, 1); // Force UTF-8 for things that look like strings
+      hash_to_amqp_table(args, &arguments, 1);
     }
     amqp_exchange_declare(
       conn,
@@ -1069,7 +1087,7 @@ net_amqp_rabbitmq_queue_declare(conn, channel, queuename, options = NULL, args =
     }
     if(args)
     {
-      hash_to_amqp_table(args, &arguments, 1); // Force UTF-8 for things that look like strings
+      hash_to_amqp_table(args, &arguments, 1);
     }
     r = amqp_queue_declare(conn, channel, queuename_b, passive,
                                                     durable, exclusive, auto_delete,
@@ -1251,14 +1269,24 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
     amqp_bytes_t body_b;
     struct amqp_basic_properties_t_ properties;
     STRLEN len;
+    int force_utf8_in_header_strings = 0;
   CODE:
     routing_key_b = amqp_cstring_bytes(routing_key);
     body_b.bytes = SvPV(body, len);
     body_b.len = len;
     if(options) {
-      if(NULL != (v = hv_fetch(options, "mandatory", strlen("mandatory"), 0))) mandatory = SvIV(*v) ? 1 : 0;
-      if(NULL != (v = hv_fetch(options, "immediate", strlen("immediate"), 0))) immediate = SvIV(*v) ? 1 : 0;
-      if(NULL != (v = hv_fetch(options, "exchange", strlen("exchange"), 0))) exchange_b = amqp_cstring_bytes(SvPV_nolen(*v));
+      if(NULL != (v = hv_fetch(options, "mandatory", strlen("mandatory"), 0))) {
+        mandatory = SvIV(*v) ? 1 : 0;
+      }
+      if(NULL != (v = hv_fetch(options, "immediate", strlen("immediate"), 0))) {
+        immediate = SvIV(*v) ? 1 : 0;
+      }
+      if(NULL != (v = hv_fetch(options, "exchange", strlen("exchange"), 0))) {
+        exchange_b = amqp_cstring_bytes(SvPV_nolen(*v));
+      }
+
+      // This is an internal option, only for determining if we want to force utf8
+      int_from_hv(options, force_utf8_in_header_strings);
     }
     properties.headers = amqp_empty_table;
     properties._flags = 0;
@@ -1312,7 +1340,7 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
         properties._flags |= AMQP_BASIC_TIMESTAMP_FLAG;
       }
       if (NULL != (v = hv_fetch(props, "headers", strlen("headers"), 0))) {
-        hash_to_amqp_table((HV *)SvRV(*v), &properties.headers, 0);
+        hash_to_amqp_table((HV *)SvRV(*v), &properties.headers, force_utf8_in_header_strings);
         properties._flags |= AMQP_BASIC_HEADERS_FLAG;
       }
     }

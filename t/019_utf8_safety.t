@@ -1,4 +1,4 @@
-use Test::More tests => 19;
+use Test::More tests => 29;
 use strict;
 use warnings;
 use utf8;
@@ -11,6 +11,8 @@ my $routekey = "nr_test_q-$unique";
 
 my $dtag1=1;
 my $dtag2=2;
+my $dtag3=3;
+my $dtag4=4;
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
 
 use_ok('Net::AMQP::RabbitMQ');
@@ -78,5 +80,66 @@ is_deeply($rv,
           'props' => { 'content_encoding' => 'C' },
           }, "payload");
 ok( ! utf8::is_utf8($rv->{'body'}), 'not utf8');
+
+my $pub_props = { content_encoding => 'C', headers => { "sample" => "sample" } };
+# Now, don't go out of your way to set the headers to UTF-8, they should still
+# come back as that.
+eval {
+     $mq->publish(
+          1,
+          $routekey,
+          $ascii_payload,
+          { exchange => $exchange },
+          $pub_props
+     );
+};
+is($@, '', "publish");
+
+$rv = {};
+eval { $rv = $mq->recv(); };
+is($@, '', "recv");
+
+is_deeply($rv,
+          {
+          'body' => $ascii_payload,
+          'routing_key' => $routekey,
+          'delivery_tag' => $dtag3,
+          'redelivered' => 0,
+          'exchange' => $exchange,
+          'consumer_tag' => 'ctag',
+          'props' => $pub_props
+          }, "payload");
+ok( ! utf8::is_utf8($rv->{'body'}), 'not utf8');
+ok( ! utf8::is_utf8($rv->{'props'}->{"headers"}->{"sample"}), 'is utf8');
+
+# Now, don't go out of your way to set the headers to UTF-8, they should still
+# come back as that.
+eval {
+     $mq->publish(
+          1,
+          $routekey,
+          $ascii_payload,
+          { exchange => $exchange, force_utf8_in_header_strings => 1 },
+          $pub_props
+     );
+};
+is($@, '', "publish");
+
+$rv = {};
+eval { $rv = $mq->recv(); };
+is($@, '', "recv");
+
+is_deeply($rv,
+          {
+          'body' => $ascii_payload,
+          'routing_key' => $routekey,
+          'delivery_tag' => $dtag4,
+          'redelivered' => 0,
+          'exchange' => $exchange,
+          'consumer_tag' => 'ctag',
+          'props' => $pub_props
+          }, "payload");
+ok( ! utf8::is_utf8($rv->{'body'}), 'not utf8');
+ok( utf8::is_utf8($rv->{'props'}->{"headers"}->{"sample"}), 'is utf8');
 
 1;
