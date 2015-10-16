@@ -1110,7 +1110,14 @@ net_amqp_rabbitmq_queue_bind(conn, channel, queuename, exchange, bindingkey, arg
   CODE:
     assert_amqp_connected(conn);
 
-    if(queuename == NULL || exchange == NULL)
+    if(queuename == NULL
+      ||
+      exchange == NULL
+      ||
+      0 == strlen(queuename)
+      ||
+      0 == strlen(exchange)
+    )
       Perl_croak(aTHX_ "queuename and exchange must both be specified");
     if(bindingkey == NULL && args == NULL)
       Perl_croak(aTHX_ "bindingkey or args must be specified");
