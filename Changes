@@ -1,5 +1,13 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+1.100000 - 2015-10-16
+    - upgraded rabbitmq-c to 0.7.1 (manchicken)
+    - optional force utf8 on strings in headers (manchicken)
+    - Added a bunch of socket safety checks (manchicken)
+    - Adding test for get_sockfd and get_channel_max() (manchicken)
+    - increase test coverage (manchicken)
+    - Added tests for `no_ack` on `get()` (manchicken)
+
 1.001000 - 2015-10-01
     - Add support for immediate return in recv() (marmand)
 
