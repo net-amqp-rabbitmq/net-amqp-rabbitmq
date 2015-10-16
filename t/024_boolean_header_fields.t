@@ -30,16 +30,16 @@ eval { $mq->connect($host, { user => "guest", password => "guest" }); };
 is($@, '', "connect");
 eval { $mq->channel_open(1); };
 is($@, '', "channel_open");
-eval { $mq->exchange_declare(1, $exchange, { exchange_type => "fanout", passive => 0, durable => 1, auto_delete => 1 }); };
+eval { $mq->exchange_declare(1, $exchange, { exchange_type => "fanout", passive => 0, durable => 1, auto_delete => 0}); };
 is($@, '', "exchange_declare");
 my $queuename = '';
-eval { $queuename = $mq->queue_declare(1, 'nr_test_q-boolean_header_fields', { passive => 0, durable => 1, exclusive => 0, auto_delete => 1 }); };
+eval { $queuename = $mq->queue_declare(1, 'nr_test_q-boolean_header_fields', { passive => 0, durable => 1, exclusive => 0, auto_delete => 0 }); };
 is($@, '', "queue_declare");
 isnt($queuename, '', "queue_declare -> private name");
 eval { $mq->queue_bind(1, $queuename, $exchange, $routekey); };
 is($@, '', "queue_bind");
 
-eval { $mq->consume(1, $queuename, {consumer_tag=>'ctag', no_local=>0,no_ack=>1,exclusive=>0}); };
+eval { $mq->consume(1, $queuename, {consumer_tag=>'ctag', no_local=>0,no_ack=>0,exclusive=>0}); };
 is($@, '', "consume");
 
 # XXX Temporarily use LWP::UserAgent to inject boolean values.
@@ -49,8 +49,9 @@ my $ua = LWP::UserAgent->new;
 
 for my $test_def (['true', 1], ['false', 0]) {
     my($boolean_value, $perl_value) = @$test_def;
+    print "EXCHANGE> $exchange\n";
     my $resp = $ua->post("http://guest:guest\@$host/mgmt/api/exchanges/%2F/$exchange/publish", Content => <<"EOF");
-{"properties":{"headers":{"booltest":$boolean_value}},"routing_key":"$routekey","payload":"test boolean","payload_encoding":"string"}
+{"properties":{"headers":{"booltest":$boolean_value,"8bit":1,"s8bit":-1,"16bit":65000,"s16bit":-65000,"32bit":2000000000,"s32bit":-2000000000}},"routing_key":"$routekey","payload":"test boolean","payload_encoding":"string"}
 EOF
     ok $resp->is_success, "Publishing message with boolean value $boolean_value"
 	or diag "Publishing booltest message failed: " . $resp->as_string;
@@ -67,7 +68,15 @@ EOF
 	       'redelivered' => 0,
 	       'exchange' => $exchange,
 	       'consumer_tag' => 'ctag',
-	       'props' => { 'headers' => { 'booltest' => $perl_value } },
+	       'props' => { 'headers' => {
+                'booltest'  => $perl_value,
+                '8bit'      => 1,
+                's8bit'     => -1,
+                '16bit'     => 65000,
+                's16bit'    => -65000,
+                '32bit'     => 2000000000,
+                's32bit'    => -2000000000,
+            } },
 	      }, "payload and header with boolean value $boolean_value");
 }
 
