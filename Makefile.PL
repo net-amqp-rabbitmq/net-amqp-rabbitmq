@@ -41,7 +41,7 @@ WriteMakefile(
     OBJECT          => "RabbitMQ.o ${ofiles}",
     OPTIMIZE        => $ENV{'OPTIMIZE'},
     CCFLAGS         => "$Config{ccflags} -I${Bin}",
-    DEFINE          => "-DAMQ_PLATFORM='\"Perl_$^O_$^V\"' ${htonll_ccflag}",
+    DEFINE          => "-DHAVE_SOCKET -DHAVE_POLL -DAMQ_PLATFORM='\"Perl_$^O_$^V\"' ${htonll_ccflag}",
     LIBS            =>['-lrt'],
     PREREQ_PM       => {
         'Math::Int64'      => 0.34,

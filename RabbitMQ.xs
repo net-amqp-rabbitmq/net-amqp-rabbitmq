@@ -5,7 +5,7 @@
 #include "amqp.h"
 #include "amqp_tcp_socket.h"
 /* For struct timeval */
-#include "amqp_timer.h"
+#include "amqp_time.h"
 #include "amqp_private.h"
 
 /* This is for the Math::UInt64 integration */
