@@ -19,13 +19,11 @@ eval { $mq->connect($host, { user => "guest", password => "guest", heartbeat => 
 is($@, '', "connect");
 eval { $mq->channel_open(1); };
 is($@, '', "channel_open");
-diag "Sleeping for 5 seconds";
 sleep(5);
 eval { $mq->heartbeat(); };
 is($@, '', "heartbeat");
 my $rv = 0;
 eval { $mq->publish(1, $routekey, "Magic Transient Payload", { exchange => $exchange, "immediate" => 1, "mandatory" => 1 }); };
-diag "Sleeping for 1 seconds";
 sleep(1);
 eval { $mq->publish(1, $routekey, "Magic Transient Payload", { exchange => $exchange, "immediate" => 1, "mandatory" => 1 }); };
 like( $@, qr/AMQP socket not connected/, "publish fails with error code" );

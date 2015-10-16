@@ -25,8 +25,6 @@ my $queue;
 eval { $queue = $mq->queue_declare(1, "", { auto_delete => $delete } ); };
 is($@, '', "queue_declare");
 
-diag "Using queue $queue";
-
 eval { $mq->exchange_declare( 1, $exchange, { exchange_type => 'headers', auto_delete => $delete } ); };
 is($@, '', "exchange_declare");
 

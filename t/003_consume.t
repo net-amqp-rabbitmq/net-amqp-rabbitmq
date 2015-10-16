@@ -1,4 +1,4 @@
-use Test::More 0.88;
+use Test::More tests => 18;
 use strict;
 use warnings;
 
@@ -79,5 +79,3 @@ is($rv, undef, 'immediate recv returns undef');
 
 eval { $mq->cancel(1, $consumer_tag); };
 is($@, '', 'cancel');
-
-done_testing;
