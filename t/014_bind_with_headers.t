@@ -1,4 +1,4 @@
-use Test::More tests => 17;
+use Test::More tests => 19;
 use strict;
 use warnings;
 
@@ -68,3 +68,18 @@ eval { $message_count = $mq->queue_delete(1, $queue, {if_unused => 0, if_empty =
 is( $@, '', "queue_delete" );
 eval { $mq->queue_bind( 1, $queue, $exchange, $routekey, $headers ); };
 like( $@, qr/NOT_FOUND - no queue /, "Binding deleted queue failed - NOT_FOUND" );
+
+# Let's do some negative testing
+my $empty_value = "";
+eval { $mq->queue_bind( 1, $empty_value, $exchange, $routekey, $headers ); };
+like(
+	$@,
+	qr/queuename and exchange must both be specified/,
+	"Binding to queue without a queue name"
+);
+eval { $mq->queue_bind( 1, $queue, $empty_value, $routekey, $headers ); };
+like(
+	$@,
+	qr/queuename and exchange must both be specified/,
+	"Binding to queue without an exchange"
+);

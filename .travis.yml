@@ -16,7 +16,7 @@ services: rabbitmq
 before_install:
   - if [[ "$(which brew)" != "" ]]; then brew upgrade; brew install cpanminus; fi
   - if [[ "$(which brew)" = "" ]]; then export LOCAL_MQHOST="localhost"; fi
-  - cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64
+  - cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64 JSON
   - export PATH="$HOME/perl5/bin:$PATH"
   - export PERL5LIB="$HOME/perl5/lib/perl5:$PERL5LIB"
 before_script:
