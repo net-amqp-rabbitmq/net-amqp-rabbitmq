@@ -1,4 +1,4 @@
-use Test::More tests => 8;
+use Test::More tests => 9;
 use strict;
 use warnings;
 
@@ -29,6 +29,9 @@ eval { $mq->exchange_declare(1, $exchange."internal0.auto_delete1", { exchange_t
 is($@, '', "exchange_declare");
 
 eval { $mq->exchange_declare(1, $exchange."internal1.auto_delete1", { exchange_type => "direct", passive => 0, durable => 1, auto_delete => 1, internal => 1 }); };
+is($@, '', "exchange_declare");
+
+eval { $mq->exchange_delete(1, $exchange, { exchange_type => "direct", passive => 0, durable => 1, auto_delete => 0, internal => 0 }); };
 is($@, '', "exchange_declare");
 
 1;
