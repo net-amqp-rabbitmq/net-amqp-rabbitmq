@@ -1342,20 +1342,47 @@ net_amqp_rabbitmq_ack(conn, channel, delivery_tag, multiple = 0)
     die_on_error(aTHX_ amqp_basic_ack(conn, channel, delivery_tag, multiple), conn,
                  "ack");
 
+void
+net_amqp_rabbitmq_nack(conn, channel, delivery_tag, multiple = 0, requeue = 0)
+  Net::AMQP::RabbitMQ conn
+  int channel
+  uint64_t delivery_tag
+  int multiple
+  int requeue
+  CODE:
+    assert_amqp_connected(conn);
+
+    die_on_error(
+      aTHX_ amqp_basic_nack(
+        conn,
+        channel,
+        delivery_tag,
+        (amqp_boolean_t)multiple,
+        (amqp_boolean_t)requeue
+      ),
+      conn,
+      "nack"
+    );
 
 void
 net_amqp_rabbitmq_reject(conn, channel, delivery_tag, requeue = 0)
- Net::AMQP::RabbitMQ conn
- int channel
- uint64_t delivery_tag
- int requeue
- PREINIT:
-   STRLEN len;
- CODE:
+  Net::AMQP::RabbitMQ conn
+  int channel
+  uint64_t delivery_tag
+  int requeue
+  CODE:
     assert_amqp_connected(conn);
 
-    die_on_error(aTHX_ amqp_basic_reject(conn, channel, delivery_tag, requeue), conn,
-                 "reject");
+    die_on_error(
+      aTHX_ amqp_basic_reject(
+        conn,
+        channel,
+        delivery_tag,
+        requeue
+      ),
+      conn,
+      "reject"
+    );
 
 
 void

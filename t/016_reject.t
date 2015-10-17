@@ -1,4 +1,4 @@
-use Test::More tests => 16;
+use Test::More tests => 20;
 use strict;
 use warnings;
 
@@ -55,6 +55,8 @@ eval { $mq->consume(1, $queuename, { no_ack => 0, consumer_tag=>'ctag' } ); };
 is($@, '', "consuming");
 $payload = {};
 eval { $payload = $mq->recv(); };
+is($@, '', "recv");
+
 my $reject_tag = $payload->{delivery_tag};
 is_deeply($payload,
           {
@@ -68,3 +70,13 @@ is_deeply($payload,
           }, "payload");
 eval { $mq->reject(1, $reject_tag); };
 is($@, '', "rejecting");
+
+eval { $mq->publish(1, $routekey, "Magic Payload $$", { exchange => $exchange }); };
+is($@, '', "publish");
+
+eval { $payload = $mq->recv(); };
+is($@, '', "recv");
+
+my $nack_tag = $payload->{delivery_tag};
+eval { $mq->nack( 1, $nack_tag, 0, 0); };
+is($@, '', 'nack');
