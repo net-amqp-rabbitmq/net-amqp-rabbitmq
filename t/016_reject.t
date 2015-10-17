@@ -1,10 +1,10 @@
-use Test::More tests => 20;
+use Test::More tests => 26;
 use strict;
 use warnings;
 
 use Math::UInt64 qw/uint64/;
 use Sys::Hostname;
-my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
+my $unique = hostname . "-$^O-$^V-$$"; #hostname-os-perlversion-PID
 my $exchange = "nr_test_x-$unique";
 my $queuename = "nr_test_reject-$unique";
 my $routekey = "nr_test_reject_route-$unique";
@@ -21,6 +21,12 @@ eval { $mq->connect($host, { user => "guest", password => "guest" }); };
 is($@, '', "connect");
 eval { $mq->channel_open(1); };
 is($@, '', "channel_open");
+
+# Re-establish the exchange if it wasn't created in 001
+# or in 002
+eval { $mq->exchange_declare(1, $exchange, { exchange_type => "direct", passive => 0, durable => 1, auto_delete => 0, internal => 0 }); };
+is($@, '', "exchange_declare");
+
 eval { $mq->queue_declare(1, $queuename, { passive => 0, durable => 1, exclusive => 0, auto_delete => 0 }); };
 is($@, '', "queue_declare");
 eval { $mq->queue_bind(1, $queuename, $exchange, $routekey); };
@@ -68,6 +74,7 @@ is_deeply($payload,
           'consumer_tag' => 'ctag',
           'props' => {},
           }, "payload");
+
 eval { $mq->reject(1, $reject_tag); };
 is($@, '', "rejecting");
 
@@ -80,3 +87,21 @@ is($@, '', "recv");
 my $nack_tag = $payload->{delivery_tag};
 eval { $mq->nack( 1, $nack_tag, 0, 0); };
 is($@, '', 'nack');
+
+# Clean up
+eval { $mq->cancel(1, 'ctag'); };
+is($@, '', 'cancel');
+
+eval { 1 while($mq->purge(1, $queuename)); };
+is($@, '', "purge queue");
+
+eval { $mq->queue_unbind(1, $queuename, $exchange, $routekey); };
+is($@, '', "queue_unbind");
+
+eval { $mq->queue_delete(1, $queuename); };
+is($@, '', "queue_delete");
+
+eval { $mq->exchange_delete(1, $exchange); };
+is($@, '', "exchange_delete");
+
+1;

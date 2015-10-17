@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Sys::Hostname;
-my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
+my $unique = hostname . "-$^O-$^V-$$"; #hostname-os-perlversion-PID
 my $exchangeA = "x-nr_test_x_e2eA-$unique";
 my $exchangeB = "x-nr_test_x_e2eB-$unique";
 my $queue = "x-nr_test_q_e2e-$unique";
