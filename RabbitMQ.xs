@@ -1048,6 +1048,84 @@ net_amqp_rabbitmq_exchange_delete(conn, channel, exchange, options = NULL)
     amqp_exchange_delete(conn, channel, amqp_cstring_bytes(exchange), if_unused);
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Deleting exchange");
 
+void net_amqp_rabbitmq_exchange_bind(conn, channel, destination, source, routing_key, args = NULL)
+  Net::AMQP::RabbitMQ conn
+  int channel
+  char *destination
+  char *source
+  char *routing_key
+  HV *args
+  PREINIT:
+    amqp_exchange_bind_ok_t *reply = (amqp_exchange_bind_ok_t*)NULL;
+    amqp_table_t arguments = amqp_empty_table;
+  CODE:
+    // We must be connected
+    assert_amqp_connected(conn);
+
+    // Parameter validation
+    if( ( source == NULL || 0 == strlen(source) )
+      ||
+      ( destination == NULL || 0 == strlen(destination) )
+    )
+    {
+      Perl_croak(aTHX_ "source and destination must both be specified");
+    }
+
+    // Pull in arguments if we have any
+    if(args)
+    {
+      hash_to_amqp_table(args, &arguments, 1);
+    }
+
+    reply = amqp_exchange_bind(
+      conn,
+      channel,
+      amqp_cstring_bytes(destination),
+      amqp_cstring_bytes(source),
+      amqp_cstring_bytes(routing_key),
+      arguments
+    );
+    die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Binding Exchange");
+
+void net_amqp_rabbitmq_exchange_unbind(conn, channel, destination, source, routing_key, args = NULL)
+  Net::AMQP::RabbitMQ conn
+  int channel
+  char *destination
+  char *source
+  char *routing_key
+  HV *args
+  PREINIT:
+    amqp_exchange_unbind_ok_t *reply = (amqp_exchange_unbind_ok_t*)NULL;
+    amqp_table_t arguments = amqp_empty_table;
+  CODE:
+    // We must be connected
+    assert_amqp_connected(conn);
+
+    // Parameter validation
+    if( ( source == NULL || 0 == strlen(source) )
+      ||
+      ( destination == NULL || 0 == strlen(destination) )
+    )
+    {
+      Perl_croak(aTHX_ "source and destination must both be specified");
+    }
+
+    // Pull in arguments if we have any
+    if(args)
+    {
+      hash_to_amqp_table(args, &arguments, 1);
+    }
+
+    reply = amqp_exchange_unbind(
+      conn,
+      channel,
+      amqp_cstring_bytes(destination),
+      amqp_cstring_bytes(source),
+      amqp_cstring_bytes(routing_key),
+      arguments
+    );
+    die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Unbinding Exchange");
+
 void net_amqp_rabbitmq_queue_delete(conn, channel, queuename, options = NULL)
   Net::AMQP::RabbitMQ conn
   int channel
@@ -1136,9 +1214,10 @@ net_amqp_rabbitmq_queue_bind(conn, channel, queuename, exchange, bindingkey, arg
       ||
       0 == strlen(exchange)
     )
+    {
       Perl_croak(aTHX_ "queuename and exchange must both be specified");
-    if(bindingkey == NULL && args == NULL)
-      Perl_croak(aTHX_ "bindingkey or args must be specified");
+    }
+
     if(args)
       hash_to_amqp_table(args, &arguments, 0);
     amqp_queue_bind(conn, channel, amqp_cstring_bytes(queuename),
@@ -1162,9 +1241,10 @@ net_amqp_rabbitmq_queue_unbind(conn, channel, queuename, exchange, bindingkey, a
     assert_amqp_connected(conn);
 
     if(queuename == NULL || exchange == NULL)
+    {
       Perl_croak(aTHX_ "queuename and exchange must both be specified");
-    if(bindingkey == NULL && args == NULL)
-      Perl_croak(aTHX_ "bindingkey or args must be specified");
+    }
+
     if(args)
     {
       hash_to_amqp_table(args, &arguments, 0);

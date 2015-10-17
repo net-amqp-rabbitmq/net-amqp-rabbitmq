@@ -16,14 +16,14 @@ Net::AMQP::RabbitMQ - interact with RabbitMQ over AMQP using librabbitmq
 
 =head1 SYNOPSIS
 
-	use Net::AMQP::RabbitMQ;
-	my $mq = Net::AMQP::RabbitMQ->new();
-	$mq->connect("localhost", { user => "guest", password => "guest" });
-	$mq->channel_open(1);
-	$mq->publish(1, "queuename", "Hi there!");
+  use Net::AMQP::RabbitMQ;
+  my $mq = Net::AMQP::RabbitMQ->new();
+  $mq->connect("localhost", { user => "guest", password => "guest" });
+  $mq->channel_open(1);
+  $mq->publish(1, "queuename", "Hi there!");
   my $gotten = $mq->get(1, "queuename");
   print $gotten->{body} . "\n";
-	$mq->disconnect();
+  $mq->disconnect();
 
 =head1 VERSION COMPATIBILITY
 
@@ -129,6 +129,32 @@ C<$options> is an optional hash respecting the following keys:
        if_unused => $boolean,   #default 1
        nowait => $boolean,      #default 0
      }
+
+=head2 exchange_bind($channel, $destination, $source, $routing_key, $arguments)
+
+C<$channel> is a channel that has been opened with C<channel_open>.
+
+C<$destination> is a previously declared exchange, C<$source> is
+yet another previously declared exchange, and C<$routing_key> is
+the routing key that will bind the specified source exchange to
+the specified destination exchange.
+
+C<$arguments> is an optional hash which will be passed to the server.  When
+binding to an exchange of type C<headers>, this can be used to only receive
+messages with the supplied header values.
+
+=head2 exchange_unbind($channel, $destination, $source, $routing_key, $arguments)
+
+C<$channel> is a channel that has been opened with C<channel_open>.
+
+C<$destination> is a previously declared exchange, C<$source> is
+yet another previously declared exchange, and C<$routing_key> is
+the routing key that will B<unbind> the specified source exchange from
+the specified destination exchange.
+
+C<$arguments> is an optional hash which will be passed to the server.  When
+binding to an exchange of type C<headers>, this can be used to only receive
+messages with the supplied header values.
 
 =head2 queue_declare($channel, $queuename, $options, $arguments)
 
