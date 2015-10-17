@@ -1070,10 +1070,6 @@ void net_amqp_rabbitmq_exchange_bind(conn, channel, destination, source, routing
     {
       Perl_croak(aTHX_ "source and destination must both be specified");
     }
-    if(routing_key == NULL && args == NULL)
-    {
-      Perl_croak(aTHX_ "routing_key or args must be specified");
-    }
 
     // Pull in arguments if we have any
     if(args)
@@ -1112,10 +1108,6 @@ void net_amqp_rabbitmq_exchange_unbind(conn, channel, destination, source, routi
     )
     {
       Perl_croak(aTHX_ "source and destination must both be specified");
-    }
-    if(routing_key == NULL && args == NULL)
-    {
-      Perl_croak(aTHX_ "routing_key or args must be specified");
     }
 
     // Pull in arguments if we have any
@@ -1222,9 +1214,10 @@ net_amqp_rabbitmq_queue_bind(conn, channel, queuename, exchange, bindingkey, arg
       ||
       0 == strlen(exchange)
     )
+    {
       Perl_croak(aTHX_ "queuename and exchange must both be specified");
-    if(bindingkey == NULL && args == NULL)
-      Perl_croak(aTHX_ "bindingkey or args must be specified");
+    }
+
     if(args)
       hash_to_amqp_table(args, &arguments, 0);
     amqp_queue_bind(conn, channel, amqp_cstring_bytes(queuename),
@@ -1248,9 +1241,10 @@ net_amqp_rabbitmq_queue_unbind(conn, channel, queuename, exchange, bindingkey, a
     assert_amqp_connected(conn);
 
     if(queuename == NULL || exchange == NULL)
+    {
       Perl_croak(aTHX_ "queuename and exchange must both be specified");
-    if(bindingkey == NULL && args == NULL)
-      Perl_croak(aTHX_ "bindingkey or args must be specified");
+    }
+
     if(args)
     {
       hash_to_amqp_table(args, &arguments, 0);

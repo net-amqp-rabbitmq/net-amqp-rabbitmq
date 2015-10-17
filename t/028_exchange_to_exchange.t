@@ -1,4 +1,4 @@
-use Test::More tests => 15;
+use Test::More tests => 19;
 use strict;
 use warnings;
 
@@ -55,3 +55,33 @@ is($@, '', 'exchange_bind');
 
 eval { $mq->queue_unbind(1, $queue, $exchangeB, $routekey); };
 is($@, '', "queue_bind");
+
+
+# Test parameter validation!
+my $empty_value = "";
+eval { $mq->exchange_bind( 1, $empty_value, $exchangeA, $routekey ); };
+like(
+	$@,
+	qr/source and destination must both be specified/,
+	"Binding exchange-to-exchange without a destination name"
+);
+eval { $mq->exchange_bind( 1, $exchangeB, $empty_value, $routekey ); };
+like(
+	$@,
+	qr/source and destination must both be specified/,
+	"Binding exchange-to-exchange without a source name"
+);
+
+# Now for unbinding
+eval { $mq->exchange_unbind( 1, $empty_value, $exchangeA, $routekey ); };
+like(
+	$@,
+	qr/source and destination must both be specified/,
+	"Unbinding exchange-to-exchange without a destination name"
+);
+eval { $mq->exchange_unbind( 1, $exchangeB, $empty_value, $routekey ); };
+like(
+	$@,
+	qr/source and destination must both be specified/,
+	"Unbinding exchange-to-exchange without a source name"
+);
