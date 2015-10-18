@@ -48,6 +48,7 @@ WriteMakefile(
     },
     META_MERGE        => {
         "meta-spec" => { version => 2 },
+        "dynamic_config" => 0,
         "x_contributors" => [
             'jesus - Theo Schlossnagle <jesus@omniti.com>',
             'markellis - Mark Ellis <markellis@cpan.org>',
