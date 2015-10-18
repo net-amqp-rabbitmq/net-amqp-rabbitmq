@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 require 5.008 ;
+use utf8;
 
 use lib qw(inc);
 use ExtUtils::MakeMaker 5.16 ;
