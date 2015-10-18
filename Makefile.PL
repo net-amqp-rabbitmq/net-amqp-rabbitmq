@@ -6,11 +6,10 @@ use utf8;
 use lib qw(inc);
 use ExtUtils::MakeMaker 5.16 ;
 use Config;
-use FindBin qw/$Bin/;
 use Devel::CheckLib;
 
 my $ofiles = '';
-foreach ( <$Bin/*.c> ){
+foreach ( <*.c> ){
 
     next if ( $_ =~ m/assertlib/ );
 
@@ -41,7 +40,7 @@ WriteMakefile(
     AUTHOR          => 'Mark Ellis <nobody@cpan.org>, Michael Stemle, Jr. <mstemle@cpan.org>',
     OBJECT          => "RabbitMQ.o ${ofiles}",
     OPTIMIZE        => $ENV{'OPTIMIZE'},
-    CCFLAGS         => "$Config{ccflags} -I${Bin}",
+    CCFLAGS         => "$Config{ccflags} -I.",
     DEFINE          => "-DHAVE_SOCKET -DHAVE_POLL -DAMQ_PLATFORM='\"Perl_$^O_$^V\"' ${htonll_ccflag}",
     LIBS            =>['-lrt'],
     PREREQ_PM       => {
