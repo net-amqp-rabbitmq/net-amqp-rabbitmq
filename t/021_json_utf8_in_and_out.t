@@ -11,7 +11,7 @@ if ( $@ ) {
      plan tests => 24;
 }
 use Sys::Hostname;
-my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
+my $unique = hostname . "-$^O-$^V-$$"; #hostname-os-perlversion-PID
 my $exchange = "nr_test_x-$unique";
 my $routekey = "nr_test_q-$unique";
 

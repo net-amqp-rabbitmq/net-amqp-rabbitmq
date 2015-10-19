@@ -5,7 +5,7 @@ use warnings;
 use Sys::Hostname;
 use Time::HiRes qw(gettimeofday tv_interval);
 
-my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
+my $unique = hostname . "-$^O-$^V-$$"; #hostname-os-perlversion-PID
 my $exchange = "nr_test_x-$unique";
 my $queuename = "nr_test_hole-$unique";
 my $routekey = "nr_test_route-$unique";

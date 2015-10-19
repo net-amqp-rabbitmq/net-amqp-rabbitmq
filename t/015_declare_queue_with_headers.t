@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Sys::Hostname;
-my $unique = hostname . "-$^O-$^V"; #hostname-os-perlversion
+my $unique = hostname . "-$^O-$^V-$$"; #hostname-os-perlversion-PID
 my $queuename = "x-headers-" . rand() . $unique;
 
 my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
