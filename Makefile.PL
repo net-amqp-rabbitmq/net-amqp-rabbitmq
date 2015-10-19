@@ -66,6 +66,7 @@ my %WriteMakefileArgs = (
             'dburke - Daniel W Burke <dburke@addictmud.org>',
             'davsx - Dávid Kovács',
             'iron-s - Alexey Sheynuk',
+            'ether - Karen Etheridge <ether@cpan.org>',
         ],
         resources => {
             bugtracker  => {

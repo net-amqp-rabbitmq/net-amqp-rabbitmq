@@ -470,15 +470,25 @@ calls are made.
 
 =head1 AUTHORS
 
-jesus - Theo Schlossnagle E<lt>jesus@omniti.comE<gt>
+Theo Schlossnagle E<lt>jesus@omniti.comE<gt>
 
-n0body - Mark Ellis E<lt>markellis@cpan.orgE<gt>
+Mark Ellis E<lt>markellis@cpan.orgE<gt>
 
-manchicken - Michael Stemle, Jr. E<lt>themanchicken@gmail.comE<gt>
+Michael Stemle, Jr. E<lt>themanchicken@gmail.comE<gt>
 
-autarch - Dave Rolsky E<lt>autarch@urth.orgE<gt>
+Dave Rolsky E<lt>autarch@urth.orgE<gt>
 
-eserte - Slaven Rezić
+Slaven Rezić
+
+Armand Leclercq
+
+Daniel W Burke
+
+Dávid Kovács
+
+Alexey Sheynuk
+
+Karen Etheridge E<lt>ether@cpan.orgE<gt>,
 
 =head1 LICENSE
 
