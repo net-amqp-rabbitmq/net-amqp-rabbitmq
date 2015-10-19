@@ -1,15 +1,15 @@
 use strict;
 use warnings;
 require 5.008 ;
+use utf8;
 
 use lib qw(inc);
 use ExtUtils::MakeMaker 5.16 ;
 use Config;
-use FindBin qw/$Bin/;
 use Devel::CheckLib;
 
 my $ofiles = '';
-foreach ( <$Bin/*.c> ){
+foreach ( <*.c> ){
 
     next if ( $_ =~ m/assertlib/ );
 
@@ -32,7 +32,7 @@ return -1;
 );
 my $htonll_ccflag = ($has_htonll) ? '-DHAVE_HTONLL' : '';
 
-WriteMakefile(
+my %WriteMakefileArgs = (
     NAME            => 'Net::AMQP::RabbitMQ',
     VERSION_FROM    => 'RabbitMQ.pm',
     LICENSE         => 'mozilla_1_1',
@@ -40,14 +40,22 @@ WriteMakefile(
     AUTHOR          => 'Mark Ellis <nobody@cpan.org>, Michael Stemle, Jr. <mstemle@cpan.org>',
     OBJECT          => "RabbitMQ.o ${ofiles}",
     OPTIMIZE        => $ENV{'OPTIMIZE'},
-    CCFLAGS         => "$Config{ccflags} -I${Bin}",
+    CCFLAGS         => "$Config{ccflags} -I.",
     DEFINE          => "-DHAVE_SOCKET -DHAVE_POLL -DAMQ_PLATFORM='\"Perl_$^O_$^V\"' ${htonll_ccflag}",
     LIBS            =>['-lrt'],
     PREREQ_PM       => {
-        'Math::Int64'      => 0.34,
+        'Math::Int64'      => '0.34',
+        'Scalar::Util'     => '0',
+        'XSLoader'         => '0',
+    },
+    TEST_REQUIRES   => {
+        'Sys::Hostname'    => '0',
+        'Test::More'       => '0',
+        'Time::HiRes'      => '0',
     },
     META_MERGE        => {
         "meta-spec" => { version => 2 },
+        "dynamic_config" => 0,
         "x_contributors" => [
             'jesus - Theo Schlossnagle <jesus@omniti.com>',
             'markellis - Mark Ellis <markellis@cpan.org>',
@@ -71,3 +79,10 @@ WriteMakefile(
         },
     },
 );
+
+if (!eval { ExtUtils::MakeMaker->VERSION('6.6303') }) {
+    $WriteMakefileArgs{BUILD_REQUIRES} = $WriteMakefileArgs{TEST_REQUIRES};
+    delete $WriteMakefileArgs{TEST_REQUIRES};
+}
+
+WriteMakefile(%WriteMakefileArgs);
