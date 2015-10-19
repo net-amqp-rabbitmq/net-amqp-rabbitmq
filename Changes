@@ -1,5 +1,14 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+1.300000 - 2015-10-19
+    - fill in missing runtime and test prereqs, with graceful backcompat (ether)
+    - mark the distribution as not having dynamically configured prereqs (ether)
+    - drop unneeded use of FindBin -- $cwd must be "." to build the distribution (ether)
+    - ensure contributor names are not mojibaked (ether)
+    - Added server and client properties (manchicken)
+    - Implementing `nack()` (manchicken)
+    - Cleaning up the tests (manchicken)
+
 1.200000 - 2015-10-17
     - added exchange-to-exchange binding (manchicken)
 
