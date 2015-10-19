@@ -633,6 +633,11 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
     __DEBUG__( warn("%d KIND >%c<", __LINE__, mq_element->kind) );
 
     switch (mq_element->kind) {
+      // Boolean
+      case AMQP_FIELD_KIND_BOOLEAN:
+        perl_element = newSViv(mq_element->value.boolean);
+        break;
+
       // Signed values
       case AMQP_FIELD_KIND_I8:
         perl_element = newSViv(mq_element->value.i8);
@@ -734,6 +739,11 @@ SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
     );
 
     switch (hash_entry->value.kind) {
+      // Boolean
+      case AMQP_FIELD_KIND_BOOLEAN:
+        perl_element = newSViv(hash_entry->value.value.boolean);
+        break;
+
       // Integers
       case AMQP_FIELD_KIND_I8:
         perl_element = newSViv(hash_entry->value.value.i8);
@@ -1651,3 +1661,39 @@ net_amqp_rabbitmq_basic_qos(conn, channel, args = NULL)
     amqp_basic_qos(conn, channel,
                    prefetch_size, prefetch_count, global);
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Basic QoS");
+
+SV* net_amqp_rabbitmq_get_server_properties(conn)
+  Net::AMQP::RabbitMQ conn
+  PREINIT:
+    amqp_table_t* server_properties;
+  CODE:
+    assert_amqp_connected(conn);
+    server_properties = amqp_get_server_properties(conn);
+    if ( server_properties )
+    {
+      RETVAL = mq_table_to_hashref(server_properties);
+    }
+    else
+    {
+      RETVAL = (SV*)&PL_sv_undef;
+    }
+  OUTPUT:
+    RETVAL
+
+SV* net_amqp_rabbitmq_get_client_properties(conn)
+  Net::AMQP::RabbitMQ conn
+  PREINIT:
+    amqp_table_t* client_properties;
+  CODE:
+    assert_amqp_connected(conn);
+    client_properties = amqp_get_client_properties(conn);
+    if ( client_properties )
+    {
+      RETVAL = mq_table_to_hashref(client_properties);
+    }
+    else
+    {
+      RETVAL = (SV*)&PL_sv_undef;
+    }
+  OUTPUT:
+    RETVAL

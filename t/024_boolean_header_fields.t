@@ -50,7 +50,7 @@ my $ua = LWP::UserAgent->new;
 for my $test_def (['true', 1], ['false', 0]) {
     my($boolean_value, $perl_value) = @$test_def;
     my $resp = $ua->post("http://guest:guest\@$host/mgmt/api/exchanges/%2F/$exchange/publish", Content => <<"EOF");
-{"properties":{"headers":{"booltest":$boolean_value}},"routing_key":"$routekey","payload":"test boolean","payload_encoding":"string"}
+{"properties":{"headers":{"booltest":$boolean_value,"boollist":[true,false]}},"routing_key":"$routekey","payload":"test boolean","payload_encoding":"string"}
 EOF
     ok $resp->is_success, "Publishing message with boolean value $boolean_value"
 	or diag "Publishing booltest message failed: " . $resp->as_string;
@@ -67,7 +67,12 @@ EOF
 	       'redelivered' => 0,
 	       'exchange' => $exchange,
 	       'consumer_tag' => 'ctag',
-	       'props' => { 'headers' => { 'booltest' => $perl_value } },
+	       'props' => {
+                'headers' => {
+                    'booltest' => $perl_value,
+                    'boollist' => [1,0]
+                }
+            },
 	      }, "payload and header with boolean value $boolean_value");
 }
 

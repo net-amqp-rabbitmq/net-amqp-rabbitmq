@@ -79,6 +79,14 @@ C<$options> is an optional hash respecting the following keys:
 
 Causes the connection to RabbitMQ to be torn down.
 
+=head2 get_server_properties()
+
+Get a hashref of server properties (these may vary, you should C<Data::Dumper> to inspect). They will be provided by the RabbitMQ server to which you are connected.
+
+=head2 get_client_properties()
+
+Get a hashref of server properties (these may vary, you should C<Data::Dumper> to inspect).
+
 =head2 is_connected()
 
 Returns true if a valid socket connection appears to exist, false otherwise.
