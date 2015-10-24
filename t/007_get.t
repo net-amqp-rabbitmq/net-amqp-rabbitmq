@@ -1,137 +1,102 @@
-use Test::More tests => 22;
+use Test::More tests => 15;
 use strict;
 use warnings;
 
-use Math::UInt64 qw/uint64/;
-use Sys::Hostname;
-my $unique = hostname . "-$^O-$^V-$$"; #hostname-os-perlversion-PID
-my $exchange = "nr_test_x-$unique";
-my $routekey = "nr_test_q-$unique";
+use FindBin qw/$Bin/;
+use lib "$Bin/lib";
+use NAR::Helper;
 
-my $dtag=1;
-my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
+my $helper = NAR::Helper->new;
 
-use_ok('Net::AMQP::RabbitMQ');
+ok $helper->connect, "connected";
+ok $helper->channel_open, "channel_open";
 
-my $mq = Net::AMQP::RabbitMQ->new();
-ok($mq);
+ok $helper->exchange_declare, "default exchange declare";
 
-eval { $mq->connect($host, { user => "guest", password => "guest" }); };
-is($@, '', "connect");
-eval { $mq->channel_open(1); };
-is($@, '', "channel_open");
+my $queuename = $helper->queue_declare( undef, undef, 1 );
+ok $queuename, "queue declare";
 
-# Re-establish the exchange if it wasn't created in 001
-# or in 002
-eval { $mq->exchange_declare(1, $exchange, { exchange_type => "direct", passive => 0, durable => 1, auto_delete => 0, internal => 0 }); };
-is($@, '', "exchange_declare");
+ok $helper->queue_bind( $queuename ), "queue bind";
+ok $helper->drain( $queuename ), "drain queue";
 
-my $queuename = '';
-eval { $queuename = $mq->queue_declare(1, '', { passive => 0, durable => 0, exclusive => 0, auto_delete => 1 }); };
-is($@, '', "queue_declare");
-isnt($queuename, '', "queue_declare -> private name");
-eval { $mq->queue_bind(1, $queuename, $exchange, $routekey); };
-is($@, '', "queue_bind");
+{
+    my $getr = $helper->get( $queuename );
+    is( $getr, undef, "get returned undef" );
+}
 
-my $getr;
-eval { $getr = $mq->get(1, $queuename); };
-is($@, '', "get");
-is($getr, undef, "get should return empty");
-
-eval { $mq->publish(1, $routekey, "Magic Transient Payload", { exchange => $exchange }); };
-
-eval { $getr = $mq->get(1, $queuename, {no_ack=>0}); };
-is($@, '', "get");
-
-is_deeply($getr,
-          {
-            redelivered => 0,
-            routing_key => $routekey,
-            exchange => $exchange,
+{
+    ok $helper->publish( "Magic Transient Payload" ), "publish";
+    my $getr = $helper->get( $queuename, 0 );
+    is_deeply(
+        $getr,
+        {
+            redelivered   => 0,
+            routing_key   => $helper->{routekey},
+            exchange      => $helper->{exchange},
             message_count => 0,
-            delivery_tag => $dtag,
-            'props' => {},
-            body => 'Magic Transient Payload',
-          }, "get should see message");
+            delivery_tag  => 1,
+            props         => {},
+            body          => 'Magic Transient Payload',
+        },
+        "get should see message"
+    );
+}
 
 # Let's close the channel, forcing the unacknowledged message to be re-delivered.
-eval { $mq->channel_close(1); };
-is($@, '', "channel_close");
-eval { $mq->channel_open(1); };
-is($@, '', "channel_open again");
+ok $helper->channel_close, "channel_close";
+ok $helper->channel_open, "channel_open";
 
+{
 # Get the message again and prove it was redelivered
-eval { $getr = $mq->get(1, $queuename, {no_ack=>1}); };
-is($@, '', "get");
-
-is_deeply($getr,
-          {
-            redelivered => 1,
-            routing_key => $routekey,
-            exchange => $exchange,
+    my $getr = $helper->get( $queuename );
+    is_deeply(
+        $getr,
+        {
+            redelivered   => 1,
+            routing_key   => $helper->{routekey},
+            exchange      => $helper->{exchange},
             message_count => 0,
-            delivery_tag => $dtag,
-            'props' => {},
-            body => 'Magic Transient Payload',
-          }, "get should see redelivered message");
+            delivery_tag  => 1,
+            props         => {},
+            body          => 'Magic Transient Payload',
+        },
+        "get should see redelivered message"
+    );
+}
 
-eval { $mq->publish(1, $routekey, "Magic Transient Payload 2", 
-                     { exchange => $exchange }, 
-                     {
-                       content_type => 'text/plain',
-                       content_encoding => 'none',
-                       correlation_id => '123',
-                       reply_to => 'somequeue',
-                       expiration => 1000,
-                       message_id => 'ABC',
-                       type => 'notmytype',
-                       user_id => 'guest',
-                       app_id => 'idd',
-                       delivery_mode => 1,
-                       priority => 2,
-                       timestamp => 1271857990,
-                     },
-                     ); };
+{
+    my $props = {
+        content_type     => 'text/plain',
+        content_encoding => 'none',
+        correlation_id   => '123',
+        reply_to         => 'somequeue',
+        expiration       => 1000,
+        message_id       => 'ABC',
+        type             => 'notmytype',
+        user_id          => $helper->{username},
+        app_id           => 'idd',
+        delivery_mode    => 1,
+        priority         => 2,
+        timestamp        => 1271857990,
+    };
+    ok $helper->publish( "Magic Transient Payload 2", $props ), "publish";
 
-eval { $getr = $mq->get(1, $queuename); };
-is($@, '', "get");
-
-$dtag =~ s/1/2/;
-is_deeply($getr,
-          {
-            redelivered => 0,
-            routing_key => $routekey,
-            exchange => $exchange,
+    my $getr = $helper->get( $queuename );
+    is_deeply(
+        $getr,
+        {
+            redelivered   => 0,
+            routing_key   => $helper->{routekey},
+            exchange      => $helper->{exchange},
             message_count => 0,
-            delivery_tag => $dtag,
-            props => {
-                content_type => 'text/plain',
-                content_encoding => 'none',
-                correlation_id => '123',
-                reply_to => 'somequeue',
-                expiration => 1000,
-                message_id => 'ABC',
-                type => 'notmytype',
-                user_id => 'guest',
-                app_id => 'idd',
-                delivery_mode => 1,
-                priority => 2,
-                timestamp => 1271857990,
-            },
-            body => 'Magic Transient Payload 2',
-          }, "get should see message");
+            delivery_tag  => 2,
+            props         => $props,
+            body          => 'Magic Transient Payload 2',
+        },
+        "get should see message"
+    );
+}
 
-# Clean up
-eval { 1 while($mq->purge(1, $queuename)); };
-is($@, '', "purge queue");
-
-eval { $mq->queue_unbind(1, $queuename, $exchange, $routekey); };
-is($@, '', "queue_unbind");
-
-eval { $mq->queue_delete(1, $queuename); };
-is($@, '', "queue_delete");
-
-eval { $mq->exchange_delete(1, $exchange); };
-is($@, '', "exchange_delete");
-
-1;
+END {
+    ok $helper->cleanup( $queuename ), "cleanup";
+}

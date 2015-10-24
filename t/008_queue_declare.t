@@ -1,52 +1,44 @@
-use Test::More tests => 9;
+use utf8;
+use Test::More tests => 7;
 use strict;
 use warnings;
 
-use utf8;
+use FindBin qw/$Bin/;
+use lib "$Bin/lib";
+use NAR::Helper;
 
-use Sys::Hostname;
-my $unique = hostname . "-$^O-$^V-$$"; #hostname-os-perlversion-PID
-my $exchange = "nr_test_x-$unique";
-my $expect_qn = "test.amqp.net.rabbitmq.perl-$unique";
-my $routekey = "nr_test_route-$unique";
+my $helper = NAR::Helper->new;
 
-my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
+ok $helper->connect, "connected";
+ok $helper->channel_open, "channel_open";
 
-use_ok('Net::AMQP::RabbitMQ');
+ok $helper->exchange_declare, "default exchange declare";
 
-my $mq = Net::AMQP::RabbitMQ->new();
-ok($mq);
-
-eval { $mq->connect($host, { user => "guest", password => "guest" }); };
-is($@, '', "connect");
-eval { $mq->channel_open(1); };
-is($@, '', "channel_open");
 my $queuename = undef;
 my $message_count = 0;
 my $consumer_count = 0;
-eval { ($queuename, $message_count, $consumer_count) =
-         $mq->queue_declare(1, $expect_qn, { passive => 0, durable => 1, exclusive => 0, auto_delete => 1 }); };
-is($@, '', "queue_declare");
-is($queuename, $expect_qn, "queue_declare -> $queuename = $expect_qn");
-is($message_count, 0, "got message count back");
-is($consumer_count, 0, "got consumer count back");
+( $queuename, $message_count, $consumer_count ) = $helper->queue_declare;
 
+is $queuename, $helper->{queue}, "queue_declare";
+is $message_count, 0, "0 messages in the queue";
+is $consumer_count, 0, "0 consumers on the queue";
 
-my $dlx = 'amq.direct';
 my $queue_options = {
-        'x-dead-letter-exchange'    => $dlx,
-        'x-dead-letter-routing-key' => $expect_qn,
-        'x-message-ttl'             => 10000,
-        'x-expires'                 => 20000,
-        };
-my $delay_queue = eval {
-	$mq->queue_declare(1,
-        	"",
-        	{ auto_delete => 1, },
-        	$queue_options,
-        	);
+    'x-dead-letter-exchange'    => 'amq.direct',
+    'x-dead-letter-routing-key' => $helper->{routekey},
+    'x-message-ttl'             => 10000,
+    'x-expires'                 => 20000,
 };
+my $returned_queuename = $helper->queue_declare( {auto_delete => 1}, undef, 1, $queue_options );
+ok $returned_queuename, "queue name";
 
-is($@, '', "queue_declare");
+END {
+    note( "cleaning up" );
 
-1;
+    $helper->purge;
+    $helper->queue_unbind;
+    $helper->queue_delete;
+    $helper->queue_delete( $returned_queuename );
+    $helper->exchange_delete;
+    $helper->channel_close;
+}

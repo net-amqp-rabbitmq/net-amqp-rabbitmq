@@ -1,83 +1,50 @@
-use Test::More tests => 19;
+use Test::More tests => 16;
 use strict;
 use warnings;
 
-use Sys::Hostname;
-my $unique = hostname . "-$^O-$^V-$$"; #hostname-os-perlversion-PID
-my $exchange = "x-nr_test_x-$unique";
-my $routekey = "nr_test_route-$unique";
+use FindBin qw/$Bin/;
+use lib "$Bin/lib";
+use NAR::Helper;
 
-my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
+my $helper = NAR::Helper->new;
 
-use_ok('Net::AMQP::RabbitMQ');
+ok $helper->connect, "connected";
+ok $helper->channel_open, "channel_open";
 
-my $mq = Net::AMQP::RabbitMQ->new();
-ok($mq, "Created object");
-
-eval { $mq->connect($host, { user => "guest", password => "guest" }); };
-is($@, '', "connect");
-
-eval { $mq->channel_open(1); };
-is($@, '', "channel_open");
-
-my $delete = 0;
-my $queue;
-eval { $queue = $mq->queue_declare(1, "", { auto_delete => $delete } ); };
-is($@, '', "queue_declare");
-
-eval { $mq->exchange_declare( 1, $exchange, { exchange_type => 'headers', auto_delete => $delete } ); };
-is($@, '', "exchange_declare");
+ok $helper->exchange_declare( { exchange_type => 'headers', auto_delete => 0 } ), "default exchange declare";
+my $queue = $helper->queue_declare( { auto_delete => 0 }, undef, 1 );
+ok $queue, "queue_declare";
 
 my $headers = { foo => 'bar' };
-eval { $mq->queue_bind( 1, $queue, $exchange, $routekey, $headers ) };
-is( $@, '', "queue_bind" );
+ok $helper->queue_bind( $queue, undef, undef, $headers ), "queue bind";
+ok $helper->drain( $queue ), "drain queue";
 
 # This message doesn't have the correct headers so will not be routed to the queue
-eval { $mq->publish( 1, $routekey, "Unroutable", { exchange => $exchange } ) };
-is( $@, '', "publish unroutable message" );
+ok $helper->publish( "Unroutable" ), "publish unroutable message";
+ok $helper->publish( "Routable", { headers => $headers } ), "publish routable message";
 
-eval { $mq->publish( 1, $routekey, "Routable", { exchange => $exchange }, { headers => $headers} ) };
-is( $@, '', "publish routable message" );
+ok $helper->consume( $queue );
 
-eval { $mq->consume( 1, $queue ) };
-is( $@, '', "consume" );
+my $msg = $helper->recv;
+ok $msg, "recv";
+is $msg->{body}, "Routable", "Got expected message";
 
-my $msg;
-eval { $msg = $mq->recv() };
-is( $@, '', "recv" );
-is( $msg->{body}, "Routable", "Got expected message" );
-
-SKIP: {
-	skip "Failed unbind closes channel", 1;
-	eval { $mq->queue_unbind( 1, $queue, $exchange, $routekey ) };
-	like( $@, qr/NOT_FOUND - no binding /, "Unbinding queue fails without specifying headers" );
-}
 my $message_count;
-SKIP: {
-	skip "Failed delete closes channel", 1;
-	eval { $message_count = $mq->queue_delete( 1, $queue ) };
-	like( $@, qr/PRECONDITION_FAILED - queue .* in use /, "deleting in use queue without setting if_unused fails" );
-}
 
-eval { $mq->queue_unbind( 1, $queue, $exchange, $routekey, $headers ) };
-is( $@, '', "queue_unbind" );
-
-eval { $message_count = $mq->queue_delete(1, $queue, {if_unused => 0, if_empty => 0} ); };
-is( $@, '', "queue_delete" );
-eval { $mq->queue_bind( 1, $queue, $exchange, $routekey, $headers ); };
-like( $@, qr/NOT_FOUND - no queue /, "Binding deleted queue failed - NOT_FOUND" );
+ok $helper->queue_unbind( $queue, undef, undef, $headers ), "queue_unbind";
+ok $helper->queue_delete( $queue );
+ok !$helper->queue_bind( $queue, undef, undef, $headers ), "queue bind";
 
 # Let's do some negative testing
-my $empty_value = "";
-eval { $mq->queue_bind( 1, $empty_value, $exchange, $routekey, $headers ); };
-like(
-	$@,
-	qr/queuename and exchange must both be specified/,
-	"Binding to queue without a queue name"
-);
-eval { $mq->queue_bind( 1, $queue, $empty_value, $routekey, $headers ); };
-like(
-	$@,
-	qr/queuename and exchange must both be specified/,
-	"Binding to queue without an exchange"
-);
+ok !$helper->queue_bind( "", undef, undef, $headers  ), "Binding to queue without a queue name";
+ok !$helper->queue_bind( $queue, "", undef, $headers  ), "Binding to queue without an exchange";
+
+END {
+    #reconnect first
+    $helper->connect;
+    $helper->channel_open;
+
+    $helper->exchange_delete;
+    $helper->channel_close;
+    $helper->disconnect;
+}

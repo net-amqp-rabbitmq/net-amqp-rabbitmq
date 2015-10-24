@@ -1,26 +1,28 @@
-use Test::More tests => 6;
+use Test::More tests => 5;
 use strict;
 use warnings;
 
-use Sys::Hostname;
-my $unique = hostname . "-$^O-$^V-$$"; #hostname-os-perlversion-PID
-my $queuename = "x-headers-" . rand() . $unique;
+use FindBin qw/$Bin/;
+use lib "$Bin/lib";
+use NAR::Helper;
 
-my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
+my $helper = NAR::Helper->new;
 
-use_ok('Net::AMQP::RabbitMQ');
+ok $helper->connect, "connected";
+ok $helper->channel_open, "channel_open";
 
-my $mq = Net::AMQP::RabbitMQ->new();
-ok($mq, "Created object");
+ok $helper->exchange_declare, "exchange declare";
+ok $helper->queue_declare( { auto_delete => 1 }, undef, undef, { "x-ha-policy" => "all" } ), "queue declare";
 
-eval { $mq->connect($host, { user => "guest", password => "guest" }); };
-is($@, '', "connect");
+ok !$helper->queue_declare( { auto_delete => 0 } ), "Redeclaring queue with different options fails";
 
-eval { $mq->channel_open(1); };
-is($@, '', "channel_open");
+END {
+    #reconnect first
+    $helper->connect;
+    $helper->channel_open;
 
-eval { $queuename = $mq->queue_declare(1, $queuename, { auto_delete => 1 }, { "x-ha-policy" => "all" }); };
-is($@, '', "queue_declare");
-
-eval { $queuename = $mq->queue_declare(1, $queuename, { auto_delete => 0 }); };
-like( $@, qr/PRECONDITION_FAILED/, "Redeclaring queue with different options fails." );
+    $helper->queue_delete;
+    $helper->exchange_delete;
+    $helper->channel_close;
+    $helper->disconnect;
+}
