@@ -1,7 +1,6 @@
 sudo: false
 language: perl
 perl:
-  - "5.22"
   - "5.20"
   - "5.18"
   - "5.16"
@@ -12,23 +11,26 @@ perl:
 os:
   - linux
   - osx
+cache:
+    directories:
+        - local
 services: rabbitmq
 before_install:
   - if [[ "$(which brew)" != "" ]]; then brew upgrade; brew install cpanminus; fi
   - if [[ "$(which brew)" = "" ]]; then export LOCAL_MQHOST="localhost"; fi
-  - cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64 JSON LWP::UserAgent
+  - cpanm -n Carton
   - export PATH="$HOME/perl5/bin:$PATH"
   - export PERL5LIB="$HOME/perl5/lib/perl5:$PERL5LIB"
+install: carton install
 before_script:
-  - cpanm -n JSON
-  - cpanm -n --installdeps .
+  - carton exec perl Makefile.PL
   - make manifest
-  - make distdir
+  - make distdir #check that the dist that will be on cpan works correctly
   - cd $(perl -MCPAN::Meta -e '$m = CPAN::Meta->load_file("MYMETA.yml"); print $m->name . "-" . $m->version')
-  - perl Makefile.PL
+  - carton exec perl Makefile.PL
   - make
 script:
   - export MQHOST="$LOCAL_MQHOST"
-  - if [[ "$MQHOST" != "" ]]; then cover -test -report coveralls -ignore_re "\.c|\.h"; fi
-  - if [[ "$MQHOST" != "" ]]; then perl -I blib/lib -I blib/arch xt/100_transaction_memory_leak.t; fi
-  - if [[ "$MQHOST" != "" ]]; then perl -I blib/lib -I blib/arch xt/101_headers_memory_leak.t; fi
+  - if [[ "$MQHOST" != "" ]]; then carton exec cover -test -report coveralls -ignore_re "\.c|\.h"; fi
+  - if [[ "$MQHOST" != "" ]]; then carton exec perl -I blib/lib -I blib/arch xt/100_transaction_memory_leak.t; fi
+  - if [[ "$MQHOST" != "" ]]; then carton exec perl -I blib/lib -I blib/arch xt/101_headers_memory_leak.t; fi
