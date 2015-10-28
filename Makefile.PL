@@ -42,7 +42,7 @@ my %WriteMakefileArgs = (
     OPTIMIZE        => $ENV{'OPTIMIZE'},
     CCFLAGS         => "$Config{ccflags} -I.",
     DEFINE          => "-DHAVE_SOCKET -DHAVE_POLL -DAMQ_PLATFORM='\"Perl_$^O_$^V\"' ${htonll_ccflag}",
-    LIBS            =>['-lrt'],
+    LIBS            =>['-lrt -lcrypto -lssl'],
     PREREQ_PM       => {
         'Math::Int64'      => '0.34',
         'Scalar::Util'     => '0',

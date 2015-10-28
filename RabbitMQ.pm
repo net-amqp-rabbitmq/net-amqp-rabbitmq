@@ -73,6 +73,9 @@ C<$options> is an optional hash respecting the following keys:
        frame_max => $fmax,      #default 131072
        heartbeat => $hearbeat,  #default 0
        timeout => $seconds      #default undef (no timeout)
+       ssl_ca => $path_to_pam   #default undef, enables SSL on connection
+       ssl_verify_hostname => 1 #default 1
+       ssl_initialize => 1      #default 1, initialize the underlying SSL library
      }
 
 =head2 disconnect()

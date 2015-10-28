@@ -3,6 +3,7 @@
 #include "XSUB.h"
 
 #include "amqp.h"
+#include "amqp_ssl_socket.h"
 #include "amqp_tcp_socket.h"
 /* For struct timeval */
 #include "amqp_time.h"
@@ -948,6 +949,9 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
     int channel_max = 0;
     int frame_max = 131072;
     int heartbeat = 0;
+    char *ssl_ca = NULL;
+    int ssl_verify_hostname = 1;
+    int ssl_initialize = 1;
     double timeout = -1;
     struct timeval to;
   CODE:
@@ -958,12 +962,23 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
     int_from_hv(options, frame_max);
     int_from_hv(options, heartbeat);
     int_from_hv(options, port);
+    str_from_hv(options, ssl_ca);
+    int_from_hv(options, ssl_verify_hostname);
+    int_from_hv(options, ssl_initialize);
     double_from_hv(options, timeout);
     if(timeout >= 0) {
      to.tv_sec = floor(timeout);
      to.tv_usec = 1000000.0 * (timeout - floor(timeout));
     }
-    sock = amqp_tcp_socket_new(conn);
+    if ( ssl_ca ) {
+      amqp_set_initialize_ssl_library(ssl_initialize);
+
+      sock = amqp_ssl_socket_new(conn);
+      amqp_ssl_socket_set_verify(sock, ssl_verify_hostname);
+      die_on_error(aTHX_ amqp_ssl_socket_set_cacert(sock, ssl_ca), conn, "Reading CACerts");
+    } else {
+      sock = amqp_tcp_socket_new(conn);
+    }
 
     if (!sock) {
       Perl_croak(aTHX_ "error creating TCP socket");
