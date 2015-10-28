@@ -135,7 +135,6 @@ C<$options> is an optional hash respecting the following keys:
 
      {
        if_unused => $boolean,   #default 1
-       nowait => $boolean,      #default 0
      }
 
 =head2 exchange_bind($channel, $destination, $source, $routing_key, $arguments)

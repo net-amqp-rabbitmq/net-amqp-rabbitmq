@@ -1,29 +1,41 @@
-use Test::More tests => 6;
+use Test::More tests => 11;
 use strict;
 use warnings;
 
-use Sys::Hostname;
-my $unique = hostname . "-$^O-$^V-$$"; #hostname-os-perlversion-PID
-my $exchange = "nr_test_x-$unique";
-my $queuename = "nr_test_hole-$unique";
-my $routekey = "nr_test_q-$unique";
+use FindBin qw/$Bin/;
+use lib "$Bin/lib";
+use NAR::Helper;
 
-my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
-$SIG{'PIPE'} = 'IGNORE';
-use_ok('Net::AMQP::RabbitMQ');
+my $helper = NAR::Helper->new;
 
-my $mq = Net::AMQP::RabbitMQ->new();
-ok($mq);
+ok $helper->connect( 1 ), "connected";
+ok $helper->channel_open, "channel_open";
 
-eval { $mq->connect($host, { user => "guest", password => "guest", heartbeat => 1 }); };
-is($@, '', "connect");
-eval { $mq->channel_open(1); };
-is($@, '', "channel_open");
-sleep(5);
-eval { $mq->heartbeat(); };
-is($@, '', "heartbeat");
-my $rv = 0;
-eval { $mq->publish(1, $routekey, "Magic Transient Payload", { exchange => $exchange, "immediate" => 1, "mandatory" => 1 }); };
+ok $helper->exchange_declare, "default exchange declare";
+ok $helper->queue_declare, "queue declare";
+ok $helper->queue_bind, "queue bind";
+ok $helper->drain, "drain queue";
+
+note "sleeping for 1s";
 sleep(1);
-eval { $mq->publish(1, $routekey, "Magic Transient Payload", { exchange => $exchange, "immediate" => 1, "mandatory" => 1 }); };
-like( $@, qr/AMQP socket not connected/, "publish fails with error code" );
+ok $helper->heartbeat, "heartbeat";
+
+my $rv = 0;
+my $props = {
+    exchange  => $helper->{exchange},
+    mandatory => 1,
+    immediate => 1
+};
+ok $helper->publish( "Magic Transient Payload", $props ), "publish";
+
+note "sleeping for 5s";
+sleep(5);
+ok !$helper->publish( "Magic Transient Payload", $props ), "publish fails";
+ok !$helper->is_connected, "not connected";
+
+END {
+    #reconect to cleanup
+    $helper->connect;
+    $helper->channel_open;
+    ok $helper->cleanup, "cleanup";
+}

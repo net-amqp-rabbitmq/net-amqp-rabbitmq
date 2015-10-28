@@ -29,6 +29,8 @@ before_script:
   - make
 script:
   - export MQHOST="$LOCAL_MQHOST"
+  - export MQUSERNAME="guest"
+  - export MQPASSWORD="guest"
   - if [[ "$MQHOST" != "" ]]; then cover -test -report coveralls -ignore_re "\.c|\.h"; fi
   - if [[ "$MQHOST" != "" ]]; then perl -I blib/lib -I blib/arch xt/100_transaction_memory_leak.t; fi
   - if [[ "$MQHOST" != "" ]]; then perl -I blib/lib -I blib/arch xt/101_headers_memory_leak.t; fi

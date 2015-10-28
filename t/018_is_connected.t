@@ -1,19 +1,14 @@
-use Test::More tests => 6;
+use Test::More tests => 4;
 use strict;
+use warnings;
 
-use Math::UInt64 qw/uint64/;
-my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
+use FindBin qw/$Bin/;
+use lib "$Bin/lib";
+use NAR::Helper;
 
-use_ok('Net::AMQP::RabbitMQ');
+my $helper = NAR::Helper->new;
 
-my $mq = Net::AMQP::RabbitMQ->new();
-ok($mq);
-
-eval { $mq->connect($host, { user => "guest", password => "guest" }); };
-is( $mq->is_connected(), 1, 'Verify that we detected a connection...' );
-is($@, '', "connect");
-eval { $mq->disconnect(); };
-is($@, '', "disconnect");
-is( $mq->is_connected(), undef, 'Verify that we detected a NO connection following disconnect...' );
-
-1;
+ok $helper->connect, "connected";
+ok $helper->is_connected, "connected";
+ok $helper->disconnect, "disconnect";
+ok !$helper->is_connected, "not connected";

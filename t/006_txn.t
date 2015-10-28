@@ -1,69 +1,48 @@
-use Test::More tests => 16;
+use Test::More tests => 14;
 use strict;
 use warnings;
 
-use Sys::Hostname;
-use Math::UInt64 qw/uint64/;
+use FindBin qw/$Bin/;
+use lib "$Bin/lib";
+use NAR::Helper;
 
-my $unique = hostname . "-$^O-$^V-$$"; #hostname-os-perlversion-PID
-my $exchange = "nr_test_x-$unique";
-my $routekey = "nr_test_q-$unique";
+my $helper = NAR::Helper->new;
 
-my $dtag=1;
-my $host = $ENV{'MQHOST'} || "dev.rabbitmq.com";
+ok $helper->connect, "connected";
+ok $helper->channel_open, "channel_open";
 
-use_ok('Net::AMQP::RabbitMQ');
+ok $helper->exchange_declare, "default exchange declare";
+ok $helper->queue_declare, "queue declare";
+ok $helper->queue_bind, "queue bind";
+ok $helper->drain, "drain queue";
 
-my $mq = Net::AMQP::RabbitMQ->new();
-ok($mq);
+ok $helper->tx_select, 'tx_select';
 
-eval { $mq->connect($host, { user => "guest", password => "guest" }); };
-is($@, '', "connect");
-eval { $mq->channel_open(1); };
-is($@, '', "channel_open");
+    ok $helper->publish( "Magic Payload" ), "publish";
 
-# Re-establish the exchange if it wasn't created in 001
-# or in 002
-eval { $mq->exchange_declare(1, $exchange, { exchange_type => "direct", passive => 0, durable => 1, auto_delete => 0, internal => 0 }); };
-is($@, '', "exchange_declare");
+ok $helper->tx_rollback, 'tx_rollback';
 
-my $queuename = '';
-eval { $queuename = $mq->queue_declare(1, '', { passive => 0, durable => 1, exclusive => 0, auto_delete => 1 }); };
-is($@, '', "queue_declare");
-isnt($queuename, '', "queue_declare -> private name");
-eval { $mq->queue_bind(1, $queuename, $exchange, $routekey); };
-is($@, '', "queue_bind");
-eval { $mq->tx_select(1); };
-is($@, '', "tx_select");
-eval { $mq->publish(1, $routekey, "Magic Transient Payload", { exchange => $exchange }); };
-eval { $mq->tx_rollback(1); };
-is($@, '', "tx_rollback");
-eval { $mq->publish(1, $routekey, "Magic Transient Payload (Commit)", { exchange => $exchange }); };
-eval { $mq->tx_commit(1); };
-is($@, '', "tx_commit");
-eval { $mq->consume(1, $queuename, {consumer_tag=>'ctag', no_local=>0,no_ack=>1,exclusive=>0} ); };
-is($@, '', "consume");
+    ok $helper->publish( "Magic Transient Payload (Commit)" ), "publish";
 
-my $rv = {};
-eval { $rv = $mq->recv(); };
-is($@, '', "recv");
+ok $helper->tx_commit, 'tx_commit';
 
-is_deeply($rv,
-          {
-          'body' => 'Magic Transient Payload (Commit)',
-          'routing_key' => $routekey,
-          'delivery_tag' => $dtag,
-          'redelivered' => 0,
-          'exchange' => $exchange,
-          'consumer_tag' => 'ctag',
-          'props' => {},
-          }, "payload");
+ok $helper->consume, "consuming";
 
-# Clean up
-eval { $mq->cancel(1, 'ctag'); };
-is($@, '', 'cancel');
+my $payload = $helper->recv;
+is_deeply(
+    $payload,
+    {
+        body         => "Magic Transient Payload (Commit)",
+        routing_key  => $helper->{routekey},
+        delivery_tag => 1,
+        redelivered  => 0,
+        exchange     => $helper->{exchange},
+        consumer_tag => $helper->{consumer_tag},
+        props        => {},
+    },
+    "payload recived correctly"
+);
 
-eval { $mq->exchange_delete(1, $exchange); };
-is($@, '', "exchange_delete");
-
-1;
+END {
+    ok $helper->cleanup, "cleanup";
+}

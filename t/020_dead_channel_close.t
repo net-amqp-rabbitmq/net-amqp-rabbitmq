@@ -1,11 +1,11 @@
-use Test::More tests => 2;
+use Test::More tests => 1;
 use strict;
 use warnings;
 
-use_ok('Net::AMQP::RabbitMQ');
+use FindBin qw/$Bin/;
+use lib "$Bin/lib";
+use NAR::Helper;
 
-my $mq = Net::AMQP::RabbitMQ->new();
-my $lives = 0;
-eval { $mq->channel_close(1); $lives = 1; };
+my $helper = NAR::Helper->new;
 
-is( $lives, 1, 'dead channel_close()');
+ok $helper->channel_close, "dead channel_close";
