@@ -18,11 +18,20 @@ sub new {
 
     my $ssl = $ENV{MQSSL} ? 1 : 0;
     my $ssl_cacert = defined $ENV{MQSSLCACERT} ? $ENV{MQSSLCACERT} : '';
-    my $ssl_verify_host = $ENV{MQSSLVERIFYHOST} ? 1 : 0;
-    my $ssl_init = $ENV{MQSSLINIT} ? 1 : 0;
+    my $ssl_verify_host = 1;
+    if ( defined($ENV{MQSSLVERIFYHOST}) ) {
+        $ssl_verify_host = $ENV{MQSSLVERIFYHOST};
+    }
+    my $ssl_init = 1;
+    if ( defined($ENV{MQSSLINIT}) ) {
+        $ssl_init = $ENV{MQSSLINIT};
+    }
 
     #XXX we don't use this one yet, waiting on a librabbitmq upgrade
-    my $ssl_verify_peer = $ENV{MQSSLVERIFYPEER} ? 1 : 0;
+    my $ssl_verify_peer = 1;
+    if ( defined($ENV{MQSSLVERIFYPEER}) ) {
+        $ssl_verify_peer = $ENV{MQSSLVERIFYPEER};
+    }
 
     my $port;
     if ( $ssl ) {
