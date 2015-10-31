@@ -1,0 +1,1 @@
+rabbitmq-c/librabbitmq/win32/threads.c

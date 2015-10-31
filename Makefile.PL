@@ -8,15 +8,6 @@ use ExtUtils::MakeMaker 5.16 ;
 use Config;
 use Devel::CheckLib;
 
-my $ofiles = '';
-foreach ( <*.c> ){
-
-    next if ( $_ =~ m/assertlib/ );
-
-    $_ =~ s/.c$/.o/;
-    $ofiles .= "$_ ";
-}
-
 # This will help make the library compile on OSX
 # (and hopefully Solaris as well, but I don't have one of those)
 my $has_htonll = check_lib(
@@ -30,19 +21,49 @@ return -1;
     'header'   => ['arpa/inet.h','stdio.h'],
     'lib' => 'c',
 );
-my $htonll_ccflag = ($has_htonll) ? '-DHAVE_HTONLL' : '';
+
+#XXX i wonder if we should check for socket and poll...
+my @defines = ('-DHAVE_SOCKET', '-DHAVE_POLL', qq/-DAMQ_PLATFORM='"Perl_$^O_$^V"'/);
+push @defines, '-DHAVE_HTONLL' if $has_htonll;
+
+my @libs = ('-lrt');
+my @inc = ('-I.', '-Irabbitmq-include');
+
+my $has_openssl = check_lib(
+    lib => [qw/ssl crypto/],
+);
+if ( $has_openssl ) {
+    push @defines, '-DNAR_HAVE_OPENSSL';
+    push @libs, '-lssl', '-lcrypto';
+    if ( $^O eq 'MSWin32' ) {
+        push @inc, "-Irabbitmq-include/win32";
+    }
+    else {
+        push @inc, "-Irabbitmq-include/unix";
+    }
+}
+
+my $ofiles = '';
+foreach ( <*.c> ){
+    next if ( $_ =~ m/assertlib/ );
+    next if ( ( $_ eq 'amqp_openssl.c' ) && !$has_openssl );
+    next if ( ( $_ eq 'threads.c' ) && ( $^O ne 'MSWin32' ) );
+
+    $_ =~ s/.c$/.o/;
+    $ofiles .= "$_ ";
+}
 
 my %WriteMakefileArgs = (
     NAME            => 'Net::AMQP::RabbitMQ',
     VERSION_FROM    => 'RabbitMQ.pm',
     LICENSE         => 'mozilla_1_1',
     ABSTRACT_FROM   => 'RabbitMQ.pm',
-    AUTHOR          => 'Mark Ellis <nobody@cpan.org>, Michael Stemle, Jr. <mstemle@cpan.org>',
+    AUTHOR          => 'Mark Ellis <markellis@cpan.org>, Michael Stemle, Jr. <mstemle@cpan.org>',
     OBJECT          => "RabbitMQ.o ${ofiles}",
     OPTIMIZE        => $ENV{'OPTIMIZE'},
-    CCFLAGS         => "$Config{ccflags} -I.",
-    DEFINE          => "-DHAVE_SOCKET -DHAVE_POLL -DAMQ_PLATFORM='\"Perl_$^O_$^V\"' ${htonll_ccflag}",
-    LIBS            =>['-lrt'],
+    DEFINE          => join( ' ', @defines ),
+    LIBS            => join( ' ', @libs ),
+    INC             => join( ' ', @inc ),
     PREREQ_PM       => {
         'Math::Int64'      => '0.34',
         'Scalar::Util'     => '0',
@@ -55,11 +76,11 @@ my %WriteMakefileArgs = (
     },
     META_MERGE        => {
         "meta-spec" => { version => 2 },
-        "dynamic_config" => 0,
+        "dynamic_config" => 1,
         "x_contributors" => [
             'jesus - Theo Schlossnagle <jesus@omniti.com>',
             'markellis - Mark Ellis <markellis@cpan.org>',
-            'mstemle - Michael Stemle, Jr. <themanchicken@gmail.com>',
+            'mstemle - Michael Stemle, Jr. <mstemle@cpan.org>',
             'drolsky - Dave Rolsky <autarch@urth.org>',
             'srezic - Slaven Rezić <slaven@rezic.de>',
             'armand - Armand Leclercq <marman.email@gmail.com>',

@@ -4,6 +4,7 @@
 
 #include "amqp.h"
 #include "amqp_tcp_socket.h"
+#include "amqp_ssl_socket.h"
 /* For struct timeval */
 #include "amqp_time.h"
 #include "amqp_private.h"
@@ -61,7 +62,7 @@ void die_on_error(pTHX_ int x, amqp_connection_state_t conn, char const *context
   }
   /* Handle everything else */
   else if (x < 0) {
-    Perl_croak(aTHX_ "%s: %s\n", context, strerror(-x));
+    Perl_croak(aTHX_ "%s: %s\n", context, amqp_error_string2(x));
   }
 }
 
@@ -88,7 +89,7 @@ void die_on_amqp_error(pTHX_ amqp_rpc_reply_t x, amqp_connection_state_t conn, c
       /* Otherwise, give a more generic croak. */
       else {
         Perl_croak(aTHX_ "%s: %s\n", context,
-                x.library_error ? strerror(x.library_error) : "(end-of-stream)");
+                x.library_error ? amqp_error_string2(x.library_error) : "(end-of-stream)");
       }
       break;
 
@@ -950,6 +951,13 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
     int heartbeat = 0;
     double timeout = -1;
     struct timeval to;
+
+    int ssl = 0;
+    char *ssl_cacert = NULL;
+    char *ssl_cert = NULL;
+    char *ssl_key = NULL;
+    int ssl_verify_hostname = 1;
+    int ssl_init = 1;
   CODE:
     str_from_hv(options, user);
     str_from_hv(options, password);
@@ -959,17 +967,58 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
     int_from_hv(options, heartbeat);
     int_from_hv(options, port);
     double_from_hv(options, timeout);
+
+    int_from_hv(options, ssl);
+    str_from_hv(options, ssl_cacert);
+    str_from_hv(options, ssl_cert);
+    str_from_hv(options, ssl_key);
+    int_from_hv(options, ssl_verify_hostname);
+    int_from_hv(options, ssl_init);
+
     if(timeout >= 0) {
      to.tv_sec = floor(timeout);
      to.tv_usec = 1000000.0 * (timeout - floor(timeout));
     }
-    sock = amqp_tcp_socket_new(conn);
 
-    if (!sock) {
-      Perl_croak(aTHX_ "error creating TCP socket");
+    if ( ssl ) {
+#ifndef NAR_HAVE_OPENSSL
+        Perl_croak(aTHX_ "no ssl support, please install openssl and reinstall");
+#endif
+        amqp_set_initialize_ssl_library( (amqp_boolean_t)ssl_init );
+        sock = amqp_ssl_socket_new(conn);
+        if ( !sock ) {
+          Perl_croak(aTHX_ "error creating SSL socket");
+        }
+
+        // TODO
+        // change this to amqp_ssl_socket_set_verify_hostname when next rabbitmq lib
+        amqp_ssl_socket_set_verify( sock, (amqp_boolean_t)ssl_verify_hostname );
+
+        if ( ( ssl_cacert != NULL ) && strlen(ssl_cacert) ) {
+            if ( amqp_ssl_socket_set_cacert(sock, ssl_cacert) ) {
+                Perl_croak(aTHX_ "error setting CA certificate");
+            }
+        }
+        else {
+            // TODO
+            // in librabbitmq > 0.7.1, amqp_ssl_socket_set_verify_peer makes this optional
+            Perl_croak(aTHX_ "required arg ssl_cacert not provided");
+        }
+
+        if ( ( ssl_key != NULL ) && strlen(ssl_key) && ( ssl_cert != NULL ) && strlen(ssl_cert) ) {
+            if ( amqp_ssl_socket_set_key( sock, ssl_cert, ssl_key ) ) {
+                Perl_croak(aTHX_ "error setting client cert");
+            }
+        }
+    }
+    else {
+        sock = amqp_tcp_socket_new(conn);
+        if (!sock) {
+          Perl_croak(aTHX_ "error creating TCP socket");
+        }
     }
 
-    die_on_error(aTHX_ amqp_socket_open_noblock(sock, hostname, port, (timeout<0)?NULL:&to), conn, "opening TCP socket");
+    die_on_error(aTHX_ amqp_socket_open_noblock(sock, hostname, port, (timeout<0)?NULL:&to), conn, "opening socket");
 
     die_on_amqp_error(aTHX_ amqp_login(conn, vhost, channel_max, frame_max, heartbeat, AMQP_SASL_METHOD_PLAIN, user, password), conn, "Logging in");
     maybe_recycle_memory( conn );
@@ -1574,6 +1623,17 @@ SV*
 net_amqp_rabbitmq_get_sockfd(conn)
   Net::AMQP::RabbitMQ conn
   CODE:
+/**
+ * this is the warning from librabbitmq-c. you have been warned.
+ *
+ * \warning Use the socket returned from this function carefully, incorrect use
+ * of the socket outside of the library will lead to undefined behavior.
+ * Additionally rabbitmq-c may use the socket differently version-to-version,
+ * what may work in one version, may break in the next version. Be sure to
+ * throughly test any applications that use the socket returned by this
+ * function especially when using a newer version of rabbitmq-c
+ *
+ */
     if ( has_valid_connection( conn ) ) {
       RETVAL = newSViv( amqp_get_sockfd(conn) );
     }
