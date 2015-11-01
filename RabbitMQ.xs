@@ -1569,7 +1569,7 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
 
     /* Otherwise, just croak */
     if ( rv != AMQP_STATUS_OK ) {
-        Perl_croak( aTHX_ "Publish failed, error code %d", rv);
+        Perl_croak( aTHX_ "Publish failed, %s\n", amqp_error_string2(rv));
     }
 
 SV *
