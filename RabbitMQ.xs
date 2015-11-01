@@ -1018,9 +1018,15 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
         }
     }
 
-    die_on_error(aTHX_ amqp_socket_open_noblock(sock, hostname, port, (timeout<0)?NULL:&to), conn, "opening socket");
+    //if there's data in the buffer, clear it
+    while ( amqp_data_in_buffer(conn) ) {
+        amqp_frame_t frame;
+        amqp_simple_wait_frame( conn, &frame );
+    }
 
+    die_on_error(aTHX_ amqp_socket_open_noblock(sock, hostname, port, (timeout<0)?NULL:&to), conn, "opening socket");
     die_on_amqp_error(aTHX_ amqp_login(conn, vhost, channel_max, frame_max, heartbeat, AMQP_SASL_METHOD_PLAIN, user, password), conn, "Logging in");
+
     maybe_recycle_memory( conn );
 
     RETVAL = 1;
