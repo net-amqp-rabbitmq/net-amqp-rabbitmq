@@ -27,7 +27,9 @@ before_script:
   - perl Makefile.PL
 script:
   - if [[ "$(which brew)" == "" ]]; then export MQHOST="localhost"; export MQUSERNAME="guest"; export MQPASSWORD="guest"; fi
-  - cover -make "make TEST_VERBOSE=1" -test test -report coveralls -ignore_re "\.c|\.h"
+  - cover -make "make TEST_VERBOSE=1" -test test
+  - MQSSL=1 MQSSLCACERT=t/ssl/cacert.pem MQHOST=rabbitmq.thisaintnews.com MQUSERNAME=nartest MQPASSWORD=reallysecure prove -MDevel::Cover -v -I blib/lib -I blib/arch t/
+  - cover -report coveralls -ignore_re "\.c|\.h"
   - export MQHOST="localhost"; export MQUSERNAME="guest"; export MQPASSWORD="guest"
   - if [[ "$(which brew)" == "" ]]; then perl -I blib/lib -I blib/arch xt/100_transaction_memory_leak.t; fi
   - if [[ "$(which brew)" == "" ]]; then perl -I blib/lib -I blib/arch xt/101_headers_memory_leak.t; fi
