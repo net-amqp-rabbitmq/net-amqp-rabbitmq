@@ -84,6 +84,13 @@ You probably don't want to touch C<ssl_init>, unless you know what it does.
 
 For now there is no option to disable ssl peer checking, meaning to use C<ssl>, C<ssl_cacert> is required.
 
+B<SSL NOTE>
+
+if the connection is cut when using ssl, openssl will throw a C<SIGPIPE>, you should catch this or perl
+will exit with error code 141
+
+    $SIG{PIPE} = 'IGNORE';
+
 =head2 disconnect()
 
 Causes the connection to RabbitMQ to be torn down.
