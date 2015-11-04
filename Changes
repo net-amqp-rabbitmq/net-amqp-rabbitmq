@@ -1,5 +1,9 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+1.400000 - 2015-11-04
+    - ssl support
+    - fixed reconnection issue if there is data in the buffer
+
 1.300000 - 2015-10-19
     - fill in missing runtime and test prereqs, with graceful backcompat (ether)
     - mark the distribution as not having dynamically configured prereqs (ether)
