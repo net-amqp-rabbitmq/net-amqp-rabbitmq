@@ -24,6 +24,7 @@ typedef amqp_connection_state_t Net__AMQP__RabbitMQ;
 
 /* this is a place to put some stuff that we convert from perl, it's transient and we recycle it as soon as it's finished being used, which means we keep memory we've used with the aim of reusing it */
 amqp_pool_t temp_memory_pool;
+bool do_not_disconnect_on_destroy;
 
 //mashup of things to free memory, also temp_memory_pool is ugly and code smell
 void maybe_recycle_memory(amqp_connection_state_t conn)
@@ -1688,10 +1689,21 @@ net_amqp_rabbitmq_DESTROY(conn)
   Net::AMQP::RabbitMQ conn
   CODE:
     if ( conn->socket != NULL ) {
+      if (!do_not_disconnect_on_destroy) {
         amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
+      } else {
+        amqp_socket_close( amqp_get_socket( conn ) );
+      }
     }
     empty_amqp_pool( &temp_memory_pool );
     amqp_destroy_connection(conn);
+
+void
+net_amqp_rabbitmq_do_not_disconnect_on_destroy(conn)
+  Net::AMQP::RabbitMQ conn
+  CODE:
+    do_not_disconnect_on_destroy = 1;
+
 
 void
 net_amqp_rabbitmq_heartbeat(conn)

@@ -473,6 +473,18 @@ Send a heartbeat frame.  If you've connected with a heartbeat parameter,
 you must send a heartbeat periodically matching connection parameter or
 the server may snip the connection.
 
+=head2 do_not_disconnect_on_destroy()
+
+This should not be used except if use fork an open connection. This will avoid the child process to close the connection of the parent.
+
+ my $rmq = Net::AMQP::RabbitMQ->new;
+ if (!fork) {
+   $rmq->do_not_disconnect_on_destroy;
+   $rmq = Net::AMQ::RabbitMQ->new;
+   # do stuff
+   exit(0);
+ }
+
 =head1 WARNING AND ERROR MESSAGES
 
 =head2 Fatal Errors
