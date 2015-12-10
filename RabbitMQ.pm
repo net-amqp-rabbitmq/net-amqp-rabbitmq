@@ -483,6 +483,60 @@ the connection has been closed by the remote host, or otherwise invalidated,
 the socket will also be closed and should be re-opened before any additional
 calls are made.
 
+=head1 RUNNING THE TEST SUITE
+
+The test suite runs live tests against a RabbitMQ server at
+C<rabbitmq.thisaintnews.com>.  If you are in an environment that won't
+let you connect to this host (or the test server is down), you can use
+these environment variables:
+
+=over 4
+
+=item MQHOST
+
+Hostname or IP address of the RabbitMQ server to connect to (defaults
+to C<rabbitmq.thisaintnews.com>).
+
+=item MQUSERNAME
+
+Username for authentication (defaults to "nartest").
+
+=item MQPASSWORD
+
+Password for authentication (defaults to "reallysecure").
+
+=item MQSSL
+
+Whether the tests should run with SSL enabled (defaults to false, but
+see also C<MQSKIPSSL>).
+
+=item MQSSLCACERT
+
+Path to the certificate file for SSL-enabled connections, defaults to
+F<t/ssl/cacert.pem>.
+
+=item MQSSLVERIFYHOST
+
+Whether SSL hostname verification should be enabled (defaults to
+true).
+
+=item MQSSLINIT
+
+Whether the openssl library should be initialized (defaults to true).
+
+=item MQPORT
+
+Port of the RabbitMQ server to connect to (defaults to 5672, or 5673
+if SSL is enabled).
+
+=item MQSKIPSSL
+
+Whether the SSL tests should be skipped entirely.  This option exists
+because the SSL tests used to ignore C<MQSSL>, and to maintain
+backwards compatibility, still do.
+
+=back
+
 =head1 AUTHORS
 
 Theo Schlossnagle E<lt>jesus@omniti.comE<gt>
