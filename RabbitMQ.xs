@@ -187,6 +187,23 @@ amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value, short force_utf8) {
       }
       return AMQP_FIELD_KIND_BYTES;
 
+    case SVt_PVMG:
+      if ( SvPOK( *perl_value ) || SvPOKp( *perl_value ) ) {
+        if ( force_utf8 || SvUTF8( *perl_value ) ) {
+            return AMQP_FIELD_KIND_UTF8;
+        }
+        return AMQP_FIELD_KIND_BYTES;
+      }
+      if ( SvIOK( *perl_value ) || SvIOKp( *perl_value ) ) {
+        if ( SvUOK( *perl_value ) ) {
+          return AMQP_FIELD_KIND_U64;
+        }
+        return AMQP_FIELD_KIND_I64;
+      }
+      if ( SvNOK( *perl_value ) || SvNOKp( *perl_value ) )  {
+        return AMQP_FIELD_KIND_F64;
+      }
+
     default:
       if ( SvROK( *perl_value ) ) {
         // Array Reference
