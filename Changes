@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+1.500000 - 2016-02-04
+    - handle magic scalar SVt_PVMG (Dávid Kovács)
+
 1.400000 - 2015-11-04
     - ssl support
     - fixed reconnection issue if there is data in the buffer

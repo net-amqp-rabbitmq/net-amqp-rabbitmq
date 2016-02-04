@@ -85,7 +85,7 @@ my %WriteMakefileArgs = (
             'srezic - Slaven Rezić <slaven@rezic.de>',
             'armand - Armand Leclercq <marman.email@gmail.com>',
             'dburke - Daniel W Burke <dburke@addictmud.org>',
-            'davsx - Dávid Kovács',
+            'davsx - Dávid Kovács <davs@cpan.org>',
             'iron-s - Alexey Sheynuk',
             'ether - Karen Etheridge <ether@cpan.org>',
         ],
