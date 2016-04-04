@@ -278,7 +278,7 @@ C<$props> is an optional hash (the AMQP 'props') respecting the following keys:
        delivery_mode => $integer,
        priority => $integer,
        timestamp => $integer,
-       header => $headers # This should be a hashref of keys and values.
+       headers => $headers # This should be a hashref of keys and values.
      }
 
 =head2 consume($channel, $queuename, $options)
