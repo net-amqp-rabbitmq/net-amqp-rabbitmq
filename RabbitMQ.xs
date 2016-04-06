@@ -20,6 +20,17 @@
  #define __DEBUG__(X)  X
 #endif
 
+/* Simple alternatives for backwards compatibility with older versions of Perl. */
+#ifndef MUTABLE_SV
+# define MUTABLE_SV(p) ((SV*)p)
+#endif
+#ifndef MUTABLE_AV
+# define MUTABLE_AV(p) ((AV*)p)
+#endif
+#ifndef MUTABLE_HV
+# define MUTABLE_HV(p) ((HV*)p)
+#endif
+
 typedef amqp_connection_state_t Net__AMQP__RabbitMQ;
 
 /* this is a place to put some stuff that we convert from perl, it's transient and we recycle it as soon as it's finished being used, which means we keep memory we've used with the aim of reusing it */
@@ -240,11 +251,11 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
   size_t body_received;
   int result;
   int is_utf8_body = 1; // The body is UTF-8 by default
-  HV *props = (HV*)&PL_sv_undef;
+  HV *props = MUTABLE_HV(&PL_sv_undef);
   int i;
-  SV *val = (SV*)&PL_sv_undef;
-  SV *hvalue = (SV*)&PL_sv_undef;
-  HV *headers = (HV*)&PL_sv_undef;
+  SV *val = &PL_sv_undef;
+  SV *hvalue = &PL_sv_undef;
+  HV *headers = MUTABLE_HV(&PL_sv_undef);
   amqp_table_entry_t *header_entry = (amqp_table_entry_t*)NULL;
   struct timeval timeout_tv;
 
@@ -299,7 +310,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
       Perl_croak(aTHX_ "Unexpected header %d!", frame.frame_type);
 
     props = newHV();
-    hv_store(RETVAL, "props", strlen("props"), newRV_noinc((SV *)props), 0);
+    hv_store(RETVAL, "props", strlen("props"), newRV_noinc(MUTABLE_SV(props)), 0);
 
     p = (amqp_basic_properties_t *) frame.payload.properties.decoded;
     if (p->_flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
@@ -369,7 +380,7 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
 
       headers = newHV();
 
-      hv_store( props, "headers", strlen("headers"), newRV_noinc((SV *)headers), 0 );
+      hv_store( props, "headers", strlen("headers"), newRV_noinc(MUTABLE_SV(headers)), 0 );
 
       for( i=0; i < p->headers.num_entries; ++i ) {
         header_entry = &(p->headers.entries[i]);
@@ -623,11 +634,11 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array, short force_utf
         break;
 
       case AMQP_FIELD_KIND_ARRAY:
-        array_to_amqp_array((AV*)SvRV(*value), &(element->value.array), force_utf8);
+        array_to_amqp_array(MUTABLE_AV(SvRV(*value)), &(element->value.array), force_utf8);
         break;
 
       case AMQP_FIELD_KIND_TABLE:
-        hash_to_amqp_table((HV*)SvRV(*value), &(element->value.table), force_utf8);
+        hash_to_amqp_table(MUTABLE_HV(SvRV(*value)), &(element->value.table), force_utf8);
         break;
 
       default:
@@ -734,7 +745,7 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
     av_push(perl_array, perl_element);
   }
 
-  return newRV_noinc((SV*)perl_array);
+  return newRV_noinc(MUTABLE_SV(perl_array));
 }
 
 SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
@@ -840,7 +851,7 @@ SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
 
   }
 
-  return newRV_noinc((SV*)perl_hash);
+  return newRV_noinc(MUTABLE_SV(perl_hash));
 }
 
 void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8) {
@@ -919,7 +930,7 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8) {
 
       case AMQP_FIELD_KIND_ARRAY:
         array_to_amqp_array(
-          (AV*) SvRV(value),
+          MUTABLE_AV(SvRV(value)),
           &(entry->value.value.array),
           force_utf8
         );
@@ -927,7 +938,7 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8) {
 
       case AMQP_FIELD_KIND_TABLE:
         hash_to_amqp_table(
-          (HV*) SvRV(value),
+          MUTABLE_HV(SvRV(value)),
           &(entry->value.value.table),
           force_utf8
         );
@@ -1407,7 +1418,7 @@ net_amqp_rabbitmq_recv(conn, timeout = 0)
         SvREFCNT_dec(message);
         RETVAL = newSV(0);
     } else {
-        RETVAL = newRV_noinc((SV*)message);
+        RETVAL = newRV_noinc(MUTABLE_SV(message));
     }
   OUTPUT:
     RETVAL
@@ -1570,7 +1581,7 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
         properties._flags |= AMQP_BASIC_TIMESTAMP_FLAG;
       }
       if (NULL != (v = hv_fetch(props, "headers", strlen("headers"), 0))) {
-        hash_to_amqp_table((HV *)SvRV(*v), &properties.headers, force_utf8_in_header_strings);
+        hash_to_amqp_table(MUTABLE_HV(SvRV(*v)), &properties.headers, force_utf8_in_header_strings);
         properties._flags |= AMQP_BASIC_HEADERS_FLAG;
       }
     }
@@ -1626,7 +1637,7 @@ net_amqp_rabbitmq_get(conn, channel, queuename, options = NULL)
           Perl_croak(aTHX_ "Bad frame read.");
         }
       }
-      RETVAL = (SV *)newRV_noinc((SV *)hv);
+      RETVAL = newRV_noinc(MUTABLE_SV(hv));
     }
     else {
       RETVAL = &PL_sv_undef;
@@ -1785,7 +1796,7 @@ SV* net_amqp_rabbitmq_get_server_properties(conn)
     }
     else
     {
-      RETVAL = (SV*)&PL_sv_undef;
+      RETVAL = &PL_sv_undef;
     }
   OUTPUT:
     RETVAL
@@ -1803,7 +1814,7 @@ SV* net_amqp_rabbitmq_get_client_properties(conn)
     }
     else
     {
-      RETVAL = (SV*)&PL_sv_undef;
+      RETVAL = &PL_sv_undef;
     }
   OUTPUT:
     RETVAL
