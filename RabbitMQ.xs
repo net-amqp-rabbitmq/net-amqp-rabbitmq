@@ -255,8 +255,6 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
   amqp_frame_t frame;
   amqp_basic_deliver_t *d;
   amqp_basic_properties_t *p;
-  size_t body_target;
-  size_t body_received;
   int result;
   int is_utf8_body = 1; // The body is UTF-8 by default
   HV *props = MUTABLE_HV(&PL_sv_undef);
@@ -280,8 +278,6 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
 
   result = 0;
   while (1) {
-    SV *payload;
-
     if(!piggyback) {
       maybe_recycle_memory( conn );
       result = amqp_simple_wait_frame_noblock(conn, &frame, timeout ? &timeout_tv : NULL);
@@ -548,36 +544,45 @@ int internal_recv(HV *RETVAL, amqp_connection_state_t conn, int piggyback, int t
       }
     }
 
-    body_target = frame.payload.properties.body_size;
-    body_received = 0;
-    payload = newSVpvn("", 0);
+    {
+      SV* body_sv;
+      char *body;
+      size_t body_target = frame.payload.properties.body_size;
+      size_t body_remaining = body_target;
 
-    while (body_received < body_target) {
-      result = amqp_simple_wait_frame(conn, &frame);
-      if (result != AMQP_STATUS_OK) break;
+      body_sv = newSV(0);
+      sv_grow(body_sv, body_target + 1);
+      SvCUR_set(body_sv, body_target);
+      SvPOK_on(body_sv);
+      if (is_utf8_body)
+        SvUTF8_on(body_sv);
 
-      if (frame.frame_type != AMQP_FRAME_BODY) {
-        Perl_croak(aTHX_ "Expected fram body, got %d!", frame.frame_type);
+      hv_stores(RETVAL, "body", body_sv);
+
+      body = SvPVX(body_sv);
+
+      while (body_remaining > 0) {
+        size_t fragment_len;
+
+        result = amqp_simple_wait_frame(conn, &frame);
+        if (result != AMQP_STATUS_OK)
+          Perl_croak(aTHX_ "Interrupted read");
+
+        if (frame.frame_type != AMQP_FRAME_BODY)
+          Perl_croak(aTHX_ "Expected frame body, got %d!", frame.frame_type);
+
+        fragment_len = frame.payload.body_fragment.len;
+        if (fragment_len > body_remaining)
+          Perl_croak(aTHX_ "invalid AMQP data");
+
+        memcpy(body, frame.payload.body_fragment.bytes, fragment_len);
+        body           += fragment_len;
+        body_remaining -= fragment_len;
       }
 
-      body_received += frame.payload.body_fragment.len;
-      assert(body_received <= body_target);
-
-      sv_catpvn(payload, frame.payload.body_fragment.bytes, frame.payload.body_fragment.len);
+      *body = '\0';
     }
 
-    if (body_received != body_target) {
-      /* Can only happen when amqp_simple_wait_frame returns <= 0 */
-      /* We break here to close the connection */
-      Perl_croak(aTHX_ "Short read %llu != %llu", (long long unsigned int)body_received, (long long unsigned int)body_target);
-    }
-
-    // Turn on the UTF-8 flag if the body is UTF-8
-    if (is_utf8_body) {
-      SvUTF8_on(payload);
-    }
-
-    hv_stores(RETVAL, "body", payload);
     break;
   }
   return result;
