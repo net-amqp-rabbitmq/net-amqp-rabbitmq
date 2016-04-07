@@ -49,6 +49,7 @@ is_deeply(
     $rv,
     {
         body         => $payload,
+        channel      => 1,
         routing_key  => $helper->{routekey},
         delivery_tag => 1,
         redelivered  => 0,
