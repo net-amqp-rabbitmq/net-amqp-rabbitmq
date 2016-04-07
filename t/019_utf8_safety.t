@@ -51,6 +51,7 @@ ok $helper->consume( $queuename ), "consume";
         $rv,
         {
             body         => $utf8_payload,
+            channel      => 1,
             routing_key  => $helper->{routekey},
             delivery_tag => $dtag1,
             redelivered  => 0,
@@ -77,6 +78,7 @@ my $ascii_payload = "Some ASCII payload";
         $rv,
         {
             body         => $ascii_payload,
+            channel      => 1,
             routing_key  => $helper->{routekey},
             delivery_tag => $dtag2,
             redelivered  => 0,
@@ -102,6 +104,7 @@ my $pub_props = { content_encoding => 'C', headers => { "sample" => "sample" } }
         $rv,
         {
             body         => $ascii_payload,
+            channel      => 1,
             routing_key  => $helper->{routekey},
             delivery_tag => $dtag3,
             redelivered  => 0,
@@ -131,6 +134,7 @@ my $pub_props = { content_encoding => 'C', headers => { "sample" => "sample" } }
         $rv,
         {
             body         => $ascii_payload,
+            channel      => 1,
             routing_key  => $helper->{routekey},
             delivery_tag => $dtag4,
             redelivered  => 0,

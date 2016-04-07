@@ -46,6 +46,7 @@ EOF
         $rv,
         {
             body         => 'test boolean',
+            channel      => 1,
             routing_key  => $helper->{routekey},
             delivery_tag => $expected_dtag,
             redelivered  => 0,

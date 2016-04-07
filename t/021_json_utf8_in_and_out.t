@@ -43,6 +43,7 @@ ok from_json( $utf8_payload ), "utf8_payload is valid json";
         $rv,
         {
             body         => $utf8_payload,
+            channel      => 1,
             routing_key  => $helper->{routekey},
             delivery_tag => 1,
             redelivered  => 0,
@@ -70,6 +71,7 @@ my $ascii_payload = "Some ASCII payload";
         $rv,
         {
             body         => $ascii_payload,
+            channel      => 1,
             routing_key  => $helper->{routekey},
             delivery_tag => 2,
             redelivered  => 0,

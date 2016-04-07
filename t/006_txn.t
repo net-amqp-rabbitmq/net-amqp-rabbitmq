@@ -33,6 +33,7 @@ is_deeply(
     $payload,
     {
         body         => "Magic Transient Payload (Commit)",
+        channel      => 1,
         routing_key  => $helper->{routekey},
         delivery_tag => 1,
         redelivered  => 0,
