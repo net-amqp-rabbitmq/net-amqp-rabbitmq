@@ -3,7 +3,7 @@ use warnings;
 use Test::More;
 use utf8;
 
-eval ("use JSON;");
+my $has_json = eval("use JSON; 1");
 if ( $@ ) {
      plan skip_all => "Missing JSON.pm";
 } else {
@@ -83,5 +83,7 @@ my $ascii_payload = "Some ASCII payload";
 }
 
 END {
-    ok $helper->cleanup, "cleanup";
+    if ($has_json) {
+        ok $helper->cleanup, "cleanup";
+    }
 }
