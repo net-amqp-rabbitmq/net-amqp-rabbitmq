@@ -1,4 +1,4 @@
-use Test::More tests => 16;
+use Test::More tests => 18;
 use strict;
 use warnings;
 
@@ -56,6 +56,31 @@ is $helper->{consumer_tag}, $tag_back, 'consume returns the tag we gave it';
             props        => $props,
         },
         "payload matches"
+    );
+}
+
+my $body = "x" x 150_000;  # Was (barely) big enough for two frames when I tried it.
+ok $helper->publish( $body, $props ), "publish";
+
+{
+    local $SIG{ALRM} = sub { BAIL_OUT("timeout exceeded") };
+
+    alarm 8;
+    my $rv = $helper->recv(6000);
+    alarm 0;
+
+    is_deeply(
+        $rv,
+        {
+            body         => $body,
+            routing_key  => $helper->{routekey},
+            delivery_tag => 2,
+            redelivered  => 0,
+            exchange     => $helper->{exchange},
+            consumer_tag => $helper->{consumer_tag},
+            props        => $props,
+        },
+        "large payload matches"
     );
 }
 
