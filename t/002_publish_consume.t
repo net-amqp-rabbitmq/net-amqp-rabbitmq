@@ -1,4 +1,4 @@
-use Test::More tests => 18;
+use Test::More tests => 20;
 use strict;
 use warnings;
 
@@ -59,6 +59,33 @@ is $helper->{consumer_tag}, $tag_back, 'consume returns the tag we gave it';
     );
 }
 
+{
+    local $props->{headers} = undef;
+    ok $helper->publish( "Magic Payload", $props ), "publish with undefined headers";
+}
+
+{
+    local $SIG{ALRM} = sub { BAIL_OUT("timeout exceeded") };
+
+    alarm 5;
+    my $rv = $helper->recv(3000);
+    alarm 0;
+
+    is_deeply(
+        $rv,
+        {
+            body         => 'Magic Payload',
+            routing_key  => $helper->{routekey},
+            delivery_tag => 2,
+            redelivered  => 0,
+            exchange     => $helper->{exchange},
+            consumer_tag => $helper->{consumer_tag},
+            props        => $props,
+        },
+        "payload matches"
+    );
+}
+
 my $body = "x" x 150_000;  # Was (barely) big enough for two frames when I tried it.
 ok $helper->publish( $body, $props ), "publish";
 
@@ -74,7 +101,7 @@ ok $helper->publish( $body, $props ), "publish";
         {
             body         => $body,
             routing_key  => $helper->{routekey},
-            delivery_tag => 2,
+            delivery_tag => 3,
             redelivered  => 0,
             exchange     => $helper->{exchange},
             consumer_tag => $helper->{consumer_tag},

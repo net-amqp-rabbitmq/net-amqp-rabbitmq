@@ -1581,7 +1581,7 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
         properties.timestamp        = (uint64_t) SvI64(*v);
         properties._flags |= AMQP_BASIC_TIMESTAMP_FLAG;
       }
-      if (NULL != (v = hv_fetchs(props, "headers", 0))) {
+      if (NULL != (v = hv_fetchs(props, "headers", 0)) && SvOK(*v)) {
         hash_to_amqp_table(MUTABLE_HV(SvRV(*v)), &properties.headers, force_utf8_in_header_strings);
         properties._flags |= AMQP_BASIC_HEADERS_FLAG;
       }
