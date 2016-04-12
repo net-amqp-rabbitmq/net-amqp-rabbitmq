@@ -131,8 +131,10 @@ C<$options> is an optional hash respecting the following keys:
        exchange_type => $type,  #default 'direct'
        passive => $boolean,     #default 0
        durable => $boolean,     #default 0
-       auto_delete => $boolean, #default 1
+       auto_delete => $boolean, #default 0
      }
+
+Note that the default for the C<auto_delete> option is different for C<exchange_declare> and for C<queue_declare>.
 
 C<$arguments> is an optional hash of additional arguments to the RabbitMQ server, such as:
 
@@ -195,6 +197,8 @@ C<$options> is an optional hash respecting the following keys:
        exclusive => $boolean,   #default 0
        auto_delete => $boolean, #default 1
      }
+
+Note that the default for the C<auto_delete> option is different for C<exchange_declare> and for C<queue_declare>.
 
 C<$arguments> is an optional hash which will be passed to the server
 when the queue is created.  This can be used for creating mirrored
