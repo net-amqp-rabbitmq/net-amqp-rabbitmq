@@ -1,5 +1,14 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.000000_001 - 2016-04-12
+    - fixed #106 - recv doesn't detect exceptions (ikegami)
+    - more consistent error messages. (ikegami)
+    - Channel now included in frames returned by recv(). (ikegami)
+    - This fixes some memory leaks that occur when an exception is thrown. (ikegami)
+    - fixed #33 - replaced internal_recv (ikegami)
+    - fixed #108 - Allow publishing with headers=>undef. (ikegami)
+    - fixed #96 - Fix the spelling in the documentation of the key for extra headers to include in a published message (ikegami)
+
 1.500000 - 2016-02-04
     - handle magic scalar SVt_PVMG (Dávid Kovács)
 

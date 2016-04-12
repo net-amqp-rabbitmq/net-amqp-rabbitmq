@@ -88,6 +88,7 @@ my %WriteMakefileArgs = (
             'davsx - Dávid Kovács <davs@cpan.org>',
             'iron-s - Alexey Sheynuk',
             'ether - Karen Etheridge <ether@cpan.org>',
+            'ikegami - Eric Brine <ikegami@cpan.org>',
         ],
         resources => {
             bugtracker  => {
