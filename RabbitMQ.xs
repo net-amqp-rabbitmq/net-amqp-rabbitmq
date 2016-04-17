@@ -2,6 +2,19 @@
 #include "perl.h"
 #include "XSUB.h"
 
+/* perl -MDevel::PPPort -e'Devel::PPPort::WriteFile();' */
+/* perl ppport.h --compat-version=5.8.0 --cplusplus RabbitMQ.xs */
+#define NEED_newSVpvn_flags
+#include "ppport.h"
+
+/* ppport.h knows about MUTABLE_PTR and MUTABLE_SV, but not these?! */
+#ifndef MUTABLE_AV
+#  define MUTABLE_AV(p) ((AV*)MUTABLE_PTR(p))
+#endif
+#ifndef MUTABLE_HV
+#  define MUTABLE_HV(p) ((HV*)MUTABLE_PTR(p))
+#endif
+
 #include "amqp.h"
 #include "amqp_tcp_socket.h"
 #include "amqp_ssl_socket.h"
@@ -18,25 +31,6 @@
  #define __DEBUG__(X) /* NOOP */
 #else
  #define __DEBUG__(X)  X
-#endif
-
-/* For backwards compatibility with older versions of Perl. */
-#ifndef hv_stores
-# define hv_stores(hv, keystr, val) hv_store(hv, ""keystr"", sizeof(keystr)-1, val, 0)
-#endif
-#ifndef hv_fetchs 
-# define hv_fetchs(hv, keystr, lval) hv_fetch(hv, ""keystr"", sizeof(keystr)-1, lval)
-#endif
-
-/* Simple alternatives for backwards compatibility with older versions of Perl. */
-#ifndef MUTABLE_SV
-# define MUTABLE_SV(p) ((SV*)p)
-#endif
-#ifndef MUTABLE_AV
-# define MUTABLE_AV(p) ((AV*)p)
-#endif
-#ifndef MUTABLE_HV
-# define MUTABLE_HV(p) ((HV*)p)
 #endif
 
 typedef amqp_connection_state_t Net__AMQP__RabbitMQ;
@@ -977,7 +971,7 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8) {
 
     __DEBUG__(
       warn("hash_to_amqp_table()");
-      warn_sv( value );
+      warn("%s", SvPV_nolen(value) );
       fprintf(
         stderr,
         "Key: >%.*s< Kind: >%c<\n",
