@@ -18,13 +18,10 @@ if ($ENV{MQSKIPSSL}) {
 # already set by the user.  Those ought to work with the default
 # server at rabbitmq.thisaintnews.com (which you get if you don't set
 # MQHOST).
-local $ENV{MQSSL} = 1;
-local $ENV{MQSSLCACERT} = "$Bin/ssl/cacert.pem"
-    unless exists $ENV{MQSSLCACERT};
-local $ENV{MQSSLINIT} = 1
-    unless exists $ENV{MQSSLINIT};
-
-my $helper = NAR::Helper->new;
+my $helper = NAR::Helper->new(
+    ssl => 1,
+    ssl_cacert => exists $ENV{MQSSLCACERT} ? $ENV{MQSSLCACERT} : "$Bin/ssl/cacert.pem",
+    ssl_init => exists $ENV{MQSSLINIT} ? $ENV{MQSSLINIT} : 1);
 
 ok $helper->connect, "connected";
 ok $helper->channel_open, "channel_open";
