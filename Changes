@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.000000_002 - 2016-04-12
+    - Fix for compatibility with Perl 5.8 (ikegami)
+
 1.600000 - 2016-04-27
     - added env varMQSKIPSSL to skip t/030_ssl.t (fgabolde)
     - Update docs to accurately reprsente exchange_declare's default for auto_delete (ikegami)
