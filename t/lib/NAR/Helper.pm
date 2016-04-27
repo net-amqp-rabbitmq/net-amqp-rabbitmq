@@ -34,7 +34,7 @@ sub new {
     }
 
     my $port;
-    if ( $ssl ) {
+    if ( $ssl || $options{ssl} ) {
         Test::More::note( "ssl mode" );
         $port = $ENV{MQPORT} || 5673;
     }
