@@ -1,5 +1,15 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+1.600000 - 2016-04-27
+    - added env varMQSKIPSSL to skip t/030_ssl.t (fgabolde)
+    - Update docs to accurately reprsente exchange_declare's default for auto_delete (ikegami)
+    - Allow publishing with headers=>undef. Would previously SEGFAULT (ikegami)
+    - Speed up internal_recv by preallocating a string or the correct size for the body (ikegami)
+    - Switch from hv_store/hv_fetch + strlen to more efficient and less error-prone hv_stores/hv_fetchs when possible. (ikegami)
+    - Use MUTABLE_* to avoid casting constness away accidentally (ikegami)
+    - Fix error when skipping tests requiring JSON (ikegami)
+    - Fix the spelling in the documentation of the key for extra headers to include in a published message (ikegami)
+
 1.500000 - 2016-02-04
     - handle magic scalar SVt_PVMG (Dávid Kovács)
 
