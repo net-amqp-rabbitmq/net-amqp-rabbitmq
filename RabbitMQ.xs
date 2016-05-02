@@ -985,7 +985,7 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
     char *ssl_cacert = NULL;
     char *ssl_cert = NULL;
     char *ssl_key = NULL;
-    int ssl_verify_hostname = 1;
+    int ssl_verify_host = 1;
     int ssl_init = 1;
   CODE:
     str_from_hv(options, user);
@@ -1001,7 +1001,7 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
     str_from_hv(options, ssl_cacert);
     str_from_hv(options, ssl_cert);
     str_from_hv(options, ssl_key);
-    int_from_hv(options, ssl_verify_hostname);
+    int_from_hv(options, ssl_verify_host);
     int_from_hv(options, ssl_init);
 
     if(timeout >= 0) {
@@ -1021,7 +1021,7 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
 
         // TODO
         // change this to amqp_ssl_socket_set_verify_hostname when next rabbitmq lib
-        amqp_ssl_socket_set_verify( sock, (amqp_boolean_t)ssl_verify_hostname );
+        amqp_ssl_socket_set_verify( sock, (amqp_boolean_t)ssl_verify_host );
 
         if ( ( ssl_cacert != NULL ) && strlen(ssl_cacert) ) {
             if ( amqp_ssl_socket_set_cacert(sock, ssl_cacert) ) {
