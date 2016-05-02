@@ -13,23 +13,6 @@ os:
   - osx
 services: rabbitmq
 before_install:
-  - if [[ "$(which brew)" != "" ]]; then brew install cpanminus; fi
-  - cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64 JSON LWP::UserAgent
-  - export PATH="$HOME/perl5/bin:$PATH"
-  - export PERL5LIB="$HOME/perl5/lib/perl5:$PERL5LIB"
-before_script:
-  - cpanm -n JSON
-  - cpanm -n --installdeps .
-  - perl Makefile.PL
-  - make manifest
-  - make distdir
-  - cd $(perl -MCPAN::Meta -e '$m = CPAN::Meta->load_file("MYMETA.yml"); print $m->name . "-" . $m->version')
-  - perl Makefile.PL
+  - $TRAVIS_BUILD_DIR/travis/before_install
 script:
-  - if [[ "$(which brew)" == "" ]]; then export MQHOST="localhost"; export MQUSERNAME="guest"; export MQPASSWORD="guest"; fi
-  - cover -make "make TEST_VERBOSE=1" -test test
-  - MQSSL=1 MQSSLCACERT=t/ssl/cacert.pem MQHOST=rabbitmq.thisaintnews.com MQUSERNAME=nartest MQPASSWORD=reallysecure prove -MDevel::Cover -v -I blib/lib -I blib/arch t/
-  - cover -report coveralls -ignore_re "\.c|\.h"
-  - export MQHOST="localhost"; export MQUSERNAME="guest"; export MQPASSWORD="guest"
-  - if [[ "$(which brew)" == "" ]]; then perl -I blib/lib -I blib/arch xt/100_transaction_memory_leak.t; fi
-  - if [[ "$(which brew)" == "" ]]; then perl -I blib/lib -I blib/arch xt/101_headers_memory_leak.t; fi
+  - $TRAVIS_BUILD_DIR/travis/script
