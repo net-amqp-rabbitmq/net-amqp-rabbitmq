@@ -490,9 +490,12 @@ calls are made.
 =head1 RUNNING THE TEST SUITE
 
 The test suite runs live tests against a RabbitMQ server at
-C<rabbitmq.thisaintnews.com>.  If you are in an environment that won't
-let you connect to this host (or the test server is down), you can use
-these environment variables:
+C<rabbitmq.thisaintnews.com>.
+
+There are separte variables for the ssl and none ssl host/user/password/port.
+
+If you are in an environment that won't let you connect to this
+host (or the test server is down), you can use these environment variables:
 
 =over 4
 
@@ -509,10 +512,37 @@ Username for authentication (defaults to "nartest").
 
 Password for authentication (defaults to "reallysecure").
 
+=item MQPORT
+
+Port of the RabbitMQ server to connect to (defaults to 5672)
+
 =item MQSSL
 
 Whether the tests should run with SSL enabled (defaults to false, but
 see also C<MQSKIPSSL>).
+
+=item MQSKIPSSL
+
+Whether the SSL tests should be skipped entirely.  This option exists
+because the SSL tests used to ignore C<MQSSL>, and to maintain
+backwards compatibility, still do.
+
+=item MQSSLHOST
+
+Hostname or IP address of the RabbitMQ server to connect to (defaults
+to C<rabbitmq.thisaintnews.com>).
+
+=item MQSSLUSERNAME
+
+Username for authentication (defaults to "nartest").
+
+=item MQSSLPASSWORD
+
+Password for authentication (defaults to "reallysecure").
+
+=item MQSSLPORT
+
+Port of the RabbitMQ server to connect to (defaults to 5673)
 
 =item MQSSLCACERT
 
@@ -527,17 +557,6 @@ true).
 =item MQSSLINIT
 
 Whether the openssl library should be initialized (defaults to true).
-
-=item MQPORT
-
-Port of the RabbitMQ server to connect to (defaults to 5672, or 5673
-if SSL is enabled).
-
-=item MQSKIPSSL
-
-Whether the SSL tests should be skipped entirely.  This option exists
-because the SSL tests used to ignore C<MQSSL>, and to maintain
-backwards compatibility, still do.
 
 =back
 
