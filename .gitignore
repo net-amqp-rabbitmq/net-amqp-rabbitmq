@@ -11,7 +11,7 @@ MANIFEST
 *.swp
 *.old
 /RabbitMQ.c
-/Net-RabbitMQ*.tar*
 .tags
 .tags_sorted_by_file
 /assertlib*
+Net-AMQP-RabbitMQ-*.tar.*
