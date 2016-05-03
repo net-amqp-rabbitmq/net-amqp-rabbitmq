@@ -1,5 +1,12 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.000000 - 2016-05-02
+    - Release new amqp_consume code (ikegami)
+    - Fixed code to match docs for `ssl_verify_host` (markellis)
+    - Fixed freebsd test fails (markellis)
+    - Added MQSSLHOST MQSSLUSERNAME MQSSLPASSWORD MQSSLPORT env vars for ssl test (markellis)
+
+
 2.000000_002 - 2016-04-12
     - Fix for compatibility with Perl 5.8 (ikegami)
 
