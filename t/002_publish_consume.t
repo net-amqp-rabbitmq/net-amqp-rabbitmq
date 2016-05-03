@@ -1,4 +1,4 @@
-use Test::More tests => 20;
+use Test::More tests => 22;
 use strict;
 use warnings;
 
@@ -48,6 +48,7 @@ is $helper->{consumer_tag}, $tag_back, 'consume returns the tag we gave it';
         $rv,
         {
             body         => 'Magic Payload',
+            channel      => 1,
             routing_key  => $helper->{routekey},
             delivery_tag => 1,
             redelivered  => 0,
@@ -75,6 +76,7 @@ is $helper->{consumer_tag}, $tag_back, 'consume returns the tag we gave it';
         $rv,
         {
             body         => 'Magic Payload',
+            channel      => 1,
             routing_key  => $helper->{routekey},
             delivery_tag => 2,
             redelivered  => 0,
@@ -100,6 +102,7 @@ ok $helper->publish( $body, $props ), "publish";
         $rv,
         {
             body         => $body,
+            channel      => 1,
             routing_key  => $helper->{routekey},
             delivery_tag => 3,
             redelivered  => 0,
@@ -146,6 +149,23 @@ ok $helper->publish( $body, $props ), "publish";
 
     ok abs(tv_interval($start)) < 0.01, "Timeout about immediate";
     is $rv, undef, 'recv with timeout returns undef';
+}
+
+ok $helper->publish( "Magic Payload", $props, 'non-existent', { exchange => 'non-existent' } ), "publish to non-existent exchange";
+
+{
+    local $SIG{ALRM} = sub { BAIL_OUT("timeout exceeded") };
+
+    alarm 5;
+    my $rv;
+    my $e;
+    if (!eval { $rv = $helper->mq->recv(3000); 1 }) {
+        $e = $@;
+    }
+    alarm 0;
+
+    ok($e, "recv reports exceptional errors")
+        and note($e);
 }
 
 END {

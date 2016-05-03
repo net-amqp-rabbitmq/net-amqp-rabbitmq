@@ -23,6 +23,7 @@ is_deeply(
     $payload,
     {
         body         => "Magic Payload $$",
+        channel      => 1,
         routing_key  => $helper->{routekey},
         delivery_tag => 1,
         redelivered  => 0,
@@ -45,6 +46,7 @@ is_deeply(
     $payload2,
     {
         body         => "Magic Payload $$",
+        channel      => 1,
         routing_key  => $helper->{routekey},
         delivery_tag => 1,
         redelivered  => 1,

@@ -29,6 +29,7 @@ ok $helper->consume( undef, 0 ), 'consume';
         $payload,
         {
             body         => "Magic Payload $$",
+            channel      => 1,
             routing_key  => $helper->{routekey},
             delivery_tag => 1,
             redelivered  => 0,
@@ -53,6 +54,7 @@ ok $helper->consume( undef, 0 ), 'consume';
         $payload,
         {
             body         => "Magic Payload $$",
+            channel      => 1,
             routing_key  => $helper->{routekey},
             delivery_tag => 1,
             redelivered  => 1,

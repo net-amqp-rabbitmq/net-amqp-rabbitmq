@@ -524,6 +524,8 @@ sub cleanup {
 
     Test::More::note( "cleaning up" );
 
+    return 1 if !$self->mq->is_connected();
+
     $self->purge( $queue );
     $self->cancel;
     $self->queue_unbind( $queue );
