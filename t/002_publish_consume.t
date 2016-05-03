@@ -119,7 +119,8 @@ ok $helper->publish( $body, $props ), "publish";
     my $rv = $helper->mq->recv(1000);
     alarm 0;
 
-    ok abs(tv_interval($start) - 1) < 0.01, "Timeout about 1 second";
+    #timeouts so low we'll consider them good if they're within just under half a second
+    ok abs(tv_interval($start) - 1) < 0.4, "Timeout about 1 second";
     is $rv, undef, 'recv with timeout returns undef';
 }
 
@@ -131,7 +132,7 @@ ok $helper->publish( $body, $props ), "publish";
     my $rv = $helper->mq->recv(1200);
     alarm 0;
 
-    ok abs(tv_interval($start) - 1.2) < 0.01, "Timeout about 1.2 second";
+    ok abs(tv_interval($start) - 1.2) < 0.4, "Timeout about 1.2 second";
     is $rv, undef, 'recv with timeout returns undef';
 }
 
