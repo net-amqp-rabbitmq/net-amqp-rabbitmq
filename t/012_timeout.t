@@ -7,7 +7,12 @@ use lib "$Bin/lib";
 use NAR::Helper;
 use Time::HiRes qw/gettimeofday tv_interval/;
 
-$ENV{MQHOST} = '199.15.224.0'; #This OmniTI IP will hang
+if ( $ENV{MQSSL} ) {
+    $ENV{MQSSLHOST} = '199.15.224.0'; #This OmniTI IP will hang
+}
+else {
+    $ENV{MQHOST} = '199.15.224.0'; #This OmniTI IP will hang
+}
 my $helper = NAR::Helper->new;
 
 $SIG{'PIPE'} = 'IGNORE';

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+. "$(dirname $0)/util.sh"
+
+if [ $is_osx ]; then
+    brew install cpanminus
+fi
+
+cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64 JSON LWP::UserAgent
+
+cpanm -n JSON
+cpanm -n --installdeps .

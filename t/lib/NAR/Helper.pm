@@ -12,12 +12,8 @@ sub new {
     my $mq = Net::AMQP::RabbitMQ->new;
     my $unique = _unique();
 
-    my $host = $ENV{'MQHOST'} || "rabbitmq.thisaintnews.com";
-    my $username = $ENV{'MQUSERNAME'} || "nartest";
-    my $password = $ENV{'MQPASSWORD'} || "reallysecure";
-
     my $ssl = $ENV{MQSSL} ? 1 : 0;
-    my $ssl_cacert = defined $ENV{MQSSLCACERT} ? $ENV{MQSSLCACERT} : '';
+    my $ssl_cacert = exists $ENV{MQSSLCACERT} ? $ENV{MQSSLCACERT} : "t/ssl/cacert.pem",
     my $ssl_verify_host = 1;
     if ( defined($ENV{MQSSLVERIFYHOST}) ) {
         $ssl_verify_host = $ENV{MQSSLVERIFYHOST};
@@ -34,12 +30,23 @@ sub new {
     }
 
     my $port;
+    my $host = "rabbitmq.thisaintnews.com";
+    my $username = "nartest";
+    my $password = "reallysecure";
+
     if ( $ssl || $options{ssl} ) {
         Test::More::note( "ssl mode" );
-        $port = $ENV{MQPORT} || 5673;
+
+        $host = $ENV{MQSSLHOST} if exists $ENV{MQSSLHOST};
+        $username = $ENV{MQSSLUSERNAME} if exists $ENV{MQSSLUSERNAME};
+        $password = $ENV{MQSSLPASSWORD} if exists $ENV{MQSSLPASSWORD};
+        $port = $ENV{MQSSLPORT} || 5673;
     }
     else {
-        $port = $ENV{MQPORT} || 5672;
+        $host = $ENV{MQHOST} if exists $ENV{MQHOST};
+        $username = $ENV{MQUSERNAME} if exists $ENV{MQUSERNAME};
+        $password = $ENV{MQPASSWORD} if exists $ENV{MQPASSWORD};
+        $port = $ENV{MQSSLPORT} || 5672;
     }
 
     my $self = {
@@ -61,6 +68,10 @@ sub new {
         ssl_init        => $ssl_init,
         %options,
     };
+    if ( $ENV{NARDEBUG} ) {
+        use Data::Dumper;
+        warn Dumper( $self );
+    }
 
     bless $self, $class;
 
