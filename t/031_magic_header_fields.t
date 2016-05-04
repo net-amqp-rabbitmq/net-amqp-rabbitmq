@@ -24,11 +24,11 @@ my ($magic_int, $magic_float, $magic_string);
 
     my $x = $1;
 
-    local $/ = 1.2;
+    local $/ = 2.5;
     $magic_float = $/;
 
     my $str = "abc12";
-    $str =~ /(\d+)/;
+    $str =~ /^(.+)$/;
     $magic_string = $1;
 }
 
@@ -57,8 +57,8 @@ is_deeply(
         consumer_tag => 'ctag',
         props        => { 'headers' => {
             int => 3,
-            float => 1.2,
-            string => "12",
+            float => 2.5,
+            string => "abc12",
         } },
     },
     "payload"
