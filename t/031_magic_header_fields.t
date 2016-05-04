@@ -55,11 +55,9 @@ is_deeply(
         redelivered  => 0,
         exchange     => $helper->{exchange},
         consumer_tag => 'ctag',
-        props        => { 'headers' => {
-            int => 3,
-            float => 1.2,
-            string => "abc12",
-        } },
+        props        => {
+            'headers' => $headers,
+        }
     },
     "payload"
 );
