@@ -25,12 +25,11 @@
 /* This is for the Math::UInt64 integration */
 #include "perl_math_int64.h"
 
-#define __DEBUG_ENABLED__ 0
-
-#if __DEBUG_ENABLED__ == 0
- #define __DEBUG__(X) /* NOOP */
-#else
+/* perl Makefile.PL; make CCFLAGS=-DDEBUG */
+#if DEBUG
  #define __DEBUG__(X)  X
+#else
+ #define __DEBUG__(X) /* NOOP */
 #endif
 
 typedef amqp_connection_state_t Net__AMQP__RabbitMQ;

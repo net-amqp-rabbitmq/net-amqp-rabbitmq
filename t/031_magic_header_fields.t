@@ -28,7 +28,7 @@ my ($magic_int, $magic_float, $magic_string);
     $magic_float = $/;
 
     my $str = "abc12";
-    $str =~ /(\d+)/;
+    $str =~ /^(.+)$/;
     $magic_string = $1;
 }
 
@@ -58,7 +58,7 @@ is_deeply(
         props        => { 'headers' => {
             int => 3,
             float => 1.2,
-            string => "12",
+            string => "abc12",
         } },
     },
     "payload"
