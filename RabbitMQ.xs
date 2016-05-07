@@ -1,6 +1,8 @@
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
+#include <float.h>
+#include <math.h>
 
 /* perl -MDevel::PPPort -e'Devel::PPPort::WriteFile();' */
 /* perl ppport.h --compat-version=5.8.0 --cplusplus RabbitMQ.xs */
@@ -25,17 +27,55 @@
 /* This is for the Math::UInt64 integration */
 #include "perl_math_int64.h"
 
-#define __DEBUG_ENABLED__ 0
-
-#if __DEBUG_ENABLED__ == 0
- #define __DEBUG__(X) /* NOOP */
-#else
+/* perl Makefile.PL; make CCFLAGS=-DDEBUG */
+#if DEBUG
  #define __DEBUG__(X)  X
+#else
+ #define __DEBUG__(X) /* NOOP */
 #endif
 
 typedef amqp_connection_state_t Net__AMQP__RabbitMQ;
 
 #define AMQP_STATUS_UNKNOWN_TYPE 0x500
+
+#ifdef USE_LONG_DOUBLE
+    /* stolen from Cpanel::JSON::XS
+     * so we don't mess up double => long double for perls with -Duselongdouble */
+#if defined(_AIX) && (!defined(HAS_LONG_DOUBLE) || AIX_WORKAROUND)
+#define HAVE_NO_POWL
+#endif
+
+    #ifdef HAVE_NO_POWL
+        /* Ulisse Monari: this is a patch for AIX 5.3, perl 5.8.8 without HAS_LONG_DOUBLE
+          There Perl_pow maps to pow(...) - NOT TO powl(...), core dumps at Perl_pow(...)
+          Base code is from http://bytes.com/topic/c/answers/748317-replacement-pow-function
+          This is my change to fs_pow that goes into libc/libm for calling fmod/exp/log.
+          NEED TO MODIFY Makefile, after perl Makefile.PL by adding "-lm" onto the LDDLFLAGS line */
+        static double fs_powEx(double x, double y)
+        {
+            double p = 0;
+
+            if (0 > x && fmod(y, 1) == 0) {
+                if (fmod(y, 2) == 0) {
+                    p =  exp(log(-x) * y);
+                } else {
+                    p = -exp(log(-x) * y);
+                }
+            } else {
+                if (x != 0 || 0 >= y) {
+                    p =  exp(log( x) * y);
+                }
+            }
+            return p;
+        }
+
+        /* powf() unfortunately is not accurate enough */
+        const NV DOUBLE_POW = fs_powEx(10., DBL_DIG );
+    #else
+        const NV DOUBLE_POW = Perl_pow(10., DBL_DIG );
+    #endif
+#endif
+
 
 /* This is a place to put some stuff that we convert from perl,
    it's transient and we recycle it as soon as it's finished being used
@@ -469,9 +509,18 @@ static amqp_rpc_reply_t read_message(amqp_connection_state_t state, amqp_channel
 
           case AMQP_FIELD_KIND_F64:
             // TODO: I don't think this is a natively supported type on all Perls.
+
             hv_store( headers,
                 header_entry->key.bytes, header_entry->key.len,
-                newSVnv(header_entry->value.value.f64),
+#ifdef USE_LONG_DOUBLE
+                /* amqp uses doubles, if perl is -Duselongdouble it messes up the precision
+                 * so we always want take the max precision from a double and discard the rest
+                 * because it can't be any more precise than a double */
+                newSVnv( ( rint( header_entry->value.value.f64 * DOUBLE_POW ) / DOUBLE_POW ) ),
+#else
+                /* both of these are doubles so it's ok */
+                newSVnv( header_entry->value.value.f64 ),
+#endif
                 0
             );
             break;
