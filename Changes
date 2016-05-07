@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.100000 - 2016-05-072
+    - Fixed precision problem when consuming a message with a float64 in the header when using a perl built with -Duselongdouble
+
 2.000000 - 2016-05-02
     - Release new amqp_consume code (ikegami)
     - Fixed code to match docs for `ssl_verify_host` (markellis)
