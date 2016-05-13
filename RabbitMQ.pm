@@ -25,21 +25,9 @@ Net::AMQP::RabbitMQ - interact with RabbitMQ over AMQP using librabbitmq
   print $gotten->{body} . "\n";
   $mq->disconnect();
 
-=head1 VERSION COMPATIBILITY
-
-This module was forked from L<Net::RabbitMQ> version 0.2.6 which uses an older
-version of librabbitmq, and doesn't work correctly with newer versions of RabbitMQ.
-The main change between this module and the original is this library uses
-a newer, unforked, version of librabbitmq. Version 0.7.1 to be precise.
-
-This means this module only works with the AMQP 0.9.1 protocol, so requires RabbitMQ
-version 2+. Also, since the version of librabbitmq used is not a custom fork, it
-means this module doesn't support the basic_return callback method.
-
 =head1 DESCRIPTION
 
-C<Net::AMQP::RabbitMQ> is a fork of C<Net::RabbitMQ> that uses a newer version of librabbitmq
-and fixes some bugs. It provides a simple wrapper around the librabbitmq library
+C<Net::AMQP::RabbitMQ> provides a simple wrapper around the librabbitmq library
 that allows connecting, declaring exchanges and queues, binding and unbinding
 queues, publishing, consuming and receiving events.
 
@@ -477,6 +465,10 @@ Send a heartbeat frame.  If you've connected with a heartbeat parameter,
 you must send a heartbeat periodically matching connection parameter or
 the server may snip the connection.
 
+=head2 has_ssl
+
+Returns true if the module was compiled with SSL support, false otherwise
+
 =head1 WARNING AND ERROR MESSAGES
 
 =head2 Fatal Errors
@@ -559,6 +551,17 @@ true).
 Whether the openssl library should be initialized (defaults to true).
 
 =back
+
+=head1 VERSION COMPATIBILITY
+
+This module was forked from L<Net::RabbitMQ> version 0.2.6 which uses an older
+version of librabbitmq, and doesn't work correctly with newer versions of RabbitMQ.
+The main change between this module and the original is this library uses
+a newer, unforked, version of librabbitmq.
+
+This means this module only works with the AMQP 0.9.1 protocol, so requires RabbitMQ
+version 2+. Also, since the version of librabbitmq used is not a custom fork, it
+means this module doesn't support the basic_return callback method.
 
 =head1 AUTHORS
 

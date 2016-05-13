@@ -1960,3 +1960,13 @@ SV* net_amqp_rabbitmq_get_client_properties(conn)
     }
   OUTPUT:
     RETVAL
+
+SV* net_amqp_rabbitmq_has_ssl()
+  CODE:
+#ifdef NAR_HAVE_OPENSSL
+    RETVAL = &PL_sv_yes;
+#else
+    RETVAL = &PL_sv_no;
+#endif
+  OUTPUT:
+    RETVAL
