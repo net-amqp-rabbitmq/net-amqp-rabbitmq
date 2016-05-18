@@ -8,6 +8,10 @@ use NAR::Helper;
 
 use Time::HiRes qw(gettimeofday tv_interval);
 
+if ( !Net::AMQP::RabbitMQ::has_ssl ) {
+    plan skip_all => 'Net::AMQP::RabbitMQ compiled without SSL support';
+}
+
 if ($ENV{MQSKIPSSL}) {
     plan skip_all => 'SSL tests disabled by user';
 } else {
