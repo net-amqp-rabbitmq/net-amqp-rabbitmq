@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.100001 - 2016-05-072
+    - Added method to check for ssl support
+
 2.100000 - 2016-05-072
     - Fixed precision problem when consuming a message with a float64 in the header when using a perl built with -Duselongdouble
 
