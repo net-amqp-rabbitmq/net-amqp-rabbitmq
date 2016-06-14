@@ -142,14 +142,45 @@ void die_on_amqp_error(pTHX_ amqp_rpc_reply_t x, amqp_connection_state_t conn, c
       ) {
         amqp_socket_close( amqp_get_socket( conn ) );
         Perl_croak(aTHX_ "%s: failed since AMQP socket connection closed.\n", context);
+        break;
       }
-      /* Otherwise, give a more generic croak. */
-      else {
-        Perl_croak(aTHX_ "%s: %s\n", context,
-                  (!x.library_error) ? "(end-of-stream)" :
-                  (x.library_error == AMQP_STATUS_UNKNOWN_TYPE) ? "unknown AMQP type id" :
-                  amqp_error_string2(x.library_error));
-      }
+      else if ( x.library_error == AMQP_STATUS_UNEXPECTED_STATE ) {
+          //try to decode the state
+          int res;
+          amqp_frame_t frame;
+          res = amqp_simple_wait_frame_noblock(conn, &frame, 0);
+          if (AMQP_FRAME_HEADER != frame.frame_type) {
+            if (
+                AMQP_FRAME_METHOD == frame.frame_type
+                && (
+                    AMQP_CHANNEL_CLOSE_METHOD == frame.payload.method.id
+                    || AMQP_CONNECTION_CLOSE_METHOD == frame.payload.method.id
+                )
+            ) {
+                {
+                    amqp_connection_close_ok_t req;
+                    req.dummy = '\0';
+                    /* res = */ amqp_send_method(conn, 0, AMQP_CONNECTION_CLOSE_OK_METHOD, &req);
+                }
+                amqp_set_socket(conn, NULL);
+                {
+                    amqp_connection_close_t *m = (amqp_connection_close_t *) frame.payload.method.decoded;
+                    Perl_croak(aTHX_ "%s: server connection error %d, message: %.*s",
+                            context,
+                            m->reply_code,
+                            (int) m->reply_text.len, (char *) m->reply_text.bytes);
+                    break;
+                }
+            }
+          }
+
+          /* Otherwise, give a more generic croak. */
+          Perl_croak(aTHX_ "%s: %s\n", context,
+              (!x.library_error) ? "(end-of-stream)" :
+              (x.library_error == AMQP_STATUS_UNKNOWN_TYPE) ? "unknown AMQP type id" :
+              amqp_error_string2(x.library_error)
+            );
+          }
       break;
 
     case AMQP_RESPONSE_SERVER_EXCEPTION:
@@ -312,48 +343,13 @@ amqp_field_value_kind_t amqp_kind_for_sv(SV** perl_value, short force_utf8) {
   Perl_croak( aTHX_ "The wheels have fallen off. Please call for help." );
 }
 
-/* Parallels amqp_read_message */
-static amqp_rpc_reply_t read_message(amqp_connection_state_t state, amqp_channel_t channel, SV **props_sv_ptr, SV **body_sv_ptr) {
-  HV *props_hv;
-  SV *body_sv;
-  amqp_rpc_reply_t ret;
-  int res;
-  amqp_frame_t frame;
-  int is_utf8_body = 1; /* The body is UTF-8 by default */
+static amqp_rpc_reply_t parse_amqp_message( amqp_message_t message, SV **props_sv_ptr, SV **body_sv_ptr ) {
+    HV *props_hv = newHV();
+    SV *body_sv;
+    int is_utf8_body = 1; /* The body is UTF-8 by default */
+    amqp_rpc_reply_t ret;
 
-  memset(&ret, 0, sizeof(amqp_rpc_reply_t));
-
-  res = amqp_simple_wait_frame_on_channel(state, channel, &frame);
-  if (AMQP_STATUS_OK != res) {
-    ret.reply_type = AMQP_RESPONSE_LIBRARY_EXCEPTION;
-    ret.library_error = res;
-    goto error_out1;
-  }
-
-  if (AMQP_FRAME_HEADER != frame.frame_type) {
-    if (AMQP_FRAME_METHOD == frame.frame_type &&
-        (AMQP_CHANNEL_CLOSE_METHOD == frame.payload.method.id ||
-         AMQP_CONNECTION_CLOSE_METHOD == frame.payload.method.id)) {
-
-      ret.reply_type = AMQP_RESPONSE_SERVER_EXCEPTION;
-      ret.reply = frame.payload.method;
-
-    } else {
-      ret.reply_type = AMQP_RESPONSE_LIBRARY_EXCEPTION;
-      ret.library_error = AMQP_STATUS_UNEXPECTED_STATE;
-
-      amqp_put_back_frame(state, &frame);
-    }
-
-    goto error_out1;
-  }
-
-  {
-    amqp_basic_properties_t *p;
-
-    props_hv = newHV();
-
-    p = (amqp_basic_properties_t *) frame.payload.properties.decoded;
+    amqp_basic_properties_t *p = &message.properties;
     if (p->_flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
       hv_stores(props_hv, "content_type", newSVpvn(p->content_type.bytes, p->content_type.len));
     }
@@ -568,145 +564,72 @@ static amqp_rpc_reply_t read_message(amqp_connection_state_t state, amqp_channel
           default:
             ret.reply_type = AMQP_RESPONSE_LIBRARY_EXCEPTION;
             ret.library_error = AMQP_STATUS_UNKNOWN_TYPE;
-            goto error_out2;
+            goto error_out;
         }
       }
     }
-  }
 
-  {
-    char *body;
-    size_t body_target = frame.payload.properties.body_size;
-    size_t body_remaining = body_target;
-
-    body_sv = newSV(0);
-    sv_grow(body_sv, body_target + 1);
-    SvCUR_set(body_sv, body_target);
-    SvPOK_on(body_sv);
-    if (is_utf8_body)
-      SvUTF8_on(body_sv);
-
-    body = SvPVX(body_sv);
-
-    while (body_remaining > 0) {
-      size_t fragment_len;
-
-      res = amqp_simple_wait_frame_on_channel(state, channel, &frame);
-      if (AMQP_STATUS_OK != res) {
-        ret.reply_type = AMQP_RESPONSE_LIBRARY_EXCEPTION;
-        ret.library_error = res;
-        goto error_out3;
-      }
-
-      if (AMQP_FRAME_BODY != frame.frame_type) {
-        if (AMQP_FRAME_METHOD == frame.frame_type &&
-            (AMQP_CHANNEL_CLOSE_METHOD == frame.payload.method.id ||
-             AMQP_CONNECTION_CLOSE_METHOD == frame.payload.method.id)) {
-
-          ret.reply_type = AMQP_RESPONSE_SERVER_EXCEPTION;
-          ret.reply = frame.payload.method;
-        } else {
-          ret.reply_type = AMQP_RESPONSE_LIBRARY_EXCEPTION;
-          ret.library_error = AMQP_STATUS_BAD_AMQP_DATA;
-        }
-        goto error_out3;
-      }
-
-      fragment_len = frame.payload.body_fragment.len;
-      if (fragment_len > body_remaining) {
-        ret.reply_type = AMQP_RESPONSE_LIBRARY_EXCEPTION;
-        ret.library_error = AMQP_STATUS_BAD_AMQP_DATA;
-        goto error_out3;
-      }
-
-      memcpy(body, frame.payload.body_fragment.bytes, fragment_len);
-      body           += fragment_len;
-      body_remaining -= fragment_len;
+    body_sv = newSVpvn(message.body.bytes, message.body.len);
+    if (is_utf8_body) {
+        SvUTF8_on(body_sv);
     }
 
-    *body = '\0';
-  }
+    *props_sv_ptr = newRV_noinc(MUTABLE_SV(props_hv));
+    *body_sv_ptr = body_sv;
 
-  *props_sv_ptr = newRV_noinc(MUTABLE_SV(props_hv));
-  *body_sv_ptr  = body_sv;
-  ret.reply_type = AMQP_RESPONSE_NORMAL;
-  return ret;
+    ret.reply_type = AMQP_RESPONSE_NORMAL;
+    return ret;
 
-error_out3:
-  SvREFCNT_dec(props_hv);
-error_out2:
-  SvREFCNT_dec(body_sv);
-error_out1:
-  *props_sv_ptr = &PL_sv_undef;
-  *body_sv_ptr  = &PL_sv_undef;
-  return ret;
+error_out:
+    SvREFCNT_dec(props_hv);
+    SvREFCNT_dec(body_sv);
+
+    return ret;
 }
 
-/* Parallels amqp_consume_message */
-static amqp_rpc_reply_t consume_message(amqp_connection_state_t state, SV **envelope_sv_ptr, struct timeval *timeout) {
-  amqp_rpc_reply_t ret;
-  HV *envelope_hv;
-  int res;
-  amqp_frame_t frame;
-  amqp_channel_t channel;
+/* perl glue for amqp_consume_message */
+static amqp_rpc_reply_t consume_message(amqp_connection_state_t conn, SV **envelope_sv_ptr, struct timeval *timeout) {
+    amqp_rpc_reply_t ret;
+    amqp_envelope_t envelope;
+    SV *props;
+    SV *body;
 
-  memset(&ret, 0, sizeof(amqp_rpc_reply_t));
-  *envelope_sv_ptr = &PL_sv_undef;
+    ret = amqp_consume_message( conn, &envelope, timeout, 0 );
 
-  res = amqp_simple_wait_frame_noblock(state, &frame, timeout);
-  if (AMQP_STATUS_OK != res) {
-    ret.reply_type = AMQP_RESPONSE_LIBRARY_EXCEPTION;
-    ret.library_error = res;
-    goto error_out1;
-  }
-
-  if (AMQP_FRAME_METHOD != frame.frame_type ||
-      AMQP_BASIC_DELIVER_METHOD != frame.payload.method.id) {
-
-    if (AMQP_FRAME_METHOD == frame.frame_type &&
-        (AMQP_CHANNEL_CLOSE_METHOD == frame.payload.method.id ||
-         AMQP_CONNECTION_CLOSE_METHOD == frame.payload.method.id)) {
-
-      ret.reply_type = AMQP_RESPONSE_SERVER_EXCEPTION;
-      ret.reply = frame.payload.method;
-    } else {
-      amqp_put_back_frame(state, &frame);
-      ret.reply_type = AMQP_RESPONSE_LIBRARY_EXCEPTION;
-      ret.library_error = AMQP_STATUS_UNEXPECTED_STATE;
+    if (AMQP_RESPONSE_NORMAL != ret.reply_type) {
+        goto error_out;
     }
 
-    goto error_out1;
-  }
+    HV *envelope_hv = newHV();
 
-  channel = frame.channel;
+    hv_stores(envelope_hv, "channel",      newSViv(envelope.channel));
+    hv_stores(envelope_hv, "delivery_tag", newSVu64(envelope.delivery_tag));
+    hv_stores(envelope_hv, "redelivered",  newSViv(envelope.redelivered));
+    hv_stores(envelope_hv, "exchange",     newSVpvn(envelope.exchange.bytes, envelope.exchange.len));
+    hv_stores(envelope_hv, "consumer_tag", newSVpvn(envelope.consumer_tag.bytes, envelope.consumer_tag.len));
+    hv_stores(envelope_hv, "routing_key",  newSVpvn(envelope.routing_key.bytes, envelope.routing_key.len));
 
-  envelope_hv = newHV();
+    ret = parse_amqp_message( envelope.message, &props, &body );
+    if (AMQP_RESPONSE_NORMAL != ret.reply_type) {
+        goto error_out;
+    }
 
-  {
-    amqp_basic_deliver_t *d = (amqp_basic_deliver_t *) frame.payload.method.decoded;
-    hv_stores(envelope_hv, "channel",      newSViv(channel));
-    hv_stores(envelope_hv, "delivery_tag", newSVu64(d->delivery_tag));
-    hv_stores(envelope_hv, "redelivered",  newSViv(d->redelivered));
-    hv_stores(envelope_hv, "exchange",     newSVpvn(d->exchange.bytes, d->exchange.len));
-    hv_stores(envelope_hv, "consumer_tag", newSVpvn(d->consumer_tag.bytes, d->consumer_tag.len));
-    hv_stores(envelope_hv, "routing_key",  newSVpvn(d->routing_key.bytes, d->routing_key.len));
-  }
+    hv_stores(envelope_hv, "props", props);
+    hv_stores(envelope_hv, "body", body);
 
-  ret = read_message(state, channel,
-    hv_fetchs(envelope_hv, "props", 1),
-    hv_fetchs(envelope_hv, "body",  1));
-  if (AMQP_RESPONSE_NORMAL != ret.reply_type)
-    goto error_out2;
+    *envelope_sv_ptr = newRV_noinc(MUTABLE_SV(envelope_hv));
 
-  *envelope_sv_ptr = newRV_noinc(MUTABLE_SV(envelope_hv));
-  ret.reply_type = AMQP_RESPONSE_NORMAL;
-  return ret;
+    ret.reply_type = AMQP_RESPONSE_NORMAL;
 
-error_out2:
-  SvREFCNT_dec(envelope_hv);
-error_out1:
-  *envelope_sv_ptr = &PL_sv_undef;
-  return ret;
+    amqp_destroy_envelope( &envelope );
+
+    return ret;
+
+error_out:
+    SvREFCNT_dec(envelope_hv);
+    amqp_destroy_envelope( &envelope );
+    *envelope_sv_ptr = &PL_sv_undef;
+    return ret;
 }
 
 void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array, short force_utf8) {
@@ -1080,31 +1003,40 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8) {
 static amqp_rpc_reply_t basic_get(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue, SV **envelope_sv_ptr, amqp_boolean_t no_ack) {
   amqp_rpc_reply_t ret;
   HV *envelope_hv = NULL;
+  SV *props;
+  SV *body;
+
+  amqp_message_t message;
 
   ret = amqp_basic_get(state, channel, queue, no_ack);
-  if (AMQP_RESPONSE_NORMAL != ret.reply_type)
+  if (AMQP_RESPONSE_NORMAL != ret.reply_type) {
     goto error_out1;
+  }
 
-  if (AMQP_BASIC_GET_OK_METHOD != ret.reply.id)
+  if (AMQP_BASIC_GET_OK_METHOD != ret.reply.id) {
     goto success_out;
+  }
 
   envelope_hv = newHV();
 
-  {
-    amqp_basic_get_ok_t *ok = (amqp_basic_get_ok_t *) ret.reply.decoded;
-    hv_stores(envelope_hv, "delivery_tag",  newSVu64(ok->delivery_tag));
-    hv_stores(envelope_hv, "redelivered",   newSViv(ok->redelivered));
-    hv_stores(envelope_hv, "exchange",      newSVpvn(ok->exchange.bytes, ok->exchange.len));
-    hv_stores(envelope_hv, "routing_key",   newSVpvn(ok->routing_key.bytes, ok->routing_key.len));
-    hv_stores(envelope_hv, "message_count", newSViv(ok->message_count));
+  amqp_basic_get_ok_t *ok = (amqp_basic_get_ok_t *) ret.reply.decoded;
+  hv_stores(envelope_hv, "delivery_tag",  newSVu64(ok->delivery_tag));
+  hv_stores(envelope_hv, "redelivered",   newSViv(ok->redelivered));
+  hv_stores(envelope_hv, "exchange",      newSVpvn(ok->exchange.bytes, ok->exchange.len));
+  hv_stores(envelope_hv, "routing_key",   newSVpvn(ok->routing_key.bytes, ok->routing_key.len));
+  hv_stores(envelope_hv, "message_count", newSViv(ok->message_count));
+
+  ret = amqp_read_message(state, channel, &message, 0);
+
+  ret = parse_amqp_message( message, &props, &body );
+  if (AMQP_RESPONSE_NORMAL != ret.reply_type) {
+      goto error_out2;
   }
 
-  ret = read_message(state, channel,
-    hv_fetchs(envelope_hv, "props", 1),
-    hv_fetchs(envelope_hv, "body",  1));
-  if (AMQP_RESPONSE_NORMAL != ret.reply_type)
-    goto error_out2;
-  
+  hv_stores(envelope_hv, "props", props);
+  hv_stores(envelope_hv, "body", body);
+
+  amqp_destroy_message( &message );
 success_out:
   *envelope_sv_ptr = envelope_hv ? newRV_noinc(MUTABLE_SV(envelope_hv)) : &PL_sv_undef;
   ret.reply_type = AMQP_RESPONSE_NORMAL;
@@ -1113,6 +1045,7 @@ success_out:
 error_out2:
   SvREFCNT_dec(envelope_hv);
 error_out1:
+  amqp_destroy_message( &message );
   *envelope_sv_ptr = &PL_sv_undef;
   return ret;
 }
@@ -1566,7 +1499,6 @@ net_amqp_rabbitmq_recv(conn, timeout = 0)
   Net::AMQP::RabbitMQ conn
   int timeout
   PREINIT:
-    SV *envelope;
     amqp_rpc_reply_t ret;
     struct timeval timeout_tv;
   CODE:
@@ -1583,10 +1515,12 @@ net_amqp_rabbitmq_recv(conn, timeout = 0)
       timeout_tv.tv_usec = 0;
     }
 
-    maybe_release_buffers(conn);
     ret = consume_message(conn, &RETVAL, timeout ? &timeout_tv : NULL);
-    if (AMQP_RESPONSE_LIBRARY_EXCEPTION != ret.reply_type || AMQP_STATUS_TIMEOUT != ret.library_error)
-      die_on_amqp_error(aTHX_ ret, conn, "recv");
+    maybe_release_buffers(conn);
+
+    if (AMQP_RESPONSE_LIBRARY_EXCEPTION != ret.reply_type || AMQP_STATUS_TIMEOUT != ret.library_error) {
+        die_on_amqp_error(aTHX_ ret, conn, "recv");
+    }
 
   OUTPUT:
     RETVAL
