@@ -649,6 +649,8 @@ static amqp_rpc_reply_t consume_message(amqp_connection_state_t state, SV **enve
   int res;
   amqp_frame_t frame;
   amqp_channel_t channel;
+  SV *props;
+  SV *body;
 
   memset(&ret, 0, sizeof(amqp_rpc_reply_t));
   *envelope_sv_ptr = &PL_sv_undef;
@@ -692,11 +694,12 @@ static amqp_rpc_reply_t consume_message(amqp_connection_state_t state, SV **enve
     hv_stores(envelope_hv, "routing_key",  newSVpvn(d->routing_key.bytes, d->routing_key.len));
   }
 
-  ret = read_message(state, channel,
-    hv_fetchs(envelope_hv, "props", 1),
-    hv_fetchs(envelope_hv, "body",  1));
+  ret = read_message(state, channel, &props, &body );
   if (AMQP_RESPONSE_NORMAL != ret.reply_type)
     goto error_out2;
+
+  hv_stores(envelope_hv, "props", props);
+  hv_stores(envelope_hv, "body", body);
 
   *envelope_sv_ptr = newRV_noinc(MUTABLE_SV(envelope_hv));
   ret.reply_type = AMQP_RESPONSE_NORMAL;
@@ -1080,6 +1083,8 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8) {
 static amqp_rpc_reply_t basic_get(amqp_connection_state_t state, amqp_channel_t channel, amqp_bytes_t queue, SV **envelope_sv_ptr, amqp_boolean_t no_ack) {
   amqp_rpc_reply_t ret;
   HV *envelope_hv = NULL;
+  SV *props;
+  SV *body;
 
   ret = amqp_basic_get(state, channel, queue, no_ack);
   if (AMQP_RESPONSE_NORMAL != ret.reply_type)
@@ -1099,11 +1104,12 @@ static amqp_rpc_reply_t basic_get(amqp_connection_state_t state, amqp_channel_t 
     hv_stores(envelope_hv, "message_count", newSViv(ok->message_count));
   }
 
-  ret = read_message(state, channel,
-    hv_fetchs(envelope_hv, "props", 1),
-    hv_fetchs(envelope_hv, "body",  1));
+  ret = read_message(state, channel, &props, &body );
   if (AMQP_RESPONSE_NORMAL != ret.reply_type)
     goto error_out2;
+
+  hv_stores(envelope_hv, "props", props);
+  hv_stores(envelope_hv, "body", body);
   
 success_out:
   *envelope_sv_ptr = envelope_hv ? newRV_noinc(MUTABLE_SV(envelope_hv)) : &PL_sv_undef;
