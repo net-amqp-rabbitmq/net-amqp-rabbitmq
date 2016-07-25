@@ -87,11 +87,11 @@ Disconnect from the RabbitMQ server.
 
 =head2 get_server_properties()
 
-Get a reference to hash of server properties (these may vary, you should use C<Data::Dumper> to inspect). Properties will be provided for the RabbitMQ server to which you are connected.
+Get a reference to hash (hashref) of server properties.  These may vary, you should use C<Data::Dumper> to inspect.  Properties will be provided for the RabbitMQ server to which you are connected.
 
 =head2 get_client_properties()
 
-Get a reference to hash of client properties (these may vary, you should use C<Data::Dumper> to inspect).
+Get a reference to hash (hashref) of client properties.  These may vary, you should use C<Data::Dumper> to inspect.
 
 =head2 is_connected()
 
@@ -99,7 +99,7 @@ Returns true if a valid socket connection appears to exist, false otherwise.
 
 =head2 channel_open($channel)
 
-Open an AMQP channel to the RabbitMQ server.
+Open an AMQP channel on the connection.
 
 C<$channel> is a positive integer describing the channel you which to open.
 
@@ -115,7 +115,9 @@ Returns the maximum allowed channel number.
 
 =head2 exchange_declare($channel, $exchange, $options, $arguments)
 
-Declare an AMQP exchange on the RabbitMQ server.
+Declare an AMQP exchange on the RabbitMQ server unless it already exists.  Bad
+things will happen if the exchange name already exists and different parameters
+are provided.
 
 C<$channel> is a channel that has been opened with C<channel_open>.
 
@@ -155,7 +157,7 @@ C<$options> is an optional hash respecting the following keys:
 
 =head2 exchange_bind($channel, $destination, $source, $routing_key, $arguments)
 
-Bind a source exchange to a destination exchange with a routing key.
+Bind a source exchange to a destination exchange with a given routing key and/or parameters.
 
 C<$channel> is a channel that has been opened with C<channel_open>.
 
@@ -251,7 +253,7 @@ C<$options> is an optional hash respecting the following keys:
 
 =head2 publish($channel, $routing_key, $body, $options, $props)
 
-Send a message to the RabbitMQ server.
+Publish a message to an exchange.
 
 C<$channel> is a channel that has been opened with C<channel_open>.
 
@@ -293,11 +295,10 @@ C<$props> is an optional hash (the AMQP 'props') respecting the following keys:
 
 =head2 consume($channel, $queuename, $options)
 
-Notify the RabbitMQ server that messages for the specified queue should
-be delivered on the specified channel.
+Put the channel into consume mode.
 
-The consumer_tag is returned.  This command does B<not> return AMQP
-frames, for that the C<recv> method should be used.
+The C<consumer_tag> is returned.  This command does B<not> return AMQP
+messages, for that the C<recv> method should be used.
 
 C<$channel> is a channel that has been opened with C<channel_open>.
 
@@ -314,9 +315,9 @@ C<$options> is an optional hash respecting the following keys:
 
 =head2 recv($timeout)
 
-Receive AMQP frames.
+Receive AMQP messages.
 
-This method returns a reference to a hash containing the following information:
+This method returns a reference to a hash (hashref) containing the following information:
 
      {
        body => 'Magic Transient Payload', # the reconstructed body
@@ -369,7 +370,7 @@ explicit tag.
 Get a message from the specified queue (via C<amqp_basic_get()>).
 
 The method returns C<undef> immediately if no messages are available
-on the queue.  If a message is available a reference to a hash is
+on the queue.  If a message is available a reference to a hash (hashref) is
 returned with the following contents:
 
     {
@@ -431,7 +432,7 @@ Acknowledge a message.
 
 C<$channel> is a channel that has been opened with C<channel_open>.
 
-C<$delivery_tag> the delivery tag seen from a returned frame from the
+C<$delivery_tag> the delivery tag seen from a returned message from the
 C<recv> method.
 
 C<$multiple> specifies if multiple are to be acknowledged at once.
@@ -450,7 +451,7 @@ Reject a message with the specified delivery tag.
 
 C<$channel> is a channel that has been opened with C<channel_open>.
 
-C<$delivery_tag> the delivery tag seen from a returned frame from the
+C<$delivery_tag> the delivery tag seen from a returned message from the
 C<recv> method.
 
 C<$requeue> specifies if the message should be requeued.
@@ -489,7 +490,7 @@ C<$options> is an optional hash respecting the following keys:
 
 =head2 heartbeat()
 
-Send a heartbeat frame.  If you've connected with a heartbeat parameter,
+Send a heartbeat.  If you've connected with a heartbeat parameter,
 you must send a heartbeat periodically matching connection parameter or
 the server may snip the connection.
 
@@ -514,14 +515,13 @@ calls are made.
     use Net::AMQP::RabbitMQ;
 
     my $channel = 1;
-    my $queue = "MyQueue.q";
-    my $exchange = "MyExchange.x";
+    my $exchange = "MyExchange.x";  # This exchange must exist already
     my $routing_key = "foobar";
 
     my $mq = Net::AMQP::RabbitMQ->new();
     $mq->connect("localhost", { user => "guest", password => "guest" });
     $mq->channel_open(1);
-    $mq->publish($channel, $queue, "Message Here");
+    $mq->publish($channel, $routing_key, "Message Here", { exchange => $exchange });
     $mq->disconnect();
 
 =head2 Simple consumer
@@ -530,22 +530,21 @@ calls are made.
     use Data::Dumper;
 
     my $channel = 1;
-    my $queue = "MyQueue.q";
-    my $exchange = "MyExchange.x";
+    my $exchange = "MyExchange.x";  # This exchange must exist already
     my $routing_key = "foobar";
 
     my $mq = Net::AMQP::RabbitMQ->new();
     $mq->connect("localhost", { user => "guest", password => "guest" });
-    $mq->channel_open(1);
+    $mq->channel_open($channel);
 
     # Declare queue, letting the server auto-generate one and collect the name
-    my $queuename = $mq->queue_declare(1, "");
+    my $queuename = $mq->queue_declare($channel, "");
 
     # Bind the new queue to the exchange using the routing key
-    $mq->queue_bind(1, $queuename, $exchange, $routing_key);
+    $mq->queue_bind($channel, $queuename, $exchange, $routing_key);
 
     # Request that messages be sent and receive them until interrupted
-    $mq->consume(1, $queuename);
+    $mq->consume($channel, $queuename);
 
     while ( my $message = $mq->recv(0) )
       {
