@@ -356,6 +356,8 @@ timeout expires before a message is received from the server.
 
 =head2 cancel($channel, $consumer_tag)
 
+Take the channel out of consume mode previously enabled with C<consume>.
+
 This method returns true or false indicating whether we got the expected
 "cancel-ok" response from the server.
 
