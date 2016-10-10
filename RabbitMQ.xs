@@ -1558,10 +1558,17 @@ net_amqp_rabbitmq_cancel(conn, channel, consumer_tag)
     assert_amqp_connected(conn);
 
     r = amqp_basic_cancel(conn, channel, amqp_cstring_bytes(consumer_tag));
-    if(strlen(consumer_tag) == r->consumer_tag.len && 0 == strcmp(consumer_tag, (char *)r->consumer_tag.bytes)) {
-      RETVAL = 1;
-    } else {
-      RETVAL = 0;
+    die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "cancel");
+
+    if ( r == NULL ) {
+        RETVAL = 0;
+    }
+    else {
+        if(strlen(consumer_tag) == r->consumer_tag.len && 0 == strcmp(consumer_tag, (char *)r->consumer_tag.bytes)) {
+          RETVAL = 1;
+        } else {
+          RETVAL = 0;
+        }
     }
   OUTPUT:
     RETVAL
