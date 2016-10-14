@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.20002 - 2016-10-14
+    - Fix test SSL cert
+
 2.20001 - 2016-09-07
     - Tidy up documentation, add simple examples for illustration (CTrabant)
     - Added declare queue in synopsis (oylenshpeegul)
