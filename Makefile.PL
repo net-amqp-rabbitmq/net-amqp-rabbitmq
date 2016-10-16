@@ -29,8 +29,24 @@ push @defines, '-DHAVE_HTONLL' if $has_htonll;
 my @libs = ('-lrt');
 my @inc = ('-I.', '-Irabbitmq-include');
 
+my %checklib_extra_options;
+if ( $^O eq 'darwin') {
+    my $osx_homebrew_openssl_path = "/usr/local/opt/openssl";
+
+    my $libpath = "${osx_homebrew_openssl_path}/lib";
+    my $incpath = "${osx_homebrew_openssl_path}/include";
+
+    push @libs, "-L$libpath";
+    push @inc, "-I$incpath";
+
+    $checklib_extra_options{libpath} = $libpath;
+    $checklib_extra_options{incpath} = $incpath;
+}
+
 my $has_openssl = check_lib(
-    lib => [qw/ssl crypto/],
+    lib     => [qw/ssl crypto/],
+    header  => 'openssl/conf.h',
+    %checklib_extra_options,
 );
 if ( $has_openssl ) {
     push @defines, '-DNAR_HAVE_OPENSSL';
@@ -48,6 +64,9 @@ foreach ( <*.c> ){
     next if ( $_ =~ m/assertlib/ );
     next if ( ( $_ eq 'amqp_openssl.c' ) && !$has_openssl );
     next if ( ( $_ eq 'threads.c' ) && ( $^O ne 'MSWin32' ) );
+
+    #this shouldn't exist unless the build dir is unclean. so ignore it
+    next if $_ eq 'RabbitMQ.c';
 
     $_ =~ s/.c$/.o/;
     $ofiles .= "$_ ";
