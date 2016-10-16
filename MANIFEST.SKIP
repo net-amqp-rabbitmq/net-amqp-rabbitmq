@@ -27,3 +27,6 @@ MYMETA.*
 README.*
 \.travis\.yml
 ^travis
+^\.vagrant
+^Vagrantfile$
+^vagrant$
