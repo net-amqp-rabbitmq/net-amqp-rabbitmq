@@ -22,7 +22,6 @@
 #include "amqp_ssl_socket.h"
 /* For struct timeval */
 #include "amqp_time.h"
-#include "amqp_private.h"
 
 /* This is for the Math::UInt64 integration */
 #include "perl_math_int64.h"
@@ -1847,7 +1846,7 @@ net_amqp_rabbitmq_disconnect(conn)
   PREINIT:
     int sockfd;
   CODE:
-    if ( conn->socket != NULL ) {
+    if ( amqp_get_socket(conn) != NULL ) {
         amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
         amqp_socket_close( amqp_get_socket( conn ) );
     }
@@ -1864,7 +1863,7 @@ void
 net_amqp_rabbitmq_DESTROY(conn)
   Net::AMQP::RabbitMQ conn
   CODE:
-    if ( conn->socket != NULL ) {
+    if ( amqp_get_socket(conn) != NULL ) {
         amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
     }
     empty_amqp_pool( &temp_memory_pool );
@@ -1894,11 +1893,8 @@ net_amqp_rabbitmq_tx_commit(conn, channel, args = NULL)
   Net::AMQP::RabbitMQ conn
   int channel
   HV *args
-  PREINIT:
-    amqp_pool_t *channel_pool;
   CODE:
     amqp_tx_commit(conn, channel);
-    channel_pool = amqp_get_or_create_channel_pool(conn, channel);
     maybe_release_buffers(conn);
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Commiting transaction");
 
