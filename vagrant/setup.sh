@@ -34,7 +34,7 @@ which perlbrew || {
 
     sudo apt-get install -y libssl-dev
 
-    bash -c 'source ~/perl5/perlbrew/etc/bashrc; cd /vagrant; cpanm --installdeps .'
+    bash -c 'source ~/perl5/perlbrew/etc/bashrc; cd /vagrant; cpanm --installdeps -n .; cpanm JSON LWP::UserAgent -n'
 }
 
 #set the config options for the tests
