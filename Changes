@@ -1,5 +1,10 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.30000 - 2016-10-18
+    - Fixed segfault on cancel fail
+    - Fixed build issue on OSX
+    - Stopped using parts of private api
+
 2.20002 - 2016-10-14
     - Fix test SSL cert
 
