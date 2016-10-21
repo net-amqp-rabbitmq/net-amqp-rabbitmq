@@ -6,7 +6,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.hostname = "nardev"
     config.vm.provider "virtualbox" do |v|
         v.memory = 512
-        v.linked_clone = true
+        v.linked_clone = true if Vagrant::VERSION =~ /^1.8/
     end
 
     config.vm.provision "shell",
