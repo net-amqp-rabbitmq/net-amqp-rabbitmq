@@ -1155,6 +1155,8 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
     char *ssl_key = NULL;
     int ssl_verify_host = 1;
     int ssl_init = 1;
+    char *sasl_method = "plain";
+    amqp_sasl_method_enum sasl_type = AMQP_SASL_METHOD_PLAIN;
   CODE:
     str_from_hv(options, user);
     str_from_hv(options, password);
@@ -1171,6 +1173,7 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
     str_from_hv(options, ssl_key);
     int_from_hv(options, ssl_verify_host);
     int_from_hv(options, ssl_init);
+    str_from_hv(options, sasl_method);
 
     if(timeout >= 0) {
      to.tv_sec = floor(timeout);
@@ -1221,8 +1224,13 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
         amqp_simple_wait_frame( conn, &frame );
     }
 
+    // should probably be amqp_raw_equal, but this is a minimal hack
+    if (strcasecmp(sasl_method, "external") == 0) {
+       sasl_type = AMQP_SASL_METHOD_EXTERNAL;
+    }
+
     die_on_error(aTHX_ amqp_socket_open_noblock(sock, hostname, port, (timeout<0)?NULL:&to), conn, "opening socket");
-    die_on_amqp_error(aTHX_ amqp_login(conn, vhost, channel_max, frame_max, heartbeat, AMQP_SASL_METHOD_PLAIN, user, password), conn, "Logging in");
+    die_on_amqp_error(aTHX_ amqp_login(conn, vhost, channel_max, frame_max, heartbeat, sasl_type, user, password), conn, "Logging in");
 
     maybe_release_buffers(conn);
 
