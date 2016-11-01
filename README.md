@@ -23,7 +23,7 @@ There are several environment variables you can set that infuluence the tests.
 
 # For developers/authors
 
-Once you have cloned the repo, you will need to download the submodules
+Once you have cloned the repo, you will need to download the submodules.
 
 ```sh
 git submodule init
