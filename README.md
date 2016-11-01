@@ -17,7 +17,7 @@ or once installed `perldoc Net::AMQP::RabbitMQ`
 
 # Tests
 
-There are several environment variables you can set that infuluence the tests.
+There are several environment variables you can set that influence the tests.
 
 <https://metacpan.org/pod/Net::AMQP::RabbitMQ#RUNNING-THE-TEST-SUITE>
 
