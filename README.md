@@ -39,6 +39,7 @@ The test environment variables have been set to use this install
 vagrant up
 vagrant ssh
 cd /vagrant
+cpanm Module::CAPIMaker
 make distclean; perl Makefile.PL; make
 
 #run all tests with test debugging
