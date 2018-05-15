@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.30001 - 2016-10-18
+    - Bumped rabbitmq-c dependencie
+
 2.30000 - 2016-10-18
     - Fixed segfault on cancel fail
     - Fixed build issue on OSX
