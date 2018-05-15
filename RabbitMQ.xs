@@ -1190,9 +1190,7 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
           Perl_croak(aTHX_ "error creating SSL socket");
         }
 
-        // TODO
-        // change this to amqp_ssl_socket_set_verify_hostname when next rabbitmq lib
-        amqp_ssl_socket_set_verify( sock, (amqp_boolean_t)ssl_verify_host );
+        amqp_ssl_socket_set_verify_hostname( sock, (amqp_boolean_t)ssl_verify_host );
 
         if ( ( ssl_cacert != NULL ) && strlen(ssl_cacert) ) {
             if ( amqp_ssl_socket_set_cacert(sock, ssl_cacert) ) {
