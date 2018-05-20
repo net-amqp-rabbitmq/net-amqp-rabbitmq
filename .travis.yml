@@ -1,5 +1,7 @@
 sudo: false
+
 language: perl
+
 perl:
   - "5.20"
   - "5.18"
@@ -8,11 +10,43 @@ perl:
   - "5.12"
   - "5.10"
   - "5.8"
+
 os:
   - linux
-  - osx
-services: rabbitmq
+
+addons:
+  apt:
+    sources:
+      - sourceline: deb https://packages.erlang-solutions.com/ubuntu trusty contrib
+        key_url: https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc
+    packages:
+      - erlang-nox
+
+cache:
+  apt: true
+  directories:
+    - $HOME/.cache
+
+env:
+  global:
+    - RABBITMQ_VERSION=3.7.4
+    - RABBITMQ_DOWNLOAD_URL="https://github.com/rabbitmq/rabbitmq-server/releases/download/v$RABBITMQ_VERSION/rabbitmq-server-generic-unix-$RABBITMQ_VERSION.tar.xz"
+    - RABBITMQ_TAR="rabbitmq-$RABBITMQ_VERSION.tar.xz"
+    - PATH=$HOME/.local/bin:$PATH
+    - MQSSLHOST=localhost
+    - MQSSLUSERNAME=guest
+    - MQSSLPASSWORD=guest
+    - MQSSLCACERT="$TRAVIS_BUILD_DIR/travis/certs/testca/cacert.pem"
+    - MQSSLVERIFYHOST=0
+
 before_install:
   - $TRAVIS_BUILD_DIR/travis/before_install
+
+install:
+  - $TRAVIS_BUILD_DIR/travis/install
+
+before_script:
+  - $TRAVIS_BUILD_DIR/travis/before_script
+
 script:
   - $TRAVIS_BUILD_DIR/travis/script

@@ -7,7 +7,6 @@ if [ "$is_osx" = false ]; then
     export MQHOST="localhost"
     export MQUSERNAME="guest"
     export MQPASSWORD="guest"
-    export MQPASSWORD="guest"
 fi
 export NARDEBUG=1
 
@@ -18,10 +17,17 @@ make distdir
 cd $(perl -MCPAN::Meta -e '$m = CPAN::Meta->load_file("MYMETA.yml"); print $m->name . "-" . $m->version')
 
 perl Makefile.PL
-cover -make "make TEST_VERBOSE=1" -test test
-MQSSL=1 prove -MDevel::Cover -v -I blib/lib -I blib/arch t/
 
-cover -report coveralls -ignore_re "\.c|\.h"
+# Devel::Cover not working properly under perl v5.8, see
+# https://metacpan.org/pod/Devel::Cover#REQUIREMENTS1
+if perl --version | grep v5.8.; then
+    make
+    MQSSL=1 prove -v -I blib/lib -I blib/arch t/
+else
+    cover -make "make TEST_VERBOSE=1" -test test
+    MQSSL=1 prove -MDevel::Cover -v -I blib/lib -I blib/arch t/
+    cover -report coveralls -ignore_re "\.c|\.h"
+fi
 
 #run linux specific memory leak tests
 if [ "$is_osx" = false ]; then

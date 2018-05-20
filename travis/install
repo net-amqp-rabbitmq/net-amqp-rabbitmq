@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [ ! -d "$HOME/.cache" ]; then
+    mkdir "$HOME/.cache"
+fi
+
+# Get the RabbitMQ tar ball
+if [ -s "$HOME/.cache/$RABBITMQ_TAR" ]; then
+    echo "[INFO] found cached $RABBITMQ_TAR file";
+else
+    wget -O "$HOME/.cache/$RABBITMQ_TAR" "$RABBITMQ_DOWNLOAD_URL"
+fi
+
+# Extract to .cache-dir
+tar -C "$TRAVIS_BUILD_DIR" -xvf "$HOME/.cache/$RABBITMQ_TAR"
+
+# Update the config file with the full Travis build dir
+sed -e "s#TRAVIS_DIR#$TRAVIS_BUILD_DIR#g" "$TRAVIS_BUILD_DIR/travis/rabbitmq.conf.travis" > "$TRAVIS_BUILD_DIR/travis/rabbitmq.conf"

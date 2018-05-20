@@ -30,9 +30,9 @@ sub new {
     }
 
     my $port;
-    my $host = "rabbitmq.thisaintnews.com";
-    my $username = "nartest";
-    my $password = "reallysecure";
+    my $host = "localhost";
+    my $username = "guest";
+    my $password = "guest";
 
     if ( $ssl || $options{ssl} ) {
         Test::More::note( "ssl mode" );
@@ -40,7 +40,7 @@ sub new {
         $host = $ENV{MQSSLHOST} if exists $ENV{MQSSLHOST};
         $username = $ENV{MQSSLUSERNAME} if exists $ENV{MQSSLUSERNAME};
         $password = $ENV{MQSSLPASSWORD} if exists $ENV{MQSSLPASSWORD};
-        $port = $ENV{MQSSLPORT} || 5673;
+        $port = $ENV{MQSSLPORT} || 5671;
     }
     else {
         $host = $ENV{MQHOST} if exists $ENV{MQHOST};

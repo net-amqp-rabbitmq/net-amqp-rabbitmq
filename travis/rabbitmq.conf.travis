@@ -1,0 +1,11 @@
+listeners.tcp.default = 5672
+listeners.ssl.default = 5671
+num_acceptors.tcp = 10
+num_acceptors.ssl = 10
+ssl_options.verify = verify_peer
+ssl_options.fail_if_no_peer_cert = false
+ssl_options.cacertfile = TRAVIS_DIR/travis/certs/testca/cacert.pem
+ssl_options.certfile = TRAVIS_DIR/travis/certs/server/cert.pem
+ssl_options.keyfile = TRAVIS_DIR/travis/certs/server/key.pem
+ssl_options.versions.1 = tlsv1.1
+ssl_options.versions.2 = tlsv1.2
