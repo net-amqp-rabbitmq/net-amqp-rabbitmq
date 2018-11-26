@@ -34,7 +34,7 @@ ok $helper->channel_open, "channel_open";
 ok $helper->queue_bind, "queue bind";
 ok $helper->drain, "drain queue";
 
-my $tag_back = $helper->consume;
+$tag_back = $helper->consume;
 is $helper->{consumer_tag}, $tag_back, 'consume returns the tag we gave it';
 
 #this one shouldn't fail or segfault
