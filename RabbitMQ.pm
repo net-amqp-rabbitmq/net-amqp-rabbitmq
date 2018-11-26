@@ -7,6 +7,7 @@ our $VERSION = '2.30000';
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
 use Scalar::Util qw(blessed);
+use Hash::Util qw(fieldhash);
 
 =encoding UTF-8
 
@@ -673,6 +674,18 @@ librabbitmq is licensed under the MIT License. See the LICENSE-MIT file in the t
 
 =cut
 
+# Since we can't store the PID in $self, which is a amqp_connection_state_t, we
+# store the pid for $self in $pids{$self}.
+# (See L<perlobj#Inside-Out-objects>).
+fieldhash my %pids;
+
+sub new {
+    my $class = shift;
+    my $self = $class->_new(@_);
+    $pids{$self} = $$;
+    return $self;
+}
+
 sub publish {
     my ($self, $channel, $routing_key, $body, $options, $props) = @_;
 
@@ -688,6 +701,14 @@ sub publish {
     }
 
     $self->_publish($channel, $routing_key, $body, $options, $props);
+}
+
+sub DESTROY {
+    my ($self) = @_;
+    my $connection_close = $pids{$self} && $pids{$self} == $$ ? 1 : 0;
+    $self->_destroy_connection_close
+        if $connection_close;
+    $self->_destroy_cleanup;
 }
 
 1;

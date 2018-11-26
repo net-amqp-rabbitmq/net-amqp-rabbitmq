@@ -1867,7 +1867,7 @@ net_amqp_rabbitmq_disconnect(conn)
     }
 
 Net::AMQP::RabbitMQ
-net_amqp_rabbitmq_new(clazz)
+net_amqp_rabbitmq__new(clazz)
   char *clazz
   CODE:
     RETVAL = amqp_new_connection();
@@ -1875,12 +1875,17 @@ net_amqp_rabbitmq_new(clazz)
     RETVAL
 
 void
-net_amqp_rabbitmq_DESTROY(conn)
+net_amqp_rabbitmq__destroy_connection_close(conn)
   Net::AMQP::RabbitMQ conn
   CODE:
     if ( amqp_get_socket(conn) != NULL ) {
         amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
     }
+
+void
+net_amqp_rabbitmq__destroy_cleanup(conn)
+  Net::AMQP::RabbitMQ conn
+  CODE:
     empty_amqp_pool( &temp_memory_pool );
     amqp_destroy_connection(conn);
 
