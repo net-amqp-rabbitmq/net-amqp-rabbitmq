@@ -84,10 +84,9 @@ my %WriteMakefileArgs = (
     LIBS            => join( ' ', @libs ),
     INC             => join( ' ', @inc ),
     PREREQ_PM       => {
-        'Math::Int64'           => '0.34',
-        'Scalar::Util'          => '0',
-        'XSLoader'              => '0',
-        'Hash::Util::FieldHash' => '0',
+        'Math::Int64'      => '0.34',
+        'Scalar::Util'     => '0',
+        'XSLoader'         => '0',
     },
     TEST_REQUIRES   => {
         'Sys::Hostname'    => '0',

@@ -1,6 +1,21 @@
-use Test::More tests => 3;
+use Test::More;
 use strict;
 use warnings;
+
+my $have_fieldhash = eval {
+    require Hash::FieldHash;
+    Hash::FieldHash->import('fieldhash');
+    1;
+} || eval {
+    require Hash::Util;
+    Hash::Util->import('fieldhash');
+    1;
+};
+
+plan skip_all => "Couldn't find a class implementing 'fieldhash'"
+    unless $have_fieldhash;
+
+plan tests => 3;
 
 # When we fork below, if the child closes the parent's connection the parent
 # will sit around for 30 seconds before declaring an error.
