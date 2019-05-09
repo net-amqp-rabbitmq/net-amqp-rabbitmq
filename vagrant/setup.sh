@@ -24,7 +24,7 @@ fi
 
 #install the latest perl
 which perlbrew || {
-    sudo apt-get install perlbrew -y
+    sudo apt-get install -y perlbrew libssl-dev
     perlbrew init > /dev/null
     echo 'source ~/perl5/perlbrew/etc/bashrc' >> ~/.bash_profile
     source ~/perl5/perlbrew/etc/bashrc
@@ -32,9 +32,9 @@ which perlbrew || {
     perlbrew install perl-stable -j2 -n --switch
     perlbrew install-cpanm
 
-    sudo apt-get install -y libssl-dev
-
-    bash -c 'source ~/perl5/perlbrew/etc/bashrc; cd /vagrant; cpanm --installdeps -n .; cpanm JSON LWP::UserAgent -n'
+    pushd /vagrant
+    cpanm --installdeps -n .
+    cpanm -n JSON LWP::UserAgent Module::CAPIMaker
 }
 
 #set the config options for the tests
