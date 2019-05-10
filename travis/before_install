@@ -6,7 +6,7 @@ if [ $is_osx ]; then
     brew install cpanminus
 fi
 
-cpanm -n Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64 JSON LWP::UserAgent
+cpanm -n Devel::Cover@1.24 Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64 JSON LWP::UserAgent
 
 cpanm -n JSON
 cpanm -n --installdeps .
