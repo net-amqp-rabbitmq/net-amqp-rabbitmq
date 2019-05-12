@@ -8,6 +8,25 @@ use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
 use Scalar::Util qw(blessed);
 
+# Hash::FieldHash and/or Hash::Util's fieldhash may or may not be available
+#
+# On versions earlier than 5.9.4, Hash::Util::FieldHash didn't exist and
+# hence Hash::Util::fieldhash didn't either.
+#
+# We need one of them to fix #151: REQUEST: optionally leave connection alive
+# in net_amqp_rabbitmq_DESTROY to allow forking
+#
+# If neither is found #151 will remain unfixed
+my $have_fieldhash = eval {
+    require Hash::FieldHash;
+    Hash::FieldHash->import('fieldhash');
+    1;
+} || eval {
+    require Hash::Util;
+    Hash::Util->import('fieldhash');
+    1;
+};
+
 =encoding UTF-8
 
 =head1 NAME
@@ -673,6 +692,23 @@ librabbitmq is licensed under the MIT License. See the LICENSE-MIT file in the t
 
 =cut
 
+# Since we can't store the PID in $self, which is a amqp_connection_state_t, we
+# store the pid for $self in $pids{$self}.
+# (See L<perlobj#Inside-Out-objects>).
+
+my %pids;
+if ($have_fieldhash) {
+    fieldhash(%pids);
+}
+
+sub new {
+    my $class = shift;
+    my $self = $class->_new(@_);
+    $pids{$self} = $$
+        if $have_fieldhash;
+    return $self;
+}
+
 sub publish {
     my ($self, $channel, $routing_key, $body, $options, $props) = @_;
 
@@ -688,6 +724,13 @@ sub publish {
     }
 
     $self->_publish($channel, $routing_key, $body, $options, $props);
+}
+
+sub DESTROY {
+    my ($self) = @_;
+    $self->_destroy_connection_close
+        if !$have_fieldhash || $pids{$self} && $pids{$self} == $$;
+    $self->_destroy_cleanup;
 }
 
 1;
