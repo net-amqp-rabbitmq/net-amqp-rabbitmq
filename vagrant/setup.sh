@@ -46,5 +46,8 @@ export MQSSLPASSWORD="guest"
 export MQHOST=\$MQSSLHOST
 export MQUSERNAME=\$MQSSLUSERNAME
 export MQPASSWORD=\$MQSSLPASSWORD
+export MQVHOST="/"
+export MQSSLVHOST="/"
+export MQSSLCACERT="t/ssl/vagrant.cacert.pem"
 EOF
 }
