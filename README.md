@@ -47,3 +47,8 @@ NARDEBUG=1 prove -I blib/lib -I blib/arch -v t/
 #run all tests in ssl mode
 MQSSL=1 prove -I blib/lib -I blib/arch -v t/
 ```
+
+#To build a release
+perl Makefile.PL
+make manifest
+make dist
