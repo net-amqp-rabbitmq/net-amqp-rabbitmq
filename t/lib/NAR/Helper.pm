@@ -13,7 +13,7 @@ sub new {
     my $unique = _unique();
 
     my $ssl = $ENV{MQSSL} ? 1 : 0;
-    my $ssl_cacert = exists $ENV{MQSSLCACERT} ? $ENV{MQSSLCACERT} : "t/ssl/cacert.pem",
+    my $ssl_cacert = exists $ENV{MQSSLCACERT} ? $ENV{MQSSLCACERT} : "t/ssl/cloudamqp.cacert.pem",
     my $ssl_verify_host = 1;
     if ( defined($ENV{MQSSLVERIFYHOST}) ) {
         $ssl_verify_host = $ENV{MQSSLVERIFYHOST};
@@ -30,9 +30,10 @@ sub new {
     }
 
     my $port;
-    my $host = "rabbitmq.thisaintnews.com";
-    my $username = "nartest";
-    my $password = "reallysecure";
+    my $host = "hornet.rmq.cloudamqp.com";
+    my $username = "mbmoajnl";
+    my $password = "bnAo6Eba0I-fqbHcy9bFS86GxKCunKie";
+    my $vhost = "mbmoajnl";
 
     if ( $ssl || $options{ssl} ) {
         Test::More::note( "ssl mode" );
@@ -40,13 +41,15 @@ sub new {
         $host = $ENV{MQSSLHOST} if exists $ENV{MQSSLHOST};
         $username = $ENV{MQSSLUSERNAME} if exists $ENV{MQSSLUSERNAME};
         $password = $ENV{MQSSLPASSWORD} if exists $ENV{MQSSLPASSWORD};
-        $port = $ENV{MQSSLPORT} || 5673;
+        $vhost = $ENV{MQSSLVHOST} if exists $ENV{MQSSLVHOST};
+        $port = $ENV{MQSSLPORT} || 5671;
     }
     else {
         $host = $ENV{MQHOST} if exists $ENV{MQHOST};
         $username = $ENV{MQUSERNAME} if exists $ENV{MQUSERNAME};
         $password = $ENV{MQPASSWORD} if exists $ENV{MQPASSWORD};
-        $port = $ENV{MQSSLPORT} || 5672;
+        $vhost = $ENV{MQVHOST} if exists $ENV{MQVHOST};
+        $port = $ENV{MQPORT} || 5672;
     }
 
     my $self = {
@@ -66,6 +69,7 @@ sub new {
         ssl_verify_peer => $ssl_verify_peer,
         ssl_cacert      => $ssl_cacert,
         ssl_init        => $ssl_init,
+        vhost           => $vhost,
         %options,
     };
     if ( $ENV{NARDEBUG} ) {
@@ -113,6 +117,7 @@ sub connect {
         ssl_verify_peer => $self->{ssl_verify_peer},
         ssl_cacert      => $self->{ssl_cacert},
         ssl_init        => $self->{ssl_init},
+        vhost           => $self->{vhost},
     };
     if ( defined $heartbeat ) {
         $options->{heartbeat} = $heartbeat;

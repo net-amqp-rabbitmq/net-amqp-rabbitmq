@@ -8,6 +8,7 @@ if [ "$is_osx" = false ]; then
     export MQUSERNAME="guest"
     export MQPASSWORD="guest"
     export MQPASSWORD="guest"
+    export MQVHOST="/"
 fi
 export NARDEBUG=1
 

@@ -579,7 +579,7 @@ calls are made.
 =head1 RUNNING THE TEST SUITE
 
 The test suite runs live tests against a RabbitMQ server at
-C<rabbitmq.thisaintnews.com>.
+C<https://www.cloudamqp.com/>.
 
 There are separte variables for the ssl and none ssl host/user/password/port.
 
@@ -591,19 +591,23 @@ host (or the test server is down), you can use these environment variables:
 =item MQHOST
 
 Hostname or IP address of the RabbitMQ server to connect to (defaults
-to C<rabbitmq.thisaintnews.com>).
+to C<hornet.rmq.cloudamqp.com>).
 
 =item MQUSERNAME
 
-Username for authentication (defaults to "nartest").
+Username for authentication (defaults to username for L<https://www.cloudamqp.com>).
 
 =item MQPASSWORD
 
-Password for authentication (defaults to "reallysecure").
+Password for authentication (defaults to password for L<https://www.cloudamqp.com>).
 
 =item MQPORT
 
 Port of the RabbitMQ server to connect to (defaults to 5672)
+
+=item MQVHOST
+
+Vhost to use (defaults to vhost for for L<https://www.cloudamqp.com>).
 
 =item MQSSL
 
@@ -619,24 +623,24 @@ backwards compatibility, still do.
 =item MQSSLHOST
 
 Hostname or IP address of the RabbitMQ server to connect to (defaults
-to C<rabbitmq.thisaintnews.com>).
+to C<hornet.rmq.cloudamqp.com>).
 
 =item MQSSLUSERNAME
 
-Username for authentication (defaults to "nartest").
+Username for authentication (defaults to username for L<https://www.cloudamqp.com>).
 
 =item MQSSLPASSWORD
 
-Password for authentication (defaults to "reallysecure").
+Password for authentication (defaults to password for L<https://www.cloudamqp.com>).
 
 =item MQSSLPORT
 
-Port of the RabbitMQ server to connect to (defaults to 5673)
+Port of the RabbitMQ server to connect to (defaults to 5671)
 
 =item MQSSLCACERT
 
 Path to the certificate file for SSL-enabled connections, defaults to
-F<t/ssl/cacert.pem>.
+F<t/ssl/cloudamqp.cacert.pem>.
 
 =item MQSSLVERIFYHOST
 
@@ -646,6 +650,10 @@ true).
 =item MQSSLINIT
 
 Whether the openssl library should be initialized (defaults to true).
+
+=item MQSSLVHOST
+
+Vhost to use when in SSL mode (defaults to vhost for for L<https://www.cloudamqp.com>).
 
 =back
 
@@ -683,6 +691,10 @@ Alexey Sheynuk
 Karen Etheridge E<lt>ether@cpan.orgE<gt>
 
 Eric Brine E<lt>ikegami@cpan.orgE<gt>
+
+=head1 THANKS
+
+Special thanks to L<https://www.cloudamqp.com> for providing us with the RabbitMQ server the tests run against.
 
 =head1 LICENSE
 
