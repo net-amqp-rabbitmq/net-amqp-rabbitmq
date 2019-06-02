@@ -1,4 +1,4 @@
-use Test::More tests => 10;
+use Test::More tests => 6;
 use strict;
 use warnings;
 
@@ -39,10 +39,3 @@ ok $helper->exchange_declare( {
         internal      => 1,
     }, "internal1.auto_delete1" ),
     "internal exchange declare auto_delete";
-
-END {
-    ok $helper->exchange_delete, "delete default exchange";
-    ok $helper->exchange_delete('internal1.auto_delete0'), "delete internal1.auto_delete0 exchange";
-    ok $helper->exchange_delete('internal0.auto_delete1'), "delete internal0.auto_delete1 exchange";
-    ok $helper->exchange_delete('internal1.auto_delete1'), "delete internal1.auto_delete1 exchange";
-}

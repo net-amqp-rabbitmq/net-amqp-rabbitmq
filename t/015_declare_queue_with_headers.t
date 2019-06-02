@@ -15,14 +15,3 @@ ok $helper->exchange_declare, "exchange declare";
 ok $helper->queue_declare( { auto_delete => 1 }, undef, undef, { "x-ha-policy" => "all" } ), "queue declare";
 
 ok !$helper->queue_declare( { auto_delete => 0 } ), "Redeclaring queue with different options fails";
-
-END {
-    #reconnect first
-    $helper->connect;
-    $helper->channel_open;
-
-    $helper->queue_delete;
-    $helper->exchange_delete;
-    $helper->channel_close;
-    $helper->disconnect;
-}

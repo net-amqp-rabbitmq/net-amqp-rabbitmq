@@ -1,4 +1,4 @@
-use Test::More tests => 21;
+use Test::More tests => 18;
 use strict;
 use warnings;
 
@@ -38,10 +38,3 @@ ok $helper->publish( "Magic Transient Payload", $props ), "publish";
 note "sleeping for 10s";
 sleep(10);
 ok !$helper->publish( "Magic Transient Payload", $props ), "publish fails";
-
-END {
-    #reconect to cleanup
-    ok $helper->connect, "reconnect";
-    ok $helper->channel_open, "reopen channel";
-    ok $helper->cleanup, "cleanup";
-}

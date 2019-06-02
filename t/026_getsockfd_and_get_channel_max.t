@@ -29,8 +29,9 @@ cmp_ok(
 
 ok $helper->channel_open, "channel_open";
 
-is(
+cmp_ok(
     $helper->mq->get_channel_max,
-    65535,
-    'max channel is 65535, per documentation of librabbitmq'
+    '>=',
+    200,
+    'max channel is >= 200 (max channels at cloudamqp)'
 );

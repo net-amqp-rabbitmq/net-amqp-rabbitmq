@@ -53,23 +53,25 @@ sub new {
     }
 
     my $self = {
-        unique          => $unique,
-        exchange        => "nar_excahnge-$unique",
-        queue           => "nar_queue-$unique",
-        routekey        => "nar_key-$unique",
-        username        => $username,
-        password        => $password,
-        consumer_tag    => 'ctag',
-        channel         => 1,
-        port            => $port,
-        host            => $host,
-        mq              => $mq,
-        ssl             => $ssl,
-        ssl_verify_host => $ssl_verify_host,
-        ssl_verify_peer => $ssl_verify_peer,
-        ssl_cacert      => $ssl_cacert,
-        ssl_init        => $ssl_init,
-        vhost           => $vhost,
+        unique             => $unique,
+        exchange           => "nar_exchange-$unique",
+        queue              => "nar_queue-$unique",
+        routekey           => "nar_key-$unique",
+        username           => $username,
+        password           => $password,
+        consumer_tag       => 'ctag',
+        channel            => 1,
+        port               => $port,
+        host               => $host,
+        mq                 => $mq,
+        ssl                => $ssl,
+        ssl_verify_host    => $ssl_verify_host,
+        ssl_verify_peer    => $ssl_verify_peer,
+        ssl_cacert         => $ssl_cacert,
+        ssl_init           => $ssl_init,
+        vhost              => $vhost,
+        declared_exchanges => [],
+        declared_queues    => [],
         %options,
     };
     if ( $ENV{NARDEBUG} ) {
@@ -184,19 +186,24 @@ sub exchange_declare {
     }
 
     my $exchange = $self->{exchange} . $extra_name;
+    push @{$self->{declared_exchanges}}, $exchange;
+
     $self->_ok( sub {
         $self->mq->exchange_declare( $self->{channel}, $exchange, $options, $args ? $args : () );
     } );
 }
 
 sub exchange_delete {
-    my ( $self, $extra_name ) = @_;
+    my ( $self, $extra_name, $exchange_name ) = @_;
 
     if ( !defined $extra_name ) {
         $extra_name = "";
     }
 
-    my $exchange = $self->{exchange} . $extra_name;
+    if (!defined $exchange_name) {
+        $exchange_name = $self->{exchange};
+    }
+    my $exchange = $exchange_name . $extra_name;
     $self->_ok( sub {
         $self->mq->exchange_delete( $self->{channel}, $exchange, { if_unused => 0 } );
     } );
@@ -252,6 +259,7 @@ sub queue_declare {
         $self->_ok( sub {
             @result = $self->mq->queue_declare( $self->{channel}, $queue, $options, $args ? $args : () );
         } );
+        push @{$self->{declared_queues}}, $result[0];
 
         return @result;
     }
@@ -260,6 +268,7 @@ sub queue_declare {
     $self->_ok( sub {
         $returned_queuename = $self->mq->queue_declare( $self->{channel}, $queue, $options );
     } );
+    push @{$self->{declared_queues}}, $returned_queuename if $returned_queuename;
 
     return $returned_queuename;
 }
@@ -524,19 +533,33 @@ sub get_client_properties {
     $client_properties;
 }
 
-sub cleanup {
-    my ( $self, $queue ) = @_;
+sub _reconnect {
+    my $self = shift;
 
-    Test::More::note( "cleaning up" );
+    if (!$self->mq->is_connected) {
+        $self->connect;
+        $self->channel_open;
+    }
+}
 
-    return 1 if !$self->mq->is_connected();
+sub DESTROY {
+    my $self = shift;
 
-    $self->purge( $queue );
-    $self->cancel;
-    $self->queue_unbind( $queue );
-    $self->queue_delete( $queue );
-    $self->exchange_delete;
-    $self->channel_close;
+    foreach my $queue (@{$self->{declared_queues}}) {
+        Test::More::note("DESTROY deleting queue $queue");
+        $self->_reconnect;
+        $self->purge($queue);
+        $self->_reconnect;
+        $self->queue_unbind($queue);
+        $self->_reconnect;
+        $self->queue_delete($queue);
+    }
+
+    foreach my $exchange (@{$self->{declared_exchanges}}) {
+        Test::More::note("DESTROY deleting exchange $exchange");
+        $self->_reconnect;
+        $self->exchange_delete(undef, $exchange);
+    }
 
     1;
 }

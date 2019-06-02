@@ -1,4 +1,4 @@
-use Test::More tests => 11;
+use Test::More tests => 10;
 use strict;
 use warnings;
 use utf8;
@@ -69,7 +69,3 @@ is_deeply(
     },
     "payload"
 );
-
-END {
-    ok $helper->cleanup, "cleanup";
-}

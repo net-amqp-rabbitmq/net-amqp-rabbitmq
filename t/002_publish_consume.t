@@ -1,4 +1,4 @@
-use Test::More tests => 22;
+use Test::More tests => 21;
 use strict;
 use warnings;
 
@@ -166,8 +166,4 @@ ok $helper->publish( "Magic Payload", $props, 'non-existent', { exchange => 'non
 
     ok($e, "recv reports exceptional errors")
         and note($e);
-}
-
-END {
-    ok $helper->cleanup, "cleanup";
 }

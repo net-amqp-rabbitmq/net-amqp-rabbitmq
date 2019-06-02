@@ -51,14 +51,3 @@ ok $getr, "get";
 
 is $getr->{'body'}, "Magic Payload", "Verify payload is the same";
 is $getr->{'exchange'}, $helper->{exchange}, "Verify it was indeed sent to the original exchange";
-
-END {
-    note( "cleaning up" );
-
-    $helper->purge;
-    $helper->queue_unbind;
-    $helper->queue_delete;
-    $helper->exchange_delete;
-    $helper->exchange_delete( 'ae' );
-    $helper->channel_close;
-}

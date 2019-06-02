@@ -1,4 +1,4 @@
-use Test::More tests => 19;
+use Test::More tests => 18;
 use strict;
 use warnings;
 
@@ -41,7 +41,3 @@ is $helper->{consumer_tag}, $tag_back, 'consume returns the tag we gave it';
 ok $helper->cancel( $tag_back ), 'cancel ok';
 ok $helper->disconnect, 'disconnect';
 ok !$helper->cancel, "cancel on disconnected fails";
-
-END {
-    ok $helper->cleanup, "cleanup";
-}

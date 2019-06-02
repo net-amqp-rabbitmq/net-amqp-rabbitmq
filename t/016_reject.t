@@ -1,4 +1,4 @@
-use Test::More tests => 21;
+use Test::More tests => 20;
 use strict;
 use warnings;
 
@@ -77,8 +77,4 @@ ok $helper->consume( undef, 0 ), 'consume';
 
     my $nack_tag = $payload->{delivery_tag};
     ok $helper->nack( $nack_tag ), "nack";
-}
-
-END {
-    ok $helper->cleanup, "cleanup";
 }

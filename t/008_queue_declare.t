@@ -31,14 +31,3 @@ my $queue_options = {
 };
 my $returned_queuename = $helper->queue_declare( {auto_delete => 1}, undef, 1, $queue_options );
 ok $returned_queuename, "queue name";
-
-END {
-    note( "cleaning up" );
-
-    $helper->purge;
-    $helper->queue_unbind;
-    $helper->queue_delete;
-    $helper->queue_delete( $returned_queuename );
-    $helper->exchange_delete;
-    $helper->channel_close;
-}

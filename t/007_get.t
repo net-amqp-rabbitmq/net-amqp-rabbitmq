@@ -1,4 +1,4 @@
-use Test::More tests => 15;
+use Test::More tests => 14;
 use strict;
 use warnings;
 
@@ -95,8 +95,4 @@ ok $helper->channel_open, "channel_open";
         },
         "get should see message"
     );
-}
-
-END {
-    ok $helper->cleanup( $queuename ), "cleanup";
 }

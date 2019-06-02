@@ -12,8 +12,3 @@ ok $helper->connect, "connected";
 ok $helper->channel_open, "channel_open";
 
 ok $helper->basic_qos( { prefetch_count => 5 } ), "qos";
-
-END {
-    $helper->channel_close;
-    $helper->disconnect;
-}
