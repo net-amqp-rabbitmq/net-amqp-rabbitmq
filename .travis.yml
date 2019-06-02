@@ -20,3 +20,8 @@ before_install:
   - $TRAVIS_BUILD_DIR/travis/before_install
 script:
   - $TRAVIS_BUILD_DIR/travis/script
+dist: xenial
+addons:
+  apt:
+    packages:
+      - rabbitmq-server
