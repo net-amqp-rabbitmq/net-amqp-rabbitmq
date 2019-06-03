@@ -21,9 +21,3 @@ my $props = {
     immediate => 1
 };
 ok $helper->publish( "Magic Payload", $props ), "bad publish";
-
-END {
-    $helper->exchange_delete;
-    $helper->channel_close;
-    $helper->disconnect;
-}

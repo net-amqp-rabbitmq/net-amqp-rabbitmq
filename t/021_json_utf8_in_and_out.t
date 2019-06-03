@@ -83,9 +83,3 @@ my $ascii_payload = "Some ASCII payload";
     );
     ok( !utf8::is_utf8( $rv->{'body'} ), 'not utf8' );
 }
-
-END {
-    if ($has_json) {
-        ok $helper->cleanup, "cleanup";
-    }
-}

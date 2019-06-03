@@ -38,13 +38,3 @@ ok !$helper->queue_bind( $queue, undef, undef, $headers ), "queue bind";
 # Let's do some negative testing
 ok !$helper->queue_bind( "", undef, undef, $headers  ), "Binding to queue without a queue name";
 ok !$helper->queue_bind( $queue, "", undef, $headers  ), "Binding to queue without an exchange";
-
-END {
-    #reconnect first
-    $helper->connect;
-    $helper->channel_open;
-
-    $helper->exchange_delete;
-    $helper->channel_close;
-    $helper->disconnect;
-}

@@ -1,4 +1,4 @@
-use Test::More tests => 16;
+use Test::More tests => 15;
 use strict;
 use warnings;
 
@@ -57,7 +57,3 @@ is_deeply(
     "payload"
 );
 ok $helper->ack( $ack_tag ), "ack";
-
-END {
-    ok $helper->cleanup, "cleanup";
-}

@@ -15,7 +15,7 @@ if ( !Net::AMQP::RabbitMQ::has_ssl ) {
 if ($ENV{MQSKIPSSL}) {
     plan skip_all => 'SSL tests disabled by user';
 } else {
-    plan tests => 10;
+    plan tests => 9;
 }
 
 # MQSKIPSSL not set, set SSL-related options to default values unless
@@ -54,9 +54,3 @@ is_deeply(
     },
     "payload matches"
 );
-
-END {
-    if (defined $helper) {
-        ok $helper->cleanup, "cleanup";
-    }
-}

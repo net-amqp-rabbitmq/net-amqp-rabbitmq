@@ -62,9 +62,3 @@ EOF
         "payload and header with boolean value $boolean_value"
     );
 }
-
-END {
-    if ( $has_lwp ) {
-        $helper->cleanup;
-    }
-}

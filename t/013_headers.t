@@ -1,4 +1,4 @@
-use Test::More tests => 18;
+use Test::More tests => 17;
 use strict;
 use warnings;
 
@@ -64,8 +64,4 @@ ok $helper->drain, "drain queue";
 
     is_deeply( $msg->{props}->{headers}, $headers, "Received blessed headers" );
     is $msg->{props}->{headers}->{blah}, "" . $headers->{blah}, 'overload still works';
-}
-
-END {
-    ok $helper->cleanup, "cleanup";
 }

@@ -1,4 +1,4 @@
-use Test::More tests => 29;
+use Test::More tests => 28;
 use strict;
 use warnings;
 use utf8;
@@ -146,8 +146,4 @@ my $pub_props = { content_encoding => 'C', headers => { "sample" => "sample" } }
     );
     ok !utf8::is_utf8( $rv->{'body'} ), 'not utf8';
     ok utf8::is_utf8( $rv->{'props'}->{"headers"}->{"sample"} ), 'is utf8';
-}
-
-END {
-    ok $helper->cleanup( $queuename ), "cleanup";
 }

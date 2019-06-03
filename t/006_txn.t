@@ -1,4 +1,4 @@
-use Test::More tests => 14;
+use Test::More tests => 13;
 use strict;
 use warnings;
 
@@ -43,7 +43,3 @@ is_deeply(
     },
     "payload recived correctly"
 );
-
-END {
-    ok $helper->cleanup, "cleanup";
-}

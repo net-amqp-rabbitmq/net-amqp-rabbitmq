@@ -65,12 +65,3 @@ like(
     qr/source and destination must both be specified/,
     "Unbinding exchange-to-exchange without a source name"
 );
-
-END {
-    note( "cleaning up" );
-
-    $helper->exchange_delete( 'a' );
-    $helper->exchange_delete( 'b' );
-    $helper->queue_delete;
-    $helper->channel_close;
-}
