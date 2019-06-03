@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.40001 - 2019-06-03
+    - Changed tests to cleanup better
+
 2.40000 - 2019-06-02
     - Changed test server to one hosted at cloudamqp
     - DESTROY: Only close connection from opener PID - fixes #151 (pmorch)
