@@ -655,6 +655,14 @@ Whether the openssl library should be initialized (defaults to true).
 
 Vhost to use when in SSL mode (defaults to vhost for for L<https://www.cloudamqp.com>).
 
+=item MQADMINPROTOCOL
+
+Protocol to use for accessing the admin. Defaults to https
+
+=item MQADMINPORT
+
+Port to use for accessing the admin interface. Defaults to 443
+
 =back
 
 =head1 VERSION COMPATIBILITY

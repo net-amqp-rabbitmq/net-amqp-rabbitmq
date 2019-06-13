@@ -47,5 +47,7 @@ export MQPASSWORD=\$MQSSLPASSWORD
 export MQVHOST="/"
 export MQSSLVHOST="/"
 export MQSSLCACERT="t/ssl/vagrant.cacert.pem"
+export MQADMINPROTOCOL="http"
+export MQADMINPORT="15672"
 EOF
 }
