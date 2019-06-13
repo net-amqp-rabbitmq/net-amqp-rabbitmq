@@ -29,7 +29,7 @@ ok $helper->consume, "consume";
 #     This might be rewritten once it's possible to publish
 #     boolean values with Net::AMQP::RabbitMQ itself.
 my $ua = LWP::UserAgent->new;
-my $url = "http://$helper->{username}:$helper->{password}\@$helper->{host}:15672/api/exchanges/%2F/$helper->{exchange}/publish";
+my $url = "$helper->{admin_api_url}/$helper->{exchange}/publish";
 for my $test_def (['true', 1], ['false', 0]) {
     my($boolean_value, $perl_value) = @$test_def;
     my $resp = $ua->post($url, Content => <<"EOF");
