@@ -7,7 +7,7 @@ my $has_json = eval("use JSON; 1");
 if ( $@ ) {
      plan skip_all => "Missing JSON.pm";
 } else {
-     plan tests => 21;
+     plan tests => 20;
 }
 
 use FindBin qw/$Bin/;

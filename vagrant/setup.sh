@@ -22,20 +22,18 @@ if [ ! -e /etc/apt/sources.list.d/rabbitmq.list ]; then
     sudo rabbitmq-plugins enable rabbitmq_management
 fi
 
-#install the latest perl
-which perlbrew || {
-    sudo apt-get install -y perlbrew libssl-dev
-    perlbrew init > /dev/null
-    echo 'source ~/perl5/perlbrew/etc/bashrc' >> ~/.bash_profile
-    source ~/perl5/perlbrew/etc/bashrc
+sudo apt-get install -y perlbrew libssl-dev
+perlbrew init > /dev/null
+echo 'source ~/perl5/perlbrew/etc/bashrc' >> ~/.bash_profile
+source ~/perl5/perlbrew/etc/bashrc
 
-    perlbrew install perl-stable -j2 -n --switch
-    perlbrew install-cpanm
+perlbrew install perl-stable -j2 -n --switch
+perlbrew install-cpanm
+source ~/perl5/perlbrew/etc/bashrc
 
-    pushd /vagrant
-    cpanm --installdeps -n .
-    cpanm -n JSON LWP::UserAgent Module::CAPIMaker
-}
+pushd /vagrant
+cpanm --installdeps -n .
+cpanm -n JSON LWP::UserAgent Module::CAPIMaker Hash::FieldHash LWP::Protocol::https
 
 #set the config options for the tests
 test $MQSSLHOST || {
