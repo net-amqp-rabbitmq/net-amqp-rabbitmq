@@ -7,7 +7,11 @@ use lib "$Bin/lib";
 use NAR::Helper;
 
 my $helper = NAR::Helper->new;
-my $has_lwp = eval q{ use LWP::UserAgent; 1 };
+my $has_lwp = eval q{
+    use LWP::UserAgent;
+    use LWP::Protocol::https;
+    1;
+};
 if ( !$has_lwp ) {
     plan skip_all => 'LWP::UserAgent not available';
 }
