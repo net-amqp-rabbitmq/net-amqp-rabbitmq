@@ -1,7 +1,10 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.40004 - 2019-06-13
+    - Fixed tests failing if LWP::UserAgent installed but not LWP::Protocol::https - fixes #176
+
 2.40003 - 2019-06-13
-    - Fixed tests not being able to connect to rabbitmq admin interface
+    - Fixed tests not being able to connect to rabbitmq admin interface - fixes #173
 
 2.40002 - 2019-06-10
     - Changed import for Hash::FieldHash - fixes #169
