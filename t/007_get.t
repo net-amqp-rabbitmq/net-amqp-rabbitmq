@@ -67,7 +67,7 @@ ok $helper->channel_open, "channel_open";
 {
     my $props = {
         content_type     => 'text/plain',
-        content_encoding => 'none',
+        content_encoding => 'binary',
         correlation_id   => '123',
         reply_to         => 'somequeue',
         expiration       => 1000,

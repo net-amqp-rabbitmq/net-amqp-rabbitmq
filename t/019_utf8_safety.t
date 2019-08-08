@@ -69,7 +69,7 @@ ok $helper->consume( $queuename ), "consume";
 my $ascii_payload = "Some ASCII payload";
 
 {
-    ok $helper->publish( $ascii_payload, { content_encoding => 'C' } ), "publish";
+    ok $helper->publish( $ascii_payload, { content_encoding => 'binary' } ), "publish";
 
     my $rv = $helper->recv;
     ok $rv, "recv";
@@ -84,14 +84,14 @@ my $ascii_payload = "Some ASCII payload";
             redelivered  => 0,
             exchange     => $helper->{exchange},
             consumer_tag => 'ctag',
-            props        => { 'content_encoding' => 'C' },
+            props        => { 'content_encoding' => 'binary' },
         },
         "payload"
     );
     ok !utf8::is_utf8( $rv->{'body'} ), 'not utf8';
 }
 
-my $pub_props = { content_encoding => 'C', headers => { "sample" => "sample" } };
+my $pub_props = { content_encoding => 'binary', headers => { "sample" => "sample" } };
 {
 # Now, don't go out of your way to set the headers to UTF-8, they should still
 # come back as that.

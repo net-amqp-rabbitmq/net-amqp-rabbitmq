@@ -20,7 +20,7 @@ ok $helper->drain, "drain queue";
 
 my $props = {
         content_type     => 'text/plain',
-        content_encoding => 'none',
+        content_encoding => 'binary',
         correlation_id   => '123',
         reply_to         => 'somequeue',
         expiration       => 60,

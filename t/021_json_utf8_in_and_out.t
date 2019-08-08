@@ -62,7 +62,7 @@ ok from_json( $utf8_payload ), "utf8_payload is valid json";
 
 my $ascii_payload = "Some ASCII payload";
 {
-    ok $helper->publish( $ascii_payload, { content_encoding => 'C' } ), "publish";
+    ok $helper->publish( $ascii_payload, { content_encoding => 'binary' } ), "publish";
 
     my $rv = $helper->recv;
     ok $rv, "recv";
@@ -77,7 +77,7 @@ my $ascii_payload = "Some ASCII payload";
             redelivered  => 0,
             exchange     => $helper->{exchange},
             consumer_tag => 'ctag',
-            props        => { 'content_encoding' => 'C' },
+            props        => { 'content_encoding' => 'binary' },
         },
         "payload"
     );
