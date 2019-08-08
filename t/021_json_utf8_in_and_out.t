@@ -14,6 +14,17 @@ use FindBin qw/$Bin/;
 use lib "$Bin/lib";
 use NAR::Helper;
 
+# About JSON's to_json:
+#
+# $json_text = to_json($perl_scalar)
+#     is equivalent to:
+# $json_text = JSON->new->encode($perl_scalar)
+#
+# It returns a UTF-8 encoded string (with the UTF-8 flag set).
+#
+# And for completeness, from_json is the opposite of to_json. So they go as a
+# pair: (to_json, from_json).
+
 my $helper = NAR::Helper->new;
 
 ok $helper->connect, "connected";
@@ -25,7 +36,10 @@ ok $helper->drain, "drain queue";
 
 ok $helper->consume, "consume";
 
-my $utf8_payload = '{"message":"Mǎgìc Trañsiént Paylöàd"}';
+my $delivery_tag = 1;
+
+# here we test JSON using UTF-8 characters (not octets) using to_json/from_json
+my $utf8_payload = to_json({"message" => "Mǎgìc Trañsiént Paylöàd"});
 ok utf8::is_utf8($utf8_payload), 'message going in is utf8';
 my $utf8_headers = {
     dummy => 'Sóme ŭtf8 strìng'
@@ -45,7 +59,7 @@ ok from_json( $utf8_payload ), "utf8_payload is valid json";
             body         => $utf8_payload,
             channel      => 1,
             routing_key  => $helper->{routekey},
-            delivery_tag => 1,
+            delivery_tag => $delivery_tag++,
             redelivered  => 0,
             exchange     => $helper->{exchange},
             consumer_tag => 'ctag',
@@ -73,7 +87,7 @@ my $ascii_payload = "Some ASCII payload";
             body         => $ascii_payload,
             channel      => 1,
             routing_key  => $helper->{routekey},
-            delivery_tag => 2,
+            delivery_tag => $delivery_tag++,
             redelivered  => 0,
             exchange     => $helper->{exchange},
             consumer_tag => 'ctag',
