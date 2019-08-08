@@ -1,4 +1,4 @@
-use Test::More tests => 5;
+use Test::More tests => 7;
 use strict;
 use warnings;
 use utf8;
@@ -147,4 +147,65 @@ subtest "force utf8 in header strings", sub {
     );
     ok !utf8::is_utf8( $rv->{'body'} ), 'not utf8';
     ok utf8::is_utf8( $rv->{'props'}->{"headers"}->{"sample"} ), 'is utf8';
+};
+
+# See chamarreddy's sample_pack from
+# Problem with Binary data · Issue #142
+# https://github.com/net-amqp-rabbitmq/net-amqp-rabbitmq/issues/142
+my $int8_var=1;
+my $int_var="200";
+my $uint_var= "1234567890";
+my $int64_var= "919404439788";
+my $char_var1="First";
+my $char_var2="Second";
+my $packed_binary = pack( "c i I Q Z15 Z24", $int8_var,$int_var,$uint_var,$int64_var,$char_var1,$char_var2);
+
+subtest "hand-packed binary blob works with content_encoding: 'binary'", sub {
+    ok $helper->publish( $packed_binary, { content_encoding => 'binary' } ), "publish";
+
+    my $rv = $helper->recv;
+    ok $rv, "recv";
+
+    is_deeply(
+        $rv,
+        {
+            body         => $packed_binary,
+            channel      => 1,
+            routing_key  => $helper->{routekey},
+            delivery_tag => $delivery_tag++,
+            redelivered  => 0,
+            exchange     => $helper->{exchange},
+            consumer_tag => 'ctag',
+            props        => { content_encoding => 'binary' },
+        },
+        "payload",
+    );
+    ok !utf8::is_utf8( $rv->{'body'} ), 'not utf8';
+};
+
+subtest "hand-packed binary blob doesn't work without content_encoding: 'binary'", sub {
+    ok $helper->publish( $packed_binary ), "publish";
+
+    my $rv = $helper->recv;
+    ok $rv, "recv";
+
+    my $body = delete $rv->{body};
+    isnt($body, $packed_binary, 'body is no longer the $packed_binary');
+    ok utf8::is_utf8( $body ), 'body marked as UTF-8 (although it almost clearly isn\'t valid UTF-8)';
+
+    # The rest of $rv is as expected...
+    is_deeply(
+        $rv,
+        {
+            # body         => $packed_binary,
+            channel      => 1,
+            routing_key  => $helper->{routekey},
+            delivery_tag => $delivery_tag++,
+            redelivered  => 0,
+            exchange     => $helper->{exchange},
+            consumer_tag => 'ctag',
+            props        => {},
+        },
+        "payload",
+    );
 };
