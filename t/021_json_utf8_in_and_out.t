@@ -7,7 +7,7 @@ my $has_json = eval("use JSON; 1");
 if ( $@ ) {
      plan skip_all => "Missing JSON.pm";
 } else {
-     plan tests => 20;
+     plan tests => 3;
 }
 
 use FindBin qw/$Bin/;
@@ -27,27 +27,29 @@ use NAR::Helper;
 
 my $helper = NAR::Helper->new;
 
-ok $helper->connect, "connected";
-ok $helper->channel_open, "channel_open";
-ok $helper->exchange_declare, "default exchange declare";
-ok $helper->queue_declare, "queue declare";
-ok $helper->queue_bind, "queue bind";
-ok $helper->drain, "drain queue";
+subtest "initialization", sub {
+    ok $helper->connect, "connected";
+    ok $helper->channel_open, "channel_open";
+    ok $helper->exchange_declare, "default exchange declare";
+    ok $helper->queue_declare, "queue declare";
+    ok $helper->queue_bind, "queue bind";
+    ok $helper->drain, "drain queue";
 
-ok $helper->consume, "consume";
+    ok $helper->consume, "consume";
+};
 
 my $delivery_tag = 1;
 
 # here we test JSON using UTF-8 characters (not octets) using to_json/from_json
-my $utf8_payload = to_json({"message" => "Mǎgìc Trañsiént Paylöàd"});
-ok utf8::is_utf8($utf8_payload), 'message going in is utf8';
-my $utf8_headers = {
-    dummy => 'Sóme ŭtf8 strìng'
-};
-ok utf8::is_utf8($utf8_headers->{'dummy'}), 'header is utf8';
-ok from_json( $utf8_payload ), "utf8_payload is valid json";
+subtest "UTF-8 encoded string - without content_encoding", sub {
+    my $utf8_payload = to_json({"message" => "Mǎgìc Trañsiént Paylöàd"});
+    ok utf8::is_utf8($utf8_payload), 'message going in is utf8';
+    my $utf8_headers = {
+        dummy => 'Sóme ŭtf8 strìng'
+    };
+    ok utf8::is_utf8($utf8_headers->{'dummy'}), 'header is utf8';
+    ok from_json( $utf8_payload ), "utf8_payload is valid json";
 
-{
     ok $helper->publish( $utf8_payload, { headers => $utf8_headers } ), "publish";
 
     my $rv = $helper->recv;
@@ -72,10 +74,10 @@ ok from_json( $utf8_payload ), "utf8_payload is valid json";
     ok utf8::is_utf8($rv->{'props'}->{'headers'}->{'dummy'}), 'verify dummy header back is utf8';
 
     ok from_json( $rv->{body} ), "rv body is valid json";
-}
+};
 
-my $ascii_payload = "Some ASCII payload";
-{
+subtest "ASCII payload with content_encoding: binary", sub {
+    my $ascii_payload = "Some ASCII payload";
     ok $helper->publish( $ascii_payload, { content_encoding => 'binary' } ), "publish";
 
     my $rv = $helper->recv;
@@ -96,4 +98,4 @@ my $ascii_payload = "Some ASCII payload";
         "payload"
     );
     ok( !utf8::is_utf8( $rv->{'body'} ), 'not utf8' );
-}
+};

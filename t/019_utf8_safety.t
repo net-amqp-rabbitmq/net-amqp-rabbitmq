@@ -1,4 +1,4 @@
-use Test::More tests => 28;
+use Test::More tests => 5;
 use strict;
 use warnings;
 use utf8;
@@ -8,11 +8,6 @@ use lib "$Bin/lib";
 use NAR::Helper;
 
 my $helper = NAR::Helper->new;
-
-ok $helper->connect, "connected";
-ok $helper->channel_open, "channel_open";
-
-ok $helper->exchange_declare, "default exchange declare";
 
 my $dtag1=1;
 my $dtag2=2;
@@ -25,15 +20,23 @@ my $options = {
     exclusive   => 0,
     auto_delete => 1,
 };
-my $queuename = $helper->queue_declare( $options, undef, 1 );
-isnt $queuename, '', "queue_declare -> private name";
 
-ok $helper->queue_bind( $queuename ), "queue bind";
-ok $helper->drain( $queuename ), "drain queue";
+subtest "Initialization", sub {
+    ok $helper->connect, "connected";
+    ok $helper->channel_open, "channel_open";
 
-ok $helper->consume( $queuename ), "consume";
+    ok $helper->exchange_declare, "default exchange declare";
 
-{
+    my $queuename = $helper->queue_declare( $options, undef, 1 );
+    isnt $queuename, '', "queue_declare -> private name";
+
+    ok $helper->queue_bind( $queuename ), "queue bind";
+    ok $helper->drain( $queuename ), "drain queue";
+
+    ok $helper->consume( $queuename ), "consume";
+};
+
+subtest "Initialization", sub {
     my $utf8_payload = "Mǎgìc Trañsiént Paylöàd";
     ok utf8::is_utf8($utf8_payload), 'message going in is utf8';
 
@@ -64,11 +67,12 @@ ok $helper->consume( $queuename ), "consume";
 
     ok utf8::is_utf8($rv->{'body'}), 'verify body back is utf8';
     ok utf8::is_utf8($rv->{'props'}->{'headers'}->{'dummy'}), 'verify dummy header back is utf8';
-}
+};
 
 my $ascii_payload = "Some ASCII payload";
 
-{
+subtest "Initialization", sub {
+
     ok $helper->publish( $ascii_payload, { content_encoding => 'binary' } ), "publish";
 
     my $rv = $helper->recv;
@@ -89,10 +93,11 @@ my $ascii_payload = "Some ASCII payload";
         "payload"
     );
     ok !utf8::is_utf8( $rv->{'body'} ), 'not utf8';
-}
+};
 
 my $pub_props = { content_encoding => 'binary', headers => { "sample" => "sample" } };
-{
+
+subtest "Headers in UTF-8", sub {
 # Now, don't go out of your way to set the headers to UTF-8, they should still
 # come back as that.
     ok $helper->publish( $ascii_payload, $pub_props ), "publish";
@@ -116,10 +121,9 @@ my $pub_props = { content_encoding => 'binary', headers => { "sample" => "sample
     );
     ok !utf8::is_utf8( $rv->{'body'} ), 'not utf8';
     ok !utf8::is_utf8( $rv->{'props'}->{"headers"}->{"sample"} ), 'is utf8';
-}
+};
 
-#force utf8 in header strings
-{
+subtest "force utf8 in header strings", sub {
     my $options = {
         exchange                     => $helper->{exchange},
         force_utf8_in_header_strings => 1,
@@ -146,4 +150,4 @@ my $pub_props = { content_encoding => 'binary', headers => { "sample" => "sample
     );
     ok !utf8::is_utf8( $rv->{'body'} ), 'not utf8';
     ok utf8::is_utf8( $rv->{'props'}->{"headers"}->{"sample"} ), 'is utf8';
-}
+};
