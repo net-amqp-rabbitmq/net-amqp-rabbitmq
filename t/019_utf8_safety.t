@@ -9,10 +9,7 @@ use NAR::Helper;
 
 my $helper = NAR::Helper->new;
 
-my $dtag1=1;
-my $dtag2=2;
-my $dtag3=3;
-my $dtag4=4;
+my $delivery_tag = 1;
 
 my $options = {
     passive     => 0,
@@ -56,7 +53,7 @@ subtest "Initialization", sub {
             body         => $utf8_payload,
             channel      => 1,
             routing_key  => $helper->{routekey},
-            delivery_tag => $dtag1,
+            delivery_tag => $delivery_tag++,
             redelivered  => 0,
             exchange     => $helper->{exchange},
             consumer_tag => 'ctag',
@@ -84,7 +81,7 @@ subtest "Initialization", sub {
             body         => $ascii_payload,
             channel      => 1,
             routing_key  => $helper->{routekey},
-            delivery_tag => $dtag2,
+            delivery_tag => $delivery_tag++,
             redelivered  => 0,
             exchange     => $helper->{exchange},
             consumer_tag => 'ctag',
@@ -111,7 +108,7 @@ subtest "Headers in UTF-8", sub {
             body         => $ascii_payload,
             channel      => 1,
             routing_key  => $helper->{routekey},
-            delivery_tag => $dtag3,
+            delivery_tag => $delivery_tag++,
             redelivered  => 0,
             exchange     => $helper->{exchange},
             consumer_tag => 'ctag',
@@ -140,7 +137,7 @@ subtest "force utf8 in header strings", sub {
             body         => $ascii_payload,
             channel      => 1,
             routing_key  => $helper->{routekey},
-            delivery_tag => $dtag4,
+            delivery_tag => $delivery_tag++,
             redelivered  => 0,
             exchange     => $helper->{exchange},
             consumer_tag => 'ctag',
