@@ -313,6 +313,22 @@ C<$props> is an optional hash (the AMQP 'props') respecting the following keys:
        headers => $headers # This should be a hashref of keys and values.
      }
 
+=head3 Publishing Binary Data
+
+By default, C<Net::AMQP::RabbitMQ> makes sure sending and receiving UTF-8
+strings works. That causes problems for binary data like e.g. the output of
+L<JSON>'s C<encode_json()> or L<YAML::XS>'s C<Dump()> because
+C<Net::AMQP::RabbitMQ>'s receiver by default decodes the message body as UTF-8.
+
+To work around that, setup C<< content_encoding => 'binary' >> in C<$props>,
+disabling the UTF_8 decoding. (Any value C<!~ /^UTF-8$/i> will work, but
+C<binary> is suggested by RFC-2045.)
+
+Or you might be able on the receiving side to:
+
+    my $message = $mq->recv();
+    my $binary_data = Encode::decode_utf8($message->{body});
+
 =head2 consume($channel, $queuename, $options)
 
 Put the channel into consume mode.
