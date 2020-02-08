@@ -16,10 +16,6 @@ perl:
 os:
   - linux
   - osx
-    osx_image: xcode9.4
-  - osx
-    osx_image: xcode10.3
-  - osx
     osx_image: xcode11.3
 services: rabbitmq
 before_install:
