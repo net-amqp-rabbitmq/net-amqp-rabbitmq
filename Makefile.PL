@@ -31,10 +31,13 @@ my @inc = ('-I.', '-Irabbitmq-include');
 
 my %checklib_extra_options;
 if ( $^O eq 'darwin') {
-    my $osx_homebrew_openssl_path = "/usr/local/opt/openssl";
+    my $osx_openssl_path = -d "/usr/local/opt/openssl"
+      ? "/usr/local/opt/openssl"
+      : -d "/opt/local"
+        ? "/opt/local" : "/usr/local";
 
-    my $libpath = "${osx_homebrew_openssl_path}/lib";
-    my $incpath = "${osx_homebrew_openssl_path}/include";
+    my $libpath = "${osx_openssl_path}/lib";
+    my $incpath = "${osx_openssl_path}/include";
 
     push @libs, "-L$libpath";
     push @inc, "-I$incpath";
