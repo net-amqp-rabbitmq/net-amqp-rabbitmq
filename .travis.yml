@@ -16,12 +16,12 @@ perl:
 os:
   - linux
   - osx
-    osx_image: xcode11.3
-services: rabbitmq
-before_install:
-  - $TRAVIS_BUILD_DIR/travis/before_install
-script:
-  - $TRAVIS_BUILD_DIR/travis/script
+  services: rabbitmq
+  before_install:
+    - $TRAVIS_BUILD_DIR/travis/before_install
+    script:
+      - $TRAVIS_BUILD_DIR/travis/script
+osx_image: xcode11.3
 dist: xenial
 addons:
   apt:
