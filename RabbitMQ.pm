@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '2.40004';
+our $VERSION = '2.40005';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
