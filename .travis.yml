@@ -16,7 +16,7 @@ perl:
 os:
   - linux
   - osx
-- osx_image:
+osx_image:
   - "xcode11.3"
 services: rabbitmq
 before_install:
