@@ -45,6 +45,7 @@ sub new {
         $port = $ENV{MQSSLPORT} || 5671;
     }
     else {
+        Test::More::note( "non-ssl mode" );
         $host = $ENV{MQHOST} if exists $ENV{MQHOST};
         $username = $ENV{MQUSERNAME} if exists $ENV{MQUSERNAME};
         $password = $ENV{MQPASSWORD} if exists $ENV{MQPASSWORD};

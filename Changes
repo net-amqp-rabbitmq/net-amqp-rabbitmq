@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.40005 - 2020-02-08
+    - Bumped rabbitmq-c version. - fixes #112
+
 2.40004 - 2019-06-13
     - Fixed tests failing if LWP::UserAgent installed but not LWP::Protocol::https - fixes #176
 

@@ -17,3 +17,7 @@ MANIFEST
 Net-AMQP-RabbitMQ-*.tar.*
 .vagrant/
 MANIFEST.bak
+.DS_Store
+*.sublime-*
+
+.vstags

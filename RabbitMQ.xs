@@ -18,6 +18,7 @@
 #endif
 
 #include "amqp.h"
+#include "amqp_socket.h"
 #include "amqp_tcp_socket.h"
 #include "amqp_ssl_socket.h"
 /* For struct timeval */
@@ -113,7 +114,7 @@ SV*  mq_table_to_hashref(amqp_table_t *table);
 void die_on_error(pTHX_ int x, amqp_connection_state_t conn, char const *context) {
   /* Handle socket errors */
   if ( x == AMQP_STATUS_CONNECTION_CLOSED || x == AMQP_STATUS_SOCKET_ERROR ) {
-      amqp_socket_close( amqp_get_socket( conn ) );
+      amqp_socket_close( amqp_get_socket( conn ), AMQP_SC_FORCE );
       Perl_croak(aTHX_ "%s failed because AMQP socket connection was closed.", context);
   }
   /* Handle everything else */
@@ -139,7 +140,7 @@ void die_on_amqp_error(pTHX_ amqp_rpc_reply_t x, amqp_connection_state_t conn, c
         ||
         x.library_error == AMQP_STATUS_SOCKET_ERROR
       ) {
-        amqp_socket_close( amqp_get_socket( conn ) );
+        amqp_socket_close( amqp_get_socket( conn ), AMQP_SC_FORCE );
         Perl_croak(aTHX_ "%s: failed since AMQP socket connection closed.\n", context);
       }
       /* Otherwise, give a more generic croak. */
@@ -1190,9 +1191,7 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
           Perl_croak(aTHX_ "error creating SSL socket");
         }
 
-        // TODO
-        // change this to amqp_ssl_socket_set_verify_hostname when next rabbitmq lib
-        amqp_ssl_socket_set_verify( sock, (amqp_boolean_t)ssl_verify_host );
+        amqp_ssl_socket_set_verify_hostname( sock, (amqp_boolean_t)ssl_verify_host );
 
         if ( ( ssl_cacert != NULL ) && strlen(ssl_cacert) ) {
             if ( amqp_ssl_socket_set_cacert(sock, ssl_cacert) ) {
@@ -1779,7 +1778,7 @@ net_amqp_rabbitmq__publish(conn, channel, routing_key, body, options = NULL, pro
 
     /* If the connection failed, blast the file descriptor! */
     if ( rv == AMQP_STATUS_CONNECTION_CLOSED || rv == AMQP_STATUS_SOCKET_ERROR ) {
-        amqp_socket_close( amqp_get_socket( conn ) );
+        amqp_socket_close( amqp_get_socket( conn ), AMQP_SC_FORCE );
         Perl_croak(aTHX_ "Publish failed because AMQP socket connection was closed.");
     }
 
@@ -1863,7 +1862,7 @@ net_amqp_rabbitmq_disconnect(conn)
   CODE:
     if ( amqp_get_socket(conn) != NULL ) {
         amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
-        amqp_socket_close( amqp_get_socket( conn ) );
+        amqp_socket_close( amqp_get_socket( conn ), AMQP_SC_NONE );
     }
 
 Net::AMQP::RabbitMQ
