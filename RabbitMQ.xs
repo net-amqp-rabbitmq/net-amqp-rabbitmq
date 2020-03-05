@@ -21,6 +21,7 @@
 #include "amqp_socket.h"
 #include "amqp_tcp_socket.h"
 #include "amqp_ssl_socket.h"
+#include "amqp_openssl_bio.h"
 /* For struct timeval */
 #include "amqp_time.h"
 
@@ -204,20 +205,19 @@ void die_on_amqp_error(pTHX_ amqp_rpc_reply_t x, amqp_connection_state_t conn, c
  * Note: This function warns users if their environment appears to be set up to cause problems
  * with openssl v1.1.0 or greater.
  */
-void amqp_openssl_v111_check(void) {
+void amqp_openssl_v110_check(void) {
   HV* env_hash = get_hv("ENV", 0);
-  const char* openssl_conf_key = "OPENSSL_CONF";
   char should_warn = 0;
 
   if (!env_hash) {
     should_warn = 1;
   }
-  if (!hv_exists(env_hash, openssl_conf_key, strlen(openssl_conf_key))) {
+  if (!hv_exists(env_hash, "OPENSSL_CONF", strlen("OPENSSL_CONF"))) {
     should_warn = 1;
   }
 
   if (should_warn) {
-    warn("Beyond OpenSSL v1.1.0, your version of openssl may require that the OPENSSL_CONF environment variable is set to the directory where openssl configuration files live. It is not currently defined, which could prevent you from connecting over SSL.");
+    warn("OPENSSL WARNING: Beyond OpenSSL v1.1.0, your version of openssl may require that the OPENSSL_CONF environment variable is set to the directory where openssl configuration files live. It is not currently defined, which could prevent you from connecting over SSL.");
   }
 
   return;
