@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.40006 - 2020-03-04
+    - Added a quick sanity check for openssl v1.1.0+ which requires the OPENSSL_CONF environment variable be set.
+
 2.40005 - 2020-02-08
     - Bumped rabbitmq-c version. - fixes #112
 

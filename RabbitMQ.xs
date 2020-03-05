@@ -199,6 +199,30 @@ void die_on_amqp_error(pTHX_ amqp_rpc_reply_t x, amqp_connection_state_t conn, c
   }
 }
 
+/**
+ * amqp_openssl_v110_check()
+ * Note: This function warns users if their environment appears to be set up to cause problems
+ * with openssl v1.1.0 or greater.
+ */
+void amqp_openssl_v111_check(void) {
+  HV* env_hash = get_hv("ENV", 0);
+  const char* openssl_conf_key = "OPENSSL_CONF";
+  char should_warn = 0;
+
+  if (!env_hash) {
+    should_warn = 1;
+  }
+  if (!hv_exists(env_hash, openssl_conf_key, strlen(openssl_conf_key))) {
+    should_warn = 1;
+  }
+
+  if (should_warn) {
+    warn("Beyond OpenSSL v1.1.0, your version of openssl may require that the OPENSSL_CONF environment variable is set to the directory where openssl configuration files live. It is not currently defined, which could prevent you from connecting over SSL.");
+  }
+
+  return;
+}
+
 /*
  * amqp_kind_for_sv(SV**)
  * Note: We could handle more types here... but we're trying to take Perl and go to
@@ -1185,6 +1209,11 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
 #ifndef NAR_HAVE_OPENSSL
         Perl_croak(aTHX_ "no ssl support, please install openssl and reinstall");
 #endif
+
+        /* Give the caller a warning if there's no OPENSSL_CONF for openssl v1.1.0 and above. */
+#ifdef AMQP_OPENSSL_V110
+        amqp_openssl_v110_check();
+#endif /* AMQP_OPENSSL_V110 */
         amqp_set_initialize_ssl_library( (amqp_boolean_t)ssl_init );
         sock = amqp_ssl_socket_new(conn);
         if ( !sock ) {
