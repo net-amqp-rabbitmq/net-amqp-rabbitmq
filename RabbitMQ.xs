@@ -565,6 +565,10 @@ static amqp_rpc_reply_t read_message(amqp_connection_state_t state, amqp_channel
             );
             break;
 
+          case AMQP_FIELD_KIND_VOID:
+            // Do nothing?
+            break;
+
           default:
             ret.reply_type = AMQP_RESPONSE_LIBRARY_EXCEPTION;
             ret.library_error = AMQP_STATUS_UNKNOWN_TYPE;
@@ -766,6 +770,9 @@ void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array, short force_utf
         hash_to_amqp_table(MUTABLE_HV(SvRV(*value)), &(element->value.table), force_utf8);
         break;
 
+      case AMQP_FIELD_KIND_VOID:
+        break;
+
       default:
         Perl_croak( aTHX_ "Unsupported SvType for array index %d", idx );
     }
@@ -857,6 +864,9 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
         perl_element = mq_table_to_hashref(&(mq_element->value.table));
         break;
 
+      case AMQP_FIELD_KIND_VOID:
+        break;
+
       // WTF
       default:
         // ACK!
@@ -867,7 +877,9 @@ SV* mq_array_to_arrayref(amqp_array_t *mq_array) {
         );
     }
 
-    av_push(perl_array, perl_element);
+    if (perl_element) {
+      av_push(perl_array, perl_element);
+    }
   }
 
   return newRV_noinc(MUTABLE_SV(perl_array));
@@ -957,6 +969,9 @@ SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
         perl_element = mq_table_to_hashref(&(hash_entry->value.value.table));
         break;
 
+      case AMQP_FIELD_KIND_VOID:
+        break;
+
       default:
         // ACK!
         Perl_croak(
@@ -967,12 +982,14 @@ SV* mq_table_to_hashref( amqp_table_t *mq_table ) {
     }
 
     // Stash this in our hash.
-    hv_store(
-      perl_hash,
-      hash_entry->key.bytes, hash_entry->key.len,
-      perl_element,
-      0
-    );
+    if (perl_element) {
+      hv_store(
+        perl_hash,
+        hash_entry->key.bytes, hash_entry->key.len,
+        perl_element,
+        0
+      );
+    }
 
   }
 
@@ -1067,6 +1084,9 @@ void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8) {
           &(entry->value.value.table),
           force_utf8
         );
+        break;
+
+      case AMQP_FIELD_KIND_VOID:
         break;
 
       default:
