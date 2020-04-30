@@ -1,5 +1,8 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.40006 - 2020-04-29
+    - Bumped rabbitmq-c version.
+
 2.40005 - 2020-02-08
     - Bumped rabbitmq-c version. - fixes #112
 
