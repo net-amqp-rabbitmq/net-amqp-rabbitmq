@@ -30,3 +30,9 @@ README.*
 ^\.vagrant
 ^Vagrantfile$
 ^vagrant
+.*?\.old
+.*workspace.*
+\.DS_Store
+.*?\.\w*?tags
+\.vscode
+Net-AMQP-RabbitMQ-.*
