@@ -82,12 +82,15 @@ C<$options> is an optional hash respecting the following keys:
         channel_max     => $cmax,        #default 0
         frame_max       => $fmax,        #default 131072
         heartbeat       => $hearbeat,    #default 0
-        timeout         => $seconds      #default undef (no timeout)
+        timeout         => $seconds,     #default undef (no timeout)
 
-        ssl             => 1 | 0         #default 0
-        ssl_verify_host => 1 | 0         #default 1
-        ssl_cacert      => $caert_path   #needed for ssl
-        ssl_init        => 1 | 0         #default 1, initilise the openssl library
+        ssl             => 1 | 0,        #default 0
+        ssl_verify_host => 1 | 0,        #default 1
+        ssl_cacert      => $caert_path,  #needed for ssl
+        ssl_init        => 1 | 0,        #default 1, initialise the openssl library
+        
+        ssl_cert        => $cert_path,   #client cert.pem and key.pem when using ssl certificate chains 
+        ssl_key         => $key_path     #(with RabbitMQ's fail_if_no_peer_cert = true)
     }
 
 You probably don't want to touch C<ssl_init>, unless you know what it does.
