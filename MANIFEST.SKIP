@@ -24,7 +24,6 @@ amqp_debug.c
 .*\.tar\.gz
 .*\.bs
 MYMETA.*
-README.*
 \.travis\.yml
 ^travis
 ^\.vagrant
