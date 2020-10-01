@@ -1,0 +1,44 @@
+# carton snapshot format: version 1.0
+DISTRIBUTIONS
+  Math-Int64-0.54
+    pathname: S/SA/SALVA/Math-Int64-0.54.tar.gz
+    provides:
+      Math::Int64 0.54
+      Math::Int64::die_on_overflow 0.54
+      Math::Int64::native_if_available 0.54
+      Math::UInt64 0.54
+    requirements:
+      Exporter 0
+      ExtUtils::MakeMaker 0
+      XSLoader 0
+      constant 0
+      overload 0
+      perl 5.006
+      strict 0
+      warnings 0
+      warnings::register 0
+  Module-CAPIMaker-0.01
+    pathname: S/SA/SALVA/Module-CAPIMaker-0.01.tar.gz
+    provides:
+      Module::CAPIMaker 0.01
+      Module::CAPIMaker::Template::C_API_H undef
+      Module::CAPIMaker::Template::Module_C undef
+      Module::CAPIMaker::Template::Module_H undef
+      Module::CAPIMaker::Template::Sample_XS undef
+    requirements:
+      ExtUtils::MakeMaker 0
+      Text::Template 1.45
+  Text-Template-1.59
+    pathname: M/MS/MSCHOUT/Text-Template-1.59.tar.gz
+    provides:
+      Text::Template 1.59
+      Text::Template::Preprocess 1.59
+    requirements:
+      Carp 0
+      Encode 0
+      Exporter 0
+      ExtUtils::MakeMaker 0
+      base 0
+      perl 5.008
+      strict 0
+      warnings 0

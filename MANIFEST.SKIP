@@ -36,3 +36,5 @@ MYMETA.*
 \.vscode
 Net-AMQP-RabbitMQ-.*
 \.?tags
+local
+cpanfile*
