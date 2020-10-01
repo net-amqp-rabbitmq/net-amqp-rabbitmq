@@ -19,5 +19,6 @@ Net-AMQP-RabbitMQ-*.tar.*
 MANIFEST.bak
 .DS_Store
 *.sublime-*
-
+local
 .vstags
+.vscode
