@@ -21,3 +21,4 @@ MANIFEST.bak
 *.sublime-*
 
 .vstags
+.vscode

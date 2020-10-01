@@ -1,7 +1,11 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.40008 - 2020-09-30
+    - Merged #195, to update Sectigo CA -  fixes #194
+
 2.40007 - 2020-04-30
     - Fixed minor issues with release.
+    - Added documentation for `ssl_cert` and `ssl_key`.
 
 2.40006 - 2020-04-29
     - Bumped rabbitmq-c version.

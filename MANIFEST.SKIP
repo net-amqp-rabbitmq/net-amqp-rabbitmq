@@ -35,3 +35,4 @@ MYMETA.*
 .*?\.\w*?tags
 \.vscode
 Net-AMQP-RabbitMQ-.*
+\.?tags
