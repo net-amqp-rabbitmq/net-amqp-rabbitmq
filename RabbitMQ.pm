@@ -519,6 +519,9 @@ Send a heartbeat.  If you've connected with a heartbeat parameter,
 you must send a heartbeat periodically matching connection parameter or
 the server may snip the connection.
 
+Note that since C<recv> blocks for up to C<$timeout> milliseconds,
+it automatically handles sending heartbeats for you while active.
+
 =head2 has_ssl
 
 Returns true if the module was compiled with SSL support, false otherwise
