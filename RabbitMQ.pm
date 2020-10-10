@@ -81,7 +81,7 @@ C<$options> is an optional hash respecting the following keys:
         vhost           => $vhost,       #default '/'
         channel_max     => $cmax,        #default 0
         frame_max       => $fmax,        #default 131072
-        heartbeat       => $hearbeat,    #default 0
+        heartbeat       => $heartbeat,   #default 0
         timeout         => $seconds,     #default undef (no timeout)
 
         ssl             => 1 | 0,        #default 0
