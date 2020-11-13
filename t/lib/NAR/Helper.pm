@@ -130,6 +130,9 @@ sub connect {
         ssl_init        => $self->{ssl_init},
         vhost           => $self->{vhost},
     };
+	my $client_properties = {
+		connection_name => 'nar_test',
+	};
     if ( defined $heartbeat ) {
         $options->{heartbeat} = $heartbeat;
     }
@@ -138,7 +141,7 @@ sub connect {
     }
 
     $self->_ok( sub {
-        $self->mq->connect( $self->{host}, $options );
+        $self->mq->connect( $self->{host}, $options, $client_properties );
     } );
 }
 
