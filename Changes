@@ -235,7 +235,7 @@ v0.2.0 - 2011-04-19
     - add a connect timeout that both times out connect() calls and
         sets SO_{SND.RCV}TIMEO on the socket
     - add a heartbeat method
-    - a hearbeat frame can be received in the internal_recv function
+    - a heartbeat frame can be received in the internal_recv function
         causing an unexpected failure consuming; these are now ignored.
     - make queue_declare return message and consumer counts (additionally)
         when called in array context.
