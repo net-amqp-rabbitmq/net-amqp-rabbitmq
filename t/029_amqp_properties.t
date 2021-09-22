@@ -1,4 +1,4 @@
-use Test::More tests => 8;
+use Test::More tests => 7;
 use strict;
 use warnings;
 
@@ -21,4 +21,3 @@ my $client_properties = $helper->get_client_properties;
 ok $client_properties, "get_client_properties";
 ok exists( $client_properties->{product} ), 'product should be returned';
 is $client_properties->{'product'}, 'rabbitmq-c', 'product is rabbitmq-c';
-is $client_properties->{connection_name}, 'nar_test','connection_name is nar_test';
