@@ -14,4 +14,5 @@ my $client_properties = {
 };
 
 ok $helper->mq->connect($helper->{host}, $connection_options, $client_properties), 'connected';
-is $client_properties->{connection_name}, 'nar_test','connection_name is nar_test';
+my $test_client_properties = $helper->get_client_properties;
+is $test_client_properties->{connection_name}, $client_properties->{connection_name},'connection_name set';
