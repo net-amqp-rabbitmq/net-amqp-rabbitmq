@@ -1134,10 +1134,11 @@ BOOT:
   PERL_MATH_INT64_LOAD_OR_CROAK;
 
 int
-net_amqp_rabbitmq_connect(conn, hostname, options)
+net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
   Net::AMQP::RabbitMQ conn
   char *hostname
   HV *options
+  HV *client_properties
   PREINIT:
     amqp_socket_t *sock;
     char *user = "guest";
@@ -1158,6 +1159,7 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
     int ssl_init = 1;
     char *sasl_method = "plain";
     amqp_sasl_method_enum sasl_type = AMQP_SASL_METHOD_PLAIN;
+    amqp_table_t client_properties_tbl = amqp_empty_table;
   CODE:
     str_from_hv(options, user);
     str_from_hv(options, password);
@@ -1175,6 +1177,11 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
     int_from_hv(options, ssl_verify_host);
     int_from_hv(options, ssl_init);
     str_from_hv(options, sasl_method);
+
+    if(client_properties)
+    {
+      hash_to_amqp_table(client_properties, &client_properties_tbl, 1);
+    }
 
     if(timeout >= 0) {
      to.tv_sec = floor(timeout);
@@ -1229,7 +1236,7 @@ net_amqp_rabbitmq_connect(conn, hostname, options)
     }
 
     die_on_error(aTHX_ amqp_socket_open_noblock(sock, hostname, port, (timeout<0)?NULL:&to), conn, "opening socket");
-    die_on_amqp_error(aTHX_ amqp_login(conn, vhost, channel_max, frame_max, heartbeat, sasl_type, user, password), conn, "Logging in");
+    die_on_amqp_error(aTHX_ amqp_login_with_properties(conn, vhost, channel_max, frame_max, heartbeat, &client_properties_tbl, sasl_type, user, password), conn, "Logging in");
 
     maybe_release_buffers(conn);
 
