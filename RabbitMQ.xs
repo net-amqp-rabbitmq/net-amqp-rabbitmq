@@ -30,6 +30,7 @@
 /* perl Makefile.PL; make CCFLAGS=-DDEBUG */
 #if DEBUG
  #define __DEBUG__(X)  X
+ extern void dump_table(amqp_table_t table);
 #else
  #define __DEBUG__(X) /* NOOP */
 #endif
@@ -1932,6 +1933,60 @@ net_amqp_rabbitmq_tx_rollback(conn, channel, args = NULL)
   CODE:
     amqp_tx_rollback(conn, channel);
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Rolling Back transaction");
+
+SV* net_amqp_rabbitmq_get_rpc_timeout(conn)
+  Net::AMQP::RabbitMQ conn
+  PREINIT:
+    struct timeval *timeout_tv;
+    HV *output;
+  CODE:
+    timeout_tv = amqp_get_rpc_timeout(conn);
+    if (timeout_tv == NULL) {
+      __DEBUG__( warn("%d get_rpc_timeout: Timeout is NULL, returning undef.", __LINE__) );
+      RETVAL = &PL_sv_undef;
+    } else {
+      __DEBUG__( warn("%d get_rpc_timeout: Timeout is non-NULL, returning hashref.", __LINE__) );
+      output = newHV();
+      hv_stores(output, "tv_sec", newSVi64( timeout_tv->tv_sec ));
+      hv_stores(output, "tv_usec", newSVi64( timeout_tv->tv_usec ));
+      RETVAL = newRV_noinc( output );
+    }
+  OUTPUT:
+    RETVAL
+
+void net_amqp_rabbitmq__set_rpc_timeout(conn, args = NULL)
+  Net::AMQP::RabbitMQ conn
+  SV* args
+  PREINIT:
+    struct timeval timeout = {0,0};
+    struct timeval *old_timeout = NULL;
+    int tv_sec = 0;
+    int tv_usec = 0;
+    int res = 0;
+  CODE:
+    old_timeout = amqp_get_rpc_timeout(conn);
+
+    // If we are setting the RPC timeout to NULL...
+    if (args == NULL || !SvOK(args) || args == &PL_sv_undef) {
+      __DEBUG__( warn("%d set_rpc_timeout: No args. Setting to unlimited RPC timeout.", __LINE__) );
+
+      if (old_timeout != NULL) {
+        __DEBUG__( warn("%d set_rpc_timeout: Changing to unlimited RPC timeout.", __LINE__) );
+        amqp_set_rpc_timeout( conn, NULL );
+      }
+    }
+
+    // If we are setting the RPC timeout to something other than NULL...
+    else {
+      int_from_hv(SvRV(args), tv_sec);
+      int_from_hv(SvRV(args), tv_usec);
+      __DEBUG__( warn("%d set_rpc_timeout: Setting to tv_sec:%d and tv_usec:%d.", __LINE__, tv_sec, tv_usec) );
+      // If we need to allocate the timeout...
+
+      timeout.tv_sec = tv_sec;
+      timeout.tv_usec = tv_usec;
+      die_on_error(aTHX_ amqp_set_rpc_timeout(conn, &timeout), conn, "Set RPC Timeout");
+    }
 
 void
 net_amqp_rabbitmq_basic_qos(conn, channel, args = NULL)
