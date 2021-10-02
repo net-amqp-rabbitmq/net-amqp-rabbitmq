@@ -48,7 +48,26 @@ NARDEBUG=1 prove -I blib/lib -I blib/arch -v t/
 MQSSL=1 prove -I blib/lib -I blib/arch -v t/
 ```
 
-#To build a release
+# To build a release
+
+```sh
 perl Makefile.PL
 make manifest
 make dist
+```
+
+# Special note for macOS
+
+You need `pkg-config` working, especially for openssl. There are so many different
+ways to install dependencies, and so many different paths for them, it is becoming
+very difficult to guess where they will be.
+
+As a result, we're shifting to using `pkg-config` for this. Please make sure
+that if you're running into any problems of missing symbols or misplaced files,
+that you check this _first_.
+
+# OpenSSL Compatibility
+
+So far we have been testing with OpenSSL 1.1. We appear to be good there, but
+OpenSSL 3 is not supported at this time.
+
