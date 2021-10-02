@@ -4,3 +4,4 @@
 [submodule "p5-Math-Int64"]
 	path = p5-Math-Int64
 	url = https://github.com/salva/p5-Math-Int64.git
+	branch = v0.54
