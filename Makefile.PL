@@ -5,7 +5,7 @@ use utf8;
 
 use lib qw(inc);
 use ExtUtils::MakeMaker 5.16;
-use Config qw/%Config/;
+use Config;
 use Devel::CheckLib;
 
 # This will help make the library compile on OSX
