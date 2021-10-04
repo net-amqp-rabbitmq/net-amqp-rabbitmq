@@ -34,15 +34,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          git submodule init
-          git submodule update
       - name: uses install-with-cpanm
         uses: perl-actions/install-with-cpanm@v1
         with:
           cpanfile: "cpanfile"
           sudo: false
           args: "--with-test"
+      - run: |
+          git submodule init
+          git submodule update
       - run: sh ./ci/run-ci-tests.sh
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
