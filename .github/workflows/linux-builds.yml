@@ -1,5 +1,5 @@
 name: GitHub Actions Demo
-runs-on:
+on:
   push:
     branches: [ main ]
   pull_request:
@@ -8,6 +8,7 @@ runs-on:
 jobs:
   linux-tests:
     name: "perl v${{ matrix.perl-version }}"
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
