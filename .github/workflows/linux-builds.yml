@@ -34,9 +34,6 @@ jobs:
 
     steps:
 
-      - name: Add git executable
-        run: apk install git
-
       - name: Check out code (w/submodules)
         uses: actions/checkout@main
         with:

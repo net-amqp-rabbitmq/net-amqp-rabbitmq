@@ -9,6 +9,12 @@
 #     export MQVHOST="/"
 # fi
 
+if [[ $(which apk) == "" ]]; then
+    sudo apk install git
+else
+    sudo apt-get install -y git
+fi
+
 #make sure a cpan build will work
 perl Makefile.PL
 make manifest
