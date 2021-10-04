@@ -34,9 +34,6 @@ jobs:
 
     steps:
 
-      - name: Update git
-        run: sudo apt-get install -y git
-
       - name: Check out code (w/submodules)
         uses: actions/checkout@main
         with:
