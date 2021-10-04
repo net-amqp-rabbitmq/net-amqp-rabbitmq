@@ -35,7 +35,7 @@ jobs:
     steps:
 
       - name: Check out code (w/submodules)
-        uses: actions/checkout@v2
+        uses: actions/checkout@main
         with:
           submodules: recursive
 
