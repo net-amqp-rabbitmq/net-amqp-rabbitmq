@@ -30,7 +30,7 @@ jobs:
           - "5.8"
 
     container:
-      image: perldocker/perl-tester:${{ matrix.perl-version }}
+      image: perldocker/perl-tester:${{ matrix.perl-version }}-stretch
 
     steps:
 

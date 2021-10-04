@@ -1,20 +1,5 @@
 #!/bin/bash
 
-#osx doesn't have a local rabbitmq service
-# if [ "$is_osx" = false ]; then
-#     export MQHOST="localhost"
-#     export MQUSERNAME="guest"
-#     export MQPASSWORD="guest"
-#     export MQPASSWORD="guest"
-#     export MQVHOST="/"
-# fi
-
-if [[ $(which apk) == "" ]]; then
-    sudo apk install git
-else
-    sudo apt-get install -y git
-fi
-
 #make sure a cpan build will work
 perl Makefile.PL
 make manifest
