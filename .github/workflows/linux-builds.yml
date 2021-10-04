@@ -34,6 +34,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - run: |
+          git submodules init
+          git submodules update
       - name: uses install-with-cpanm
         uses: perl-actions/install-with-cpanm@v1
         with:
