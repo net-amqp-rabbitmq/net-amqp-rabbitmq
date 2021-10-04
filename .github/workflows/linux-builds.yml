@@ -42,7 +42,7 @@ jobs:
         with:
           cpanfile: "cpanfile"
           sudo: false
-        args: "--with-test"
+          args: "--with-test"
       - run: sh ./ci/run-ci-tests.sh
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
