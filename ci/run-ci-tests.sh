@@ -8,7 +8,6 @@
 #     export MQPASSWORD="guest"
 #     export MQVHOST="/"
 # fi
-export NARDEBUG=1
 
 #make sure a cpan build will work
 perl Makefile.PL
