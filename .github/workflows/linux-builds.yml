@@ -33,16 +33,21 @@ jobs:
       image: perldocker/perl-tester:${{ matrix.perl-version }}
 
     steps:
-      - uses: actions/checkout@v2
+
+      - name: Check out code (w/submodules)
+        uses: actions/checkout@v2
         with:
-          submodules: true
-      - name: uses install-with-cpanm
+          submodules: recursive
+
+      - name: Install Perl dependencies
         uses: perl-actions/install-with-cpanm@v1
         with:
           cpanfile: "cpanfile"
           sudo: false
           args: "--with-test"
-      - run: sh ./ci/run-ci-tests.sh
+
+      - name: Run CI tests
+        run: sh ./ci/run-ci-tests.sh
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           IS_OSX: false
