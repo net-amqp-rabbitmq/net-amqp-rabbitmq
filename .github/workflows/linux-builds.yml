@@ -39,6 +39,9 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Add git executable
+        run: apk install git
+
       - name: Install Perl dependencies
         uses: perl-actions/install-with-cpanm@v1
         with:
