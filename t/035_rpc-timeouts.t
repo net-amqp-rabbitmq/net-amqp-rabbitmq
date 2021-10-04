@@ -33,7 +33,5 @@ is_deeply $mq->get_rpc_timeout, {tv_sec=>0, tv_usec=>10}, 'Making sure we get ba
 is $mq->set_rpc_timeout( undef ), undef, 'Setting to unlimited.';
 is_deeply $mq->get_rpc_timeout, undef, 'Making sure we get back what we sent in.';
 
-
-
 is $mq->set_rpc_timeout( tv_usec=> 10 ), undef, 'Setting the timeout to 10 seconds.';
 is_deeply $mq->get_rpc_timeout, {tv_sec=>0, tv_usec=>10}, 'Making sure we get back what we sent in.';
