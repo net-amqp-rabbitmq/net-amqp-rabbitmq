@@ -53,7 +53,7 @@ jobs:
           IS_OSX: false
           PERL_VERSION: ${{ matrix.perl-version }}
 
-  linux-tests:
+  linux-tests-5.8:
     name: "perl v${{ matrix.perl-version }}"
     runs-on: ubuntu-latest
 
