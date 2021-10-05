@@ -3,7 +3,7 @@ requires 'Module::CAPIMaker'   => '0.01';
 requires 'Math::Int64'         => '0';
 
 on 'test' => sub {
-  requires 'Devel::Cover'                    => '0';
+  requires 'Devel::Cover'                    => '1.24';
   requires 'Devel::Cover::Report::Coveralls' => '0';
   requires 'CPAN::Meta'                      => '0';
   requires 'Math::Int64'                     => '0';
