@@ -27,6 +27,7 @@ jobs:
           - "5.14"
           - "5.12"
           - "5.10"
+          - "5.8"
 
     container:
       image: manchicken/perl-tester-testing:${{ matrix.perl-version }}
@@ -45,48 +46,6 @@ jobs:
           cpanfile: "cpanfile"
           sudo: false
           args: "--with-test"
-
-      - name: Run CI tests
-        run: sh ./ci/run-ci-tests.sh
-        env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-          IS_OSX: false
-          PERL_VERSION: ${{ matrix.perl-version }}
-
-  linux-tests-5_8:
-    name: "perl v${{ matrix.perl-version }}"
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        perl-version:
-          - "5.8"
-
-    container:
-      image: manchicken/perl-tester-testing:${{ matrix.perl-version }}
-      #image: perldocker/perl-tester:${{ matrix.perl-version }}
-
-    steps:
-
-      - name: Check out code (w/submodules)
-        uses: actions/checkout@main
-        with:
-          submodules: recursive
-
-      - name: Install Perl dependencies
-        uses: perl-actions/install-with-cpanm@v1
-        with:
-          install: |
-            Devel::Cover@1.24
-            Devel::Cover::Report::Coveralls
-            CPAN::Meta
-            Math::Int64
-            JSON
-            LWP::UserAgent
-            Module::CAPIMaker
-            ExtUtils::PkgConfig
-          sudo: false
 
       - name: Run CI tests
         run: sh ./ci/run-ci-tests.sh

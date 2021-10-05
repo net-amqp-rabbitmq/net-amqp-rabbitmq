@@ -1,5 +1,4 @@
 requires 'ExtUtils::PkgConfig' => '1.16';
-requires 'Module::CAPIMaker'   => '0.01';
 requires 'Math::Int64'         => '0';
 
 on 'test' => sub {
@@ -9,4 +8,8 @@ on 'test' => sub {
   requires 'Math::Int64'                     => '0';
   requires 'JSON'                            => '0';
   requires 'LWP::UserAgent'                  => '0';
+};
+
+on 'develop' => sub {
+  requires 'Module::CAPIMaker' => '0.01';
 };
