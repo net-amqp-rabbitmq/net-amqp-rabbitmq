@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [[ "$PERL_VERSION" == "5.8" ]]; then
+    cpanm -n Devel::Cover@1.24 Devel::Cover::Report::Coveralls CPAN::Meta Math::Int64 JSON LWP::UserAgent
+fi
+
 #make sure a cpan build will work
 perl Makefile.PL
 make manifest

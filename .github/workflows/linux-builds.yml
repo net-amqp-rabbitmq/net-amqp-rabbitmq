@@ -52,3 +52,4 @@ jobs:
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           IS_OSX: false
+          PERL_VERSION: ${{ matrix.perl-version }}
