@@ -1,17 +1,5 @@
 #!/bin/bash
 
-. "$(dirname $0)/util.sh"
-
-#osx doesn't have a local rabbitmq service
-if [ "$is_osx" = false ]; then
-    export MQHOST="localhost"
-    export MQUSERNAME="guest"
-    export MQPASSWORD="guest"
-    export MQPASSWORD="guest"
-    export MQVHOST="/"
-fi
-export NARDEBUG=1
-
 #make sure a cpan build will work
 perl Makefile.PL
 make manifest
