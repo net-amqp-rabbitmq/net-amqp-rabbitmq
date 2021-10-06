@@ -499,6 +499,30 @@ Rollback a server-side (tx) transaction over $channel.
 
 C<$channel> is a channel that has been opened with C<channel_open>.
 
+=head2 get_rpc_timeout()
+
+Return the RPC timeout on the current connection.
+
+The value returned will be either C<undef>, if the RPC timeout is
+unlimited, or a hashref with C<tv_sec> for the number of seconds and
+C<tv_usec> for the number of microseconds.
+
+=head2 set_rpc_timeout({ tv_sec => SECONDS, tv_usec => MICROSECONDS })
+
+Set the RPC timeout for the current connection, using the seconds
+(C<tv_sec>) and microseconds (C<tv_usec>) provided. The arguments
+supplied can be either in the form of a hash or a hashref, so all of
+the following are valid:
+
+    $mq->set_rpc_timeout(tv_sec => 10, tv_usec => 500000)
+    $mq->set_rpc_timeout( { tv_sec => 10, tv_usec => 500000 } )
+    $mq->set_rpc_timeout(tv_sec => 10)
+    $mq->set_rpc_timeout(tv_usec => 500000)
+
+In order to remove the time limit for RPC calls, simply pass C<undef>.
+
+    $mq->set_rpc_timeout( undef )
+
 =head2 basic_qos($channel, $options)
 
 Set quality of service flags on the current $channel.
@@ -688,7 +712,7 @@ Theo Schlossnagle E<lt>jesus@omniti.comE<gt>
 
 Mark Ellis E<lt>markellis@cpan.orgE<gt>
 
-Michael Stemle, Jr. E<lt>themanchicken@gmail.comE<gt>
+Mike "manchicken" Stemle, Jr. E<lt>mstemle@cpan.orgE<gt>
 
 Dave Rolsky E<lt>autarch@urth.orgE<gt>
 
@@ -752,6 +776,22 @@ sub publish {
     }
 
     $self->_publish($channel, $routing_key, $body, $options, $props);
+}
+
+sub set_rpc_timeout {
+  my ($self, @opts) = @_;
+
+  my $args = undef;
+
+  # Be kind on whether or not we receive a hashref
+  # or an actual hash.
+  if ((scalar @opts % 2) == 0) {
+    $args = { @opts };
+  } elsif ( scalar @opts == 1 && defined $opts[0]) {
+    $args = $opts[0];
+  }
+
+  return $self->_set_rpc_timeout( $args );
 }
 
 sub DESTROY {
