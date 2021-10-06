@@ -1,0 +1,55 @@
+name: Linux Builds for Net::AMQP::RabbitMQ
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  linux-tests:
+    name: "perl v${{ matrix.perl-version }}"
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        perl-version:
+          - "5.34"
+          - "5.32"
+          - "5.30"
+          - "5.28"
+          - "5.26"
+          - "5.24"
+          - "5.22"
+          - "5.20"
+          - "5.18"
+          - "5.16"
+          - "5.14"
+          - "5.12"
+          - "5.10"
+          - "5.8"
+
+    container:
+      image: manchicken/perl-tester-testing:${{ matrix.perl-version }}
+      #image: perldocker/perl-tester:${{ matrix.perl-version }}
+
+    steps:
+
+      - name: Check out code (w/submodules)
+        uses: actions/checkout@main
+        with:
+          submodules: recursive
+
+      - name: Install Perl dependencies
+        uses: perl-actions/install-with-cpanm@v1
+        with:
+          cpanfile: "cpanfile"
+          sudo: false
+          args: "--with-test"
+
+      - name: Run CI tests
+        run: sh ./ci/run-ci-tests.sh
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          IS_OSX: false
+          PERL_VERSION: ${{ matrix.perl-version }}
