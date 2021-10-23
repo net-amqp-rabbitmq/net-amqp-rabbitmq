@@ -51,12 +51,16 @@ C<Net::AMQP::RabbitMQ> provides a simple wrapper around the librabbitmq library
 that allows connecting, declaring exchanges and queues, binding and unbinding
 queues, publishing, consuming and receiving events.
 
-[Note that the C<Net::AMQP::RabbitMQ> module includes the associated librabbitmq
-C library.  Thus there is no need to install this separately beforehand.]
-
 Error handling in this module is primarily achieve by C<Perl_croak> (die). You
 should be making good use of C<eval> around these methods to ensure that you
 appropriately catch the errors.
+
+=head1 INSTALLATION
+
+C<cpanm Net::AMQP::RabbitMQ> or C<cpan Net::AMQP::RabbitMQ>
+
+Note that the C<Net::AMQP::RabbitMQ> module includes the associated librabbitmq
+C library.  Thus there is no need to install this separately beforehand.
 
 =head1 METHODS
 
