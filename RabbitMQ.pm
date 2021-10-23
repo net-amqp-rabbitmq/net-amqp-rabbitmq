@@ -55,6 +55,13 @@ Error handling in this module is primarily achieve by C<Perl_croak> (die). You
 should be making good use of C<eval> around these methods to ensure that you
 appropriately catch the errors.
 
+=head1 INSTALLATION
+
+C<cpanm Net::AMQP::RabbitMQ> or C<cpan Net::AMQP::RabbitMQ>
+
+Note that the C<Net::AMQP::RabbitMQ> module includes the associated librabbitmq
+C library.  Thus there is no need to install this separately beforehand.
+
 =head1 METHODS
 
 All methods, unless specifically stated, return nothing on success
