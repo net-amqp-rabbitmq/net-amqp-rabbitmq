@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '2.40008';
+our $VERSION = '2.40009';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -803,9 +803,10 @@ sub set_rpc_timeout {
 
 sub DESTROY {
     my ($self) = @_;
-    $self->_destroy_connection_close
-        if !$have_fieldhash || $pids{$self} && $pids{$self} == $$;
-    $self->_destroy_cleanup;
+    if (!$have_fieldhash || $pids{$self} && $pids{$self} == $$) {
+      $self->_destroy_connection_close;
+      $self->_destroy_cleanup;
+    }
 }
 
 1;

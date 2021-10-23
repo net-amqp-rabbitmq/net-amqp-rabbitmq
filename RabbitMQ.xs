@@ -1294,17 +1294,25 @@ net_amqp_rabbitmq_exchange_declare(conn, channel, exchange, options = NULL, args
     {
       hash_to_amqp_table(args, &arguments, 1);
     }
-    amqp_exchange_declare(
-      conn,
-      channel,
-      amqp_cstring_bytes(exchange),
-      amqp_cstring_bytes(exchange_type),
-      passive,
-      (amqp_boolean_t)durable,
-      (amqp_boolean_t)auto_delete,
-      (amqp_boolean_t)internal,
-      arguments
+    __DEBUG__(
+      warn("%d: amqp_declare_exchange with channel:%d, exchange:%s, and exchange_type:%s\n",
+        __LINE__,
+        channel,
+        exchange,
+        exchange_type
+      );
+      dump_table(arguments);
     );
+    amqp_exchange_declare(
+        conn,
+        channel,
+        amqp_cstring_bytes(exchange),
+        amqp_cstring_bytes(exchange_type),
+        passive,
+        (amqp_boolean_t)durable,
+        (amqp_boolean_t)auto_delete,
+        (amqp_boolean_t)internal,
+        arguments);
     maybe_release_buffers(conn);
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Declaring exchange");
 

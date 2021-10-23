@@ -1,5 +1,14 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.40009 - 2021-10-23
+    - Fixed a process where subprocess closed the parent process's connection - fixes #202
+    - Changed over to GitHub Actions from TravisCI
+    - Added support for librabbitmq-c's RPC timeout functionality. - fixes #206
+    - Updated to use the latest rabbitmq-c version.
+    - Merged #201, which allows setting `client_properties` in connect.
+    - Merged #200, which fixes minor document typos - fixes #199
+    - Merged #198, which adds minor documentation clarification - fixes #61
+
 2.40008 - 2020-09-30
     - Merged #195, to update Sectigo CA -  fixes #194
 
