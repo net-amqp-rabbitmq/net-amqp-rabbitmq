@@ -292,7 +292,7 @@ sub queue_declare {
 
     my $returned_queuename;
     $self->_ok( sub {
-        $returned_queuename = $self->mq->queue_declare( $self->{channel}, $queue, $options );
+        $returned_queuename = $self->mq->queue_declare( $self->{channel}, $queue, $options, $args ? $args : () );
     } );
     push @{$self->{declared_queues}}, $returned_queuename if $returned_queuename;
 
