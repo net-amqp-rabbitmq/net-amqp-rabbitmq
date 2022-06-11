@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '2.40009';
+our $VERSION = '2.40010';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -18,13 +18,13 @@ use Scalar::Util qw(blessed);
 #
 # If neither is found #151 will remain unfixed
 my $have_fieldhash = eval {
-    require Hash::FieldHash;
-    Hash::FieldHash->import('all');
-    1;
+  require Hash::FieldHash;
+  Hash::FieldHash->import('all');
+  1;
 } || eval {
-    require Hash::Util;
-    Hash::Util->import('fieldhash');
-    1;
+  require Hash::Util;
+  Hash::Util->import('fieldhash');
+  1;
 };
 
 =encoding UTF-8
@@ -757,56 +757,58 @@ librabbitmq is licensed under the MIT License. See the LICENSE-MIT file in the t
 
 my %pids;
 if ($have_fieldhash) {
-    fieldhash(%pids);
+  fieldhash(%pids);
 }
 
 sub new {
-    my $class = shift;
-    my $self = $class->_new(@_);
-    $pids{$self} = $$
-        if $have_fieldhash;
-    return $self;
+  my $class = shift;
+  my $self  = $class->_new(@_);
+  $pids{$self} = $$
+    if $have_fieldhash;
+  return $self;
 }
 
 sub publish {
-    my ($self, $channel, $routing_key, $body, $options, $props) = @_;
+  my ( $self, $channel, $routing_key, $body, $options, $props ) = @_;
 
-    $options ||= {};
-    $props   ||= {};
+  $options ||= {};
+  $props   ||= {};
 
-    # Do a shallow clone to avoid modifying variable passed by caller
-    $props = { %$props };
+  # Do a shallow clone to avoid modifying variable passed by caller
+  $props = {%$props};
 
-    # Convert blessed variables in headers to strings
-    if( $props->{headers} ) {
-        $props->{headers} = { map { blessed($_) ? "$_" : $_ } %{ $props->{headers} } };
-    }
+  # Convert blessed variables in headers to strings
+  if ( $props->{headers} ) {
+    $props->{headers} =
+      { map { blessed($_) ? "$_" : $_ } %{ $props->{headers} } };
+  }
 
-    $self->_publish($channel, $routing_key, $body, $options, $props);
+  $self->_publish( $channel, $routing_key, $body, $options, $props );
 }
 
 sub set_rpc_timeout {
-  my ($self, @opts) = @_;
+  my ( $self, @opts ) = @_;
 
   my $args = undef;
 
   # Be kind on whether or not we receive a hashref
   # or an actual hash.
-  if ((scalar @opts % 2) == 0) {
-    $args = { @opts };
-  } elsif ( scalar @opts == 1 && defined $opts[0]) {
+  if ( ( scalar @opts % 2 ) == 0 ) {
+    $args = {@opts};
+  }
+  elsif ( scalar @opts == 1 && defined $opts[0] ) {
     $args = $opts[0];
   }
 
-  return $self->_set_rpc_timeout( $args );
+  return $self->_set_rpc_timeout($args);
 }
 
 sub DESTROY {
-    my ($self) = @_;
-    if (!$have_fieldhash || $pids{$self} && $pids{$self} == $$) {
-      $self->_destroy_connection_close;
-      $self->_destroy_cleanup;
-    }
+  my ($self) = @_;
+  if ( !$have_fieldhash || $pids{$self} && $pids{$self} == $$ ) {
+    $self->_destroy_connection_close;
+    $self->_destroy_cleanup;
+  }
 }
 
 1;
