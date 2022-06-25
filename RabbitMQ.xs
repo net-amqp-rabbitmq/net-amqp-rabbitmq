@@ -27,6 +27,8 @@
 /* This is for the Math::UInt64 integration */
 #include "perl_math_int64.h"
 
+extern void dump_table(amqp_table_t table);
+
 /* perl Makefile.PL; make CCFLAGS=-DDEBUG */
 #if DEBUG
  #define __DEBUG__(X)  X
@@ -1193,6 +1195,9 @@ net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
 #ifndef NAR_HAVE_OPENSSL
         Perl_croak(aTHX_ "no ssl support, please install openssl and reinstall");
 #endif
+        if (!hv_exists(SvRV(options), "port", 4)) {
+          port = 5671;
+        }
         amqp_set_initialize_ssl_library( (amqp_boolean_t)ssl_init );
         sock = amqp_ssl_socket_new(conn);
         if ( !sock ) {
@@ -1205,11 +1210,6 @@ net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
             if ( amqp_ssl_socket_set_cacert(sock, ssl_cacert) ) {
                 Perl_croak(aTHX_ "error setting CA certificate");
             }
-        }
-        else {
-            /* TODO */
-            /* in librabbitmq > 0.7.1, amqp_ssl_socket_set_verify_peer makes this optional */
-            Perl_croak(aTHX_ "required arg ssl_cacert not provided");
         }
 
         if ( ( ssl_key != NULL ) && strlen(ssl_key) && ( ssl_cert != NULL ) && strlen(ssl_cert) ) {
@@ -1606,6 +1606,7 @@ net_amqp_rabbitmq_recv(conn, timeout = 0)
     struct timeval timeout_tv;
   CODE:
     assert_amqp_connected(conn);
+    __DEBUG__(fprintf(stderr, "RECV()!\n");); 
 
     if (timeout > 0) {
       timeout_tv.tv_sec = timeout / 1000;
@@ -1912,6 +1913,7 @@ net_amqp_rabbitmq_heartbeat(conn)
   CODE:
     f.frame_type = AMQP_FRAME_HEARTBEAT;
     f.channel = 0;
+    __DEBUG__(fprintf(stderr, "HEARTBEAT!\n"););
     amqp_send_frame(conn, &f);
 
 void

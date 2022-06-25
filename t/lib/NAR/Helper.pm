@@ -45,7 +45,7 @@ sub new {
     $username = $ENV{MQSSLUSERNAME} if exists $ENV{MQSSLUSERNAME};
     $password = $ENV{MQSSLPASSWORD} if exists $ENV{MQSSLPASSWORD};
     $vhost    = $ENV{MQSSLVHOST}    if exists $ENV{MQSSLVHOST};
-    $port     = $ENV{MQSSLPORT} || 5671;
+    $port     = exists $ENV{MQSSLPORT} ? $ENV{MQSSLPORT} : undef;
   }
   else {
     Test::More::note("non-ssl mode");
@@ -53,7 +53,7 @@ sub new {
     $username = $ENV{MQUSERNAME} if exists $ENV{MQUSERNAME};
     $password = $ENV{MQPASSWORD} if exists $ENV{MQPASSWORD};
     $vhost    = $ENV{MQVHOST}    if exists $ENV{MQVHOST};
-    $port     = $ENV{MQPORT} || 5672;
+    $port     = exists $ENV{MQPORT} ? $ENV{MQPORT} : undef;
   }
   my $admin_protocol = $ENV{MQADMINPROTOCOL} || "https";
   my $admin_port     = $ENV{MQADMINPORT}     || "443";
@@ -124,7 +124,6 @@ sub connect {
   my $options = {
     user            => $self->{username},
     password        => $self->{password},
-    port            => $self->{port},
     ssl             => $self->{ssl},
     ssl_verify_host => $self->{ssl_verify_host},
     ssl_verify_peer => $self->{ssl_verify_peer},
@@ -132,6 +131,9 @@ sub connect {
     ssl_init        => $self->{ssl_init},
     vhost           => $self->{vhost},
   };
+  if (defined $self->{port}) {
+    $options->{port} = $self->{port};
+  }
   if ( defined $heartbeat ) {
     $options->{heartbeat} = $heartbeat;
   }
@@ -149,10 +151,9 @@ sub connect {
 sub get_connection_options {
   my ($self) = @_;
 
-  return {
+  my $to_return = {
     user            => $self->{username},
     password        => $self->{password},
-    port            => $self->{port},
     ssl             => $self->{ssl},
     ssl_verify_host => $self->{ssl_verify_host},
     ssl_verify_peer => $self->{ssl_verify_peer},
@@ -161,6 +162,11 @@ sub get_connection_options {
     vhost           => $self->{vhost},
   };
 
+  if (defined $self->{port}) {
+    $to_return->{port} = $self->{port};
+  }
+
+  return $to_return;
 }
 
 sub heartbeat {

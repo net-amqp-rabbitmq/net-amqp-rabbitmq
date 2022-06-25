@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/net-amqp-rabbitmq/net-amqp-rabbitmq.png)](https://travis-ci.org/net-amqp-rabbitmq/net-amqp-rabbitmq)
+![example workflow](https://github.com/net-amqp-rabbitmq/net-amqp-rabbitmq/actions/workflows/linux-builds.yml/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/net-amqp-rabbitmq/net-amqp-rabbitmq/badge.png)](https://coveralls.io/r/net-amqp-rabbitmq/net-amqp-rabbitmq)
 
 # Install
