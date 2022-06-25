@@ -1211,11 +1211,6 @@ net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
                 Perl_croak(aTHX_ "error setting CA certificate");
             }
         }
-        else {
-            /* TODO */
-            /* in librabbitmq > 0.7.1, amqp_ssl_socket_set_verify_peer makes this optional */
-            Perl_croak(aTHX_ "required arg ssl_cacert not provided");
-        }
 
         if ( ( ssl_key != NULL ) && strlen(ssl_key) && ( ssl_cert != NULL ) && strlen(ssl_cert) ) {
             if ( amqp_ssl_socket_set_key( sock, ssl_cert, ssl_key ) ) {
