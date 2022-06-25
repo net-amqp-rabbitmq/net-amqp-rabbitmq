@@ -34,11 +34,11 @@ ok $helper->drain( $queuename ), "drain queue";
 ok $helper->consume( $queuename ), "consume";
 
 {
-    my $utf8_payload = "Mǎgìc Trañsiént Paylöàd";
+    my $utf8_payload = "Mǎgìc Trañsiént Paylöàd👋🏻";
     ok utf8::is_utf8($utf8_payload), 'message going in is utf8';
 
     my $utf8_headers = {
-        dummy => 'Sóme ŭtf8 strìng',
+        dummy => 'Sóme ŭtf8 strìng👋🏻',
     };
     ok utf8::is_utf8($utf8_headers->{'dummy'}), 'header is utf8';
 
