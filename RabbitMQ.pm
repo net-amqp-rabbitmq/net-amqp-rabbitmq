@@ -613,6 +613,20 @@ calls are made.
 
     $mq->disconnect();
 
+=head2 Using QOS
+
+    use Net::AMQP::RabbitMQ;
+    my $channel = 1;
+    my $exchange = "MyExchange.x";  # This exchange must exist already
+    my $routing_key = "foobar";
+
+    my $mq = Net::AMQP::RabbitMQ->new();
+    $mq->connect("localhost", { user => "guest", password => "guest" });
+    $mq->channel_open($channel);
+
+    # Prefetch 5 messages per window
+    $mq->basic_qos( $channel, { prefetch_count => 5 });
+
 =head1 RUNNING THE TEST SUITE
 
 The test suite runs live tests against a RabbitMQ server at
