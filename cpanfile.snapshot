@@ -1,5 +1,76 @@
 # carton snapshot format: version 1.0
 DISTRIBUTIONS
+  Devel-Cover-1.24
+    pathname: P/PJ/PJCJ/Devel-Cover-1.24.tar.gz
+    provides:
+      Devel::Cover 1.24
+      Devel::Cover::Annotation::Git 1.24
+      Devel::Cover::Annotation::Random 1.24
+      Devel::Cover::Annotation::Svk 1.24
+      Devel::Cover::Branch 1.24
+      Devel::Cover::Collection 1.24
+      Devel::Cover::Collection::Template::Provider 1.24
+      Devel::Cover::Condition 1.24
+      Devel::Cover::Condition_and_2 1.24
+      Devel::Cover::Condition_and_3 1.24
+      Devel::Cover::Condition_or_2 1.24
+      Devel::Cover::Condition_or_3 1.24
+      Devel::Cover::Condition_xor_4 1.24
+      Devel::Cover::Criterion 1.24
+      Devel::Cover::DB 1.24
+      Devel::Cover::DB::Criterion 1.24
+      Devel::Cover::DB::Digests 1.24
+      Devel::Cover::DB::File 1.24
+      Devel::Cover::DB::IO 1.24
+      Devel::Cover::DB::IO::JSON 1.24
+      Devel::Cover::DB::IO::Sereal 1.24
+      Devel::Cover::DB::IO::Storable 1.24
+      Devel::Cover::DB::Run 1.24
+      Devel::Cover::DB::Structure 1.24
+      Devel::Cover::Html_Common 1.24
+      Devel::Cover::Op 1.24
+      Devel::Cover::Pod 1.24
+      Devel::Cover::Report::Compilation 1.24
+      Devel::Cover::Report::Html 1.24
+      Devel::Cover::Report::Html_basic 1.24
+      Devel::Cover::Report::Html_basic::Template::Provider 1.24
+      Devel::Cover::Report::Html_minimal 1.24
+      Devel::Cover::Report::Html_subtle 1.24
+      Devel::Cover::Report::Html_subtle::Template::Provider 1.24
+      Devel::Cover::Report::Json 1.24
+      Devel::Cover::Report::Sort 1.24
+      Devel::Cover::Report::Text 1.24
+      Devel::Cover::Report::Text2 1.24
+      Devel::Cover::Report::Vim 1.24
+      Devel::Cover::Report::Vim::Template::Provider 1.24
+      Devel::Cover::Statement 1.24
+      Devel::Cover::Subroutine 1.24
+      Devel::Cover::Test 1.24
+      Devel::Cover::Time 1.24
+      Devel::Cover::Truth_Table 1.24
+      Devel::Cover::Truth_Table::Row 1.24
+      Devel::Cover::Util 1.24
+      Devel::Cover::Web 1.24
+    requirements:
+      Digest::MD5 0
+      ExtUtils::MakeMaker 0
+      HTML::Entities 3.69
+      Storable 0
+      Test::More 0
+  Devel-Cover-Report-Coveralls-0.31
+    pathname: M/MI/MIKIHOSHI/Devel-Cover-Report-Coveralls-0.31.tar.gz
+    provides:
+      Devel::Cover::Report::Coveralls 0.31
+    requirements:
+      Devel::Cover 1.02
+      HTTP::Tiny 0.043
+      IO::Socket::SSL 1.42
+      JSON::PP 0
+      Module::Build::Tiny 0.035
+      Mozilla::CA 0
+      Net::SSLeay 1.49
+      YAML 0
+      perl 5.008005
   Encode-Locale-1.05
     pathname: G/GA/GAAS/Encode-Locale-1.05.tar.gz
     provides:
@@ -48,6 +119,12 @@ DISTRIBUTIONS
       perl 5.006
       strict 0
       warnings 0
+  ExtUtils-PkgConfig-1.16
+    pathname: X/XA/XAOC/ExtUtils-PkgConfig-1.16.tar.gz
+    provides:
+      ExtUtils::PkgConfig 1.16
+    requirements:
+      ExtUtils::MakeMaker 0
   File-Listing-6.07
     pathname: P/PL/PLICEASE/File-Listing-6.07.tar.gz
     provides:
@@ -191,6 +268,31 @@ DISTRIBUTIONS
       Exporter 5.57
       ExtUtils::MakeMaker 0
       perl 5.008
+  IO-Socket-SSL-2.074
+    pathname: S/SU/SULLR/IO-Socket-SSL-2.074.tar.gz
+    provides:
+      IO::Socket::SSL 2.074
+      IO::Socket::SSL::Intercept 2.056
+      IO::Socket::SSL::OCSP_Cache 2.074
+      IO::Socket::SSL::OCSP_Resolver 2.074
+      IO::Socket::SSL::PublicSuffix undef
+      IO::Socket::SSL::SSL_Context 2.074
+      IO::Socket::SSL::SSL_HANDLE 2.074
+      IO::Socket::SSL::Session_Cache 2.074
+      IO::Socket::SSL::Utils 2.015
+    requirements:
+      ExtUtils::MakeMaker 0
+      Mozilla::CA 0
+      Net::SSLeay 1.46
+      Scalar::Util 0
+  JSON-4.06
+    pathname: I/IS/ISHIGAKI/JSON-4.06.tar.gz
+    provides:
+      JSON 4.06
+      JSON::Backend::PP 4.06
+    requirements:
+      ExtUtils::MakeMaker 0
+      Test::More 0
   LWP-MediaTypes-6.04
     pathname: O/OA/OALDERS/LWP-MediaTypes-6.04.tar.gz
     provides:
@@ -256,6 +358,13 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       Text::Template 1.45
+  Mozilla-CA-20211001
+    pathname: A/AB/ABH/Mozilla-CA-20211001.tar.gz
+    provides:
+      Mozilla::CA 20211001
+    requirements:
+      ExtUtils::MakeMaker 0
+      perl 5.006
   Net-HTTP-6.19
     pathname: O/OA/OALDERS/Net-HTTP-6.19.tar.gz
     provides:
@@ -275,6 +384,19 @@ DISTRIBUTIONS
       strict 0
       vars 0
       warnings 0
+  Net-SSLeay-1.92
+    pathname: C/CH/CHRISN/Net-SSLeay-1.92.tar.gz
+    provides:
+      Net::SSLeay 1.92
+      Net::SSLeay::Handle 1.92
+    requirements:
+      English 0
+      ExtUtils::MakeMaker 0
+      File::Spec::Functions 0
+      MIME::Base64 0
+      Text::Wrap 0
+      constant 0
+      perl 5.008001
   Text-Template-1.59
     pathname: M/MS/MSCHOUT/Text-Template-1.59.tar.gz
     provides:
@@ -422,6 +544,34 @@ DISTRIBUTIONS
       Fcntl 0
       URI 1.10
       perl 5.008001
+  YAML-1.30
+    pathname: T/TI/TINITA/YAML-1.30.tar.gz
+    provides:
+      YAML 1.30
+      YAML::Any 1.30
+      YAML::Dumper undef
+      YAML::Dumper::Base undef
+      YAML::Error undef
+      YAML::Loader undef
+      YAML::Loader::Base undef
+      YAML::Marshall undef
+      YAML::Mo undef
+      YAML::Node undef
+      YAML::Tag undef
+      YAML::Type::blessed undef
+      YAML::Type::code undef
+      YAML::Type::glob undef
+      YAML::Type::ref undef
+      YAML::Type::regexp undef
+      YAML::Type::undef undef
+      YAML::Types undef
+      YAML::Warning undef
+      yaml_mapping undef
+      yaml_scalar undef
+      yaml_sequence undef
+    requirements:
+      ExtUtils::MakeMaker 0
+      perl 5.008001
   libwww-perl-6.49
     pathname: O/OA/OALDERS/libwww-perl-6.49.tar.gz
     provides:
@@ -467,7 +617,7 @@ DISTRIBUTIONS
       HTTP::Request 6
       HTTP::Request::Common 6
       HTTP::Response 6
-      HTTP::Status 6.07
+      HTTP::Status 6.18
       IO::Select 0
       IO::Socket 0
       LWP::MediaTypes 6
