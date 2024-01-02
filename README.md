@@ -1,6 +1,17 @@
 ![example workflow](https://github.com/net-amqp-rabbitmq/net-amqp-rabbitmq/actions/workflows/linux-builds.yml/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/net-amqp-rabbitmq/net-amqp-rabbitmq/badge.png)](https://coveralls.io/r/net-amqp-rabbitmq/net-amqp-rabbitmq)
 
+# NOTICE
+
+This module is presently in a difficult-to-maintain state, and caution should be used in using it.
+
+- The OpenSSL version used by the `librabbitmq-c` library is end-of-life
+- The code duplication in this module makes it very difficult to keep up with C library updates
+
+There is a [GitHub Discussion here regarding paths forward](https://github.com/net-amqp-rabbitmq/net-amqp-rabbitmq/discussions/241), and if you use this module then your input is requested.
+
+It is important that if you use this module, that you mitigate these risks to your satisfaction, or to that of your organization.
+
 # Install
 
 ` cpanm Net::AMQP::RabbitMQ`
