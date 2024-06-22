@@ -1,0 +1,1 @@
+../../rabbitmq-c/include/rabbitmq-c/ssl_socket.h

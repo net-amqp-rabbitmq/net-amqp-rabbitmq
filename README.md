@@ -41,31 +41,26 @@ git submodule init
 git submodule update
 ```
 
-There is a vagrant development environment available, with a local rabbitmq installation and ssl enabled.
+When running your own tests, for quick access to a testing RabbitMQ service, consider [CloudAMQP](https://cloudamqp.com).
 
-The test environment variables have been set to use this install
+There are a few convenience scripts to help you out:
 
-
-```sh
-vagrant up
-vagrant ssh
-cd /vagrant
-make distclean; perl Makefile.PL; make
-
-#run all tests with test debugging
-NARDEBUG=1 prove -I blib/lib -I blib/arch -v t/
-
-#run all tests in ssl mode
-MQSSL=1 prove -I blib/lib -I blib/arch -v t/
-```
+- `local-tests-no-ssl` - Convenience script to run tests on a local network without SSL at all.
+- `run-one-test` - This script helps you quickly run a single test while working on this project.
+- `ci/run-ci-tests.sh` - This script is what we run in GitHub Actions, it'll help you run the full suite.
 
 # To build a release
 
 ```sh
+make distclean
 perl Makefile.PL
 make manifest
 make dist
 ```
+
+## Known challenges
+
+- In order to run test `024_boolean_header_fields.t`, you need to have the web client for RabbitMQ enabled, and your test user must have access to it. This is because this test uses the web client to test specific use cases which require a literal Boolean type (which Perl lacks).
 
 # Special note for macOS
 
@@ -79,6 +74,4 @@ that you check this _first_.
 
 # OpenSSL Compatibility
 
-So far we have been testing with OpenSSL 1.1. We appear to be good there, but
-OpenSSL 3 is not supported at this time.
-
+To date, OpenSSL v3 is supported.

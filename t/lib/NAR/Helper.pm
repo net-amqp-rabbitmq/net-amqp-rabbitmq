@@ -4,7 +4,7 @@ use warnings;
 
 use Net::AMQP::RabbitMQ;
 use Test::More ();
-use Carp qw/carp/;
+use Carp       qw/carp/;
 
 sub new {
   my ( $class, %options ) = @_;
@@ -12,12 +12,9 @@ sub new {
   my $mq     = Net::AMQP::RabbitMQ->new;
   my $unique = _unique();
 
-  my $ssl = $ENV{MQSSL} ? 1 : 0;
-  my $ssl_cacert =
-    exists $ENV{MQSSLCACERT}
-    ? $ENV{MQSSLCACERT}
-    : "t/ssl/api-cloudamqp-com-chain.pem",
-    my $ssl_verify_host = 1;
+  my $ssl             = $ENV{MQSSL} ? 1 : 0;
+  my $ssl_cacert      = $ENV{MQSSLCACERT};
+  my $ssl_verify_host = 1;
   if ( defined( $ENV{MQSSLVERIFYHOST} ) ) {
     $ssl_verify_host = $ENV{MQSSLVERIFYHOST};
   }
@@ -32,11 +29,12 @@ sub new {
     $ssl_verify_peer = $ENV{MQSSLVERIFYPEER};
   }
 
+  # THESE VALUES MUST BE USER-SUPPLIED!
   my $port;
-  my $host     = "shrimp.rmq.cloudamqp.com";
-  my $username = "frkwiwbi";
-  my $password = "n1rN3wmzelie8TYCTRjK9KHnJxo10HyN";
-  my $vhost    = "frkwiwbi";
+  my $host     = "";
+  my $username = "";
+  my $password = "";
+  my $vhost    = "";
 
   if ( $ssl || $options{ssl} ) {
     Test::More::note("ssl mode");
@@ -57,6 +55,11 @@ sub new {
   }
   my $admin_protocol = $ENV{MQADMINPROTOCOL} || "https";
   my $admin_port     = $ENV{MQADMINPORT}     || "443";
+
+  if ( !defined $host || !defined $username ) {
+    die
+'No host or user defined. Please see the https://metacpan.org/pod/Net::AMQP::RabbitMQ#RUNNING-THE-TEST-SUITE for more information.';
+  }
 
   #hack but it's ok as it's for testing and I don't want more deps
   my $uri_encoded_vhost = $vhost;
@@ -131,7 +134,7 @@ sub connect {
     ssl_init        => $self->{ssl_init},
     vhost           => $self->{vhost},
   };
-  if (defined $self->{port}) {
+  if ( defined $self->{port} ) {
     $options->{port} = $self->{port};
   }
   if ( defined $heartbeat ) {
@@ -162,7 +165,7 @@ sub get_connection_options {
     vhost           => $self->{vhost},
   };
 
-  if (defined $self->{port}) {
+  if ( defined $self->{port} ) {
     $to_return->{port} = $self->{port};
   }
 
