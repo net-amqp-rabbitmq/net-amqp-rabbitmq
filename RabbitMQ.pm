@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '2.40010';
+our $VERSION = '2.40011';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -629,28 +629,26 @@ calls are made.
 
 =head1 RUNNING THE TEST SUITE
 
-The test suite runs live tests against a RabbitMQ server at
-C<https://www.cloudamqp.com/>.
+When working on this module, we run tests against a RabbitMQ server at
+C<https://www.cloudamqp.com/>. You can create your own free instance to use with testing.
 
-There are separte variables for the ssl and none ssl host/user/password/port.
+There are separate variables for the ssl and none ssl host/user/password/port.
 
-If you are in an environment that won't let you connect to this
-host (or the test server is down), you can use these environment variables:
+These are the environment variables which control test behavior:
 
 =over 4
 
 =item MQHOST
 
-Hostname or IP address of the RabbitMQ server to connect to (defaults
-to C<hornet.rmq.cloudamqp.com>).
+Hostname or IP address of the RabbitMQ server to connect to.
 
 =item MQUSERNAME
 
-Username for authentication (defaults to username for L<https://www.cloudamqp.com>).
+Username for authentication.
 
 =item MQPASSWORD
 
-Password for authentication (defaults to password for L<https://www.cloudamqp.com>).
+Password for authentication.
 
 =item MQPORT
 
@@ -658,7 +656,7 @@ Port of the RabbitMQ server to connect to (defaults to 5672)
 
 =item MQVHOST
 
-Vhost to use (defaults to vhost for for L<https://www.cloudamqp.com>).
+Vhost to use.
 
 =item MQSSL
 
@@ -673,16 +671,15 @@ backwards compatibility, still do.
 
 =item MQSSLHOST
 
-Hostname or IP address of the RabbitMQ server to connect to (defaults
-to C<hornet.rmq.cloudamqp.com>).
+Hostname or IP address of the RabbitMQ server to connect to.
 
 =item MQSSLUSERNAME
 
-Username for authentication (defaults to username for L<https://www.cloudamqp.com>).
+Username for authentication.
 
 =item MQSSLPASSWORD
 
-Password for authentication (defaults to password for L<https://www.cloudamqp.com>).
+Password for authentication.
 
 =item MQSSLPORT
 
@@ -690,8 +687,7 @@ Port of the RabbitMQ server to connect to (defaults to 5671)
 
 =item MQSSLCACERT
 
-Path to the certificate file for SSL-enabled connections, defaults to
-F<t/ssl/cloudamqp.cacert.pem>.
+Path to the certificate file for SSL-enabled connections.
 
 =item MQSSLVERIFYHOST
 
@@ -704,7 +700,7 @@ Whether the openssl library should be initialized (defaults to true).
 
 =item MQSSLVHOST
 
-Vhost to use when in SSL mode (defaults to vhost for for L<https://www.cloudamqp.com>).
+Vhost to use when in SSL mode.
 
 =item MQADMINPROTOCOL
 
@@ -727,13 +723,15 @@ This means this module only works with the AMQP 0.9.1 protocol, so requires Rabb
 version 2+. Also, since the version of librabbitmq used is not a custom fork, it
 means this module doesn't support the basic_return callback method.
 
+This module has been tested with OpenSSL up to version 3.3.1.
+
 =head1 AUTHORS
+
+Mike "manchicken" Stemle, Jr. E<lt>hello@mikestemle.comE<gt>
 
 Theo Schlossnagle E<lt>jesus@omniti.comE<gt>
 
 Mark Ellis E<lt>markellis@cpan.orgE<gt>
-
-Mike "manchicken" Stemle, Jr. E<lt>mstemle@cpan.orgE<gt>
 
 Dave Rolsky E<lt>autarch@urth.orgE<gt>
 

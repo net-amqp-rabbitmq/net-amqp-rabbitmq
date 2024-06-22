@@ -22,11 +22,11 @@ Hey all, it's just me maintaining this module. I'm a busy person, and my time wo
 ## When you're contributing, please observe our code quality standards (they're pretty light).
 
 1. Do your best not to drop code coverage. There are a lot of folks who use the module, and we want to make sure everyone has a great experience.
-2. Please run `make test` prior to submitting any PRs. If your tests don't pass, we can't merge your branch.
+2. Please run `ci/run-ci-tests.sh` prior to submitting any PRs. If your tests don't pass, we can't merge your branch.
 3. Please try to stick to the formatting in the file you are modifying as closely as possible.
 4. Please also prove the `xt` directory, too, when you can.
 5. Don't forget that we have a number of users, so check the GitHub Actions if you don't have access to multiple OS' for testing.
-6. Please make sure that your contribution _also_ works on the default test AMQP host.
+6. Please make sure that your contribution _also_ works on a CloudAMQP test host.
 
 ## Other requests
 

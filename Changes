@@ -1,10 +1,13 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
-2.40011 - 
+2.40011 - 2024-06-22
     - Updated `ppport.h`
     - Fixed a problem where the SSL port defaulted to 5672 incorrectly.
-    - Updated tests so they let the RabbitMQ.xs defaults to play a role.
+    - Updated tests so they let the `RabbitMQ.xs` defaults to play a role.
     - We're now friendly to folks who want to use Carton when contributing.
+    - Discontinuing use of Vagrant for licensing reasons
+    - Updating `rabbitmq-c` to `v0.14.0`
+    - Discontinuing use of CloudAMQP hard-coded in tests for vendor security reasons
 
 2.40010 - 2022-06-11
     - Fixed SSL tests

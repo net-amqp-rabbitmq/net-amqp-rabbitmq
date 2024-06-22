@@ -6,29 +6,26 @@ on:
     branches: [ main ]
 
 jobs:
+  perl-versions:
+    runs-on: ubuntu-latest
+    name: List Perl versions
+    outputs:
+      perl-versions: ${{ steps.action.outputs.perl-versions }}
+    steps:
+      - id: action
+        uses: perl-actions/perl-versions@v1
+        with:
+          since-perl: v5.12
+          with-devel: false
+
   linux-tests:
-    name: "perl v${{ matrix.perl-version }}"
+    name: "Perl v${{ matrix.perl-version }}"
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        perl-version:
-          - "5.40"
-          - "5.38"
-          - "5.36"
-          - "5.34"
-          - "5.32"
-          - "5.30"
-          - "5.28"
-          - "5.26"
-          - "5.24"
-          - "5.22"
-          - "5.20"
-          - "5.18"
-          - "5.16"
-          - "5.14"
-          - "5.12"
+        perl-versions: ${{ fromJson (needs.perl-versions.outputs.perl-versions) }}
 
     container:
       image: perldocker/perl-tester:${{ matrix.perl-version }}
@@ -49,8 +46,6 @@ jobs:
 
       - name: Prep the C module
         run: |
-         cp rmq-export.h rabbitmq-c/include/rabbitmq-c/export.h
-         ls -altr --recursive rabbitmq-c
 
       - name: Run CI tests
         run: sh ./ci/run-ci-tests.sh
@@ -58,3 +53,5 @@ jobs:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           IS_OSX: false
           PERL_VERSION: ${{ matrix.perl-version }}
+          MQSSL: 1
+          MQSSLCACERT: "t/ssl/api-cloudamqp-com-chain.pem"
