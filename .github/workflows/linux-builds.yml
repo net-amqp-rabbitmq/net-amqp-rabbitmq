@@ -19,10 +19,10 @@ jobs:
           with-devel: false
 
   linux-tests:
-    name: "Perl v${{ matrix.perl-version }}"
-    runs-on: ubuntu-latest
     needs:
       - perl-versions
+    name: "Perl v${{ matrix.perl-version }}"
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
