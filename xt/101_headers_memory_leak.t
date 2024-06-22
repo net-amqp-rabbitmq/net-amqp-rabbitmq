@@ -17,7 +17,7 @@ use_ok('Net::AMQP::RabbitMQ');
 my $mq = Net::AMQP::RabbitMQ->new();
 ok($mq);
 
-eval { $mq->connect($host, { user => "guest", password => "guest" }); };
+eval { $mq->connect($host); };
 is($@, '', "connect");
 eval { $mq->channel_open(1); };
 is($@, '', "channel_open");
