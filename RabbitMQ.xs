@@ -17,10 +17,10 @@
 #  define MUTABLE_HV(p) ((HV*)MUTABLE_PTR(p))
 #endif
 
-#include "rabbitmq-c/amqp.h"
+#include <rabbitmq-c/amqp.h>
 #include "amqp_socket.h"
-#include "rabbitmq-c/tcp_socket.h"
-#include "rabbitmq-c/ssl_socket.h"
+#include <rabbitmq-c/tcp_socket.h>
+#include <rabbitmq-c/ssl_socket.h>
 /* For struct timeval */
 #include "amqp_time.h"
 
