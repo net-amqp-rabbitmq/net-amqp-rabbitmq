@@ -1,9 +1,22 @@
 name: Linux Builds for Net::AMQP::RabbitMQ
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
+    paths:
+      - '**.t'
+      - '**.xs'
+      - '**.pl'
+      - '**.pm'
+      - '**.sh'
   pull_request:
     branches: [ main ]
+    paths:
+      - '**.t'
+      - '**.xs'
+      - '**.pl'
+      - '**.pm'
+      - '**.sh'
 
 env:
   COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
