@@ -50,7 +50,7 @@ jobs:
       - name: Prep the C module
         run: |
          cp rmq-export.h rabbitmq-c/include/rabbitmq-c/export.h
-         ls -altr
+         ls -altr --recursive rabbitmq-c
 
       - name: Run CI tests
         run: sh ./ci/run-ci-tests.sh
