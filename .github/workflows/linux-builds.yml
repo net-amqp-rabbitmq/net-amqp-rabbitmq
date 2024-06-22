@@ -47,7 +47,7 @@ jobs:
 
       - name: Prep the C module
         run: |
-          sudo apt install cmake
+          apt install cmake
           cd rabbitmq-c
           cmake .
           cd -
