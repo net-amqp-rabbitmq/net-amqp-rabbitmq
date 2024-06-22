@@ -63,7 +63,6 @@ jobs:
 
       - name: Run CI tests
         run: |
-          echo "MQSSL:$MQSSL"
           sh ./ci/run-ci-tests.sh
         env:
           IS_OSX: false
