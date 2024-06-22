@@ -55,5 +55,10 @@ jobs:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           IS_OSX: false
           PERL_VERSION: ${{ matrix.perl-version }}
-          MQSSL: 1
-          MQSSLCACERT: "t/ssl/api-cloudamqp-com-chain.pem"
+          MQSSL: ${{ env.MQSSL }}
+          MQSSLCACERT: ${{ env.MQSSLCACERT }}
+          MQSSLHOST: ${{ secrets.MQSSLHOST }}
+          MQSSLUSERNAME: ${{ secrets.MQSSLUSERNAME }}
+          MQSSLPASSWORD: ${{ secrets.MQSSLPASSWORD }}
+          MQSSLPORT: ${{ secrets.MQSSLPORT }}
+          MQSSLVHOST: ${{ secrets.MQSSLVHOST }}
