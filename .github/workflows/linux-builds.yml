@@ -14,6 +14,10 @@ env:
   MQSSLPASSWORD: ${{ secrets.MQSSLPASSWORD }}
   MQSSLPORT: ${{ secrets.MQSSLPORT }}
   MQSSLVHOST: ${{ secrets.MQSSLVHOST }}
+  MQHOST: ${{ secrets.MQSSLHOST }}
+  MQUSERNAME: ${{ secrets.MQSSLUSERNAME }}
+  MQPASSWORD: ${{ secrets.MQSSLPASSWORD }}
+  MQVHOST: ${{ secrets.MQSSLVHOST }}
 
 jobs:
   perl-versions:
