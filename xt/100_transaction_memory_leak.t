@@ -19,7 +19,11 @@ ok($mq);
 
 my $uname = $ENV{'MQUSERNAME'} || 'guest';
 my $pword = $ENV{'MQPASSWORD'} || 'guest';
-eval { $mq->connect( $host, { user => $uname, password => $pword } ); };
+my $vhost = $ENV{'MQVHOST'}    || '/';
+eval {
+  $mq->connect( $host,
+    { user => $uname, password => $pword, vhost => $vhost } );
+};
 is( $@, '', "connect" );
 eval { $mq->channel_open(1); };
 is( $@, '', "channel_open" );
