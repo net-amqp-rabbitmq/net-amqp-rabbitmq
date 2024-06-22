@@ -17,6 +17,7 @@ env:
   MQHOST: ${{ secrets.MQSSLHOST }}
   MQUSERNAME: ${{ secrets.MQSSLUSERNAME }}
   MQPASSWORD: ${{ secrets.MQSSLPASSWORD }}
+  MQPORT: 5672
   MQVHOST: ${{ secrets.MQSSLVHOST }}
 
 jobs:
