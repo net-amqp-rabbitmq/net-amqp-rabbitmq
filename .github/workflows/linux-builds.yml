@@ -5,6 +5,19 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+  IS_OSX: false
+  NARDEBUG: 1
+  PERL_VERSION: ${{ matrix.perl-version }}
+  MQSSL: ${{ env.MQSSL }}
+  MQSSLCACERT: ${{ env.MQSSLCACERT }}
+  MQSSLHOST: ${{ secrets.MQSSLHOST }}
+  MQSSLUSERNAME: ${{ secrets.MQSSLUSERNAME }}
+  MQSSLPASSWORD: ${{ secrets.MQSSLPASSWORD }}
+  MQSSLPORT: ${{ secrets.MQSSLPORT }}
+  MQSSLVHOST: ${{ secrets.MQSSLVHOST }}
+
 jobs:
   perl-versions:
     runs-on: ubuntu-latest
@@ -47,18 +60,6 @@ jobs:
           args: "--with-test"
 
       - name: Run CI tests
-        env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-          IS_OSX: false
-          NARDEBUG: 1
-          PERL_VERSION: ${{ matrix.perl-version }}
-          MQSSL: ${{ env.MQSSL }}
-          MQSSLCACERT: ${{ env.MQSSLCACERT }}
-          MQSSLHOST: ${{ secrets.MQSSLHOST }}
-          MQSSLUSERNAME: ${{ secrets.MQSSLUSERNAME }}
-          MQSSLPASSWORD: ${{ secrets.MQSSLPASSWORD }}
-          MQSSLPORT: ${{ secrets.MQSSLPORT }}
-          MQSSLVHOST: ${{ secrets.MQSSLVHOST }}
         run: |
           echo "MQSSL:$MQSSL"
           sh ./ci/run-ci-tests.sh
