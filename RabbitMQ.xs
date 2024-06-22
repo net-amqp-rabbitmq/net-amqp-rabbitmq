@@ -17,10 +17,10 @@
 #  define MUTABLE_HV(p) ((HV*)MUTABLE_PTR(p))
 #endif
 
-#include "amqp.h"
+#include "rabbitmq-c/amqp.h"
 #include "amqp_socket.h"
-#include "amqp_tcp_socket.h"
-#include "amqp_ssl_socket.h"
+#include "rabbitmq-c/tcp_socket.h"
+#include "rabbitmq-c/ssl_socket.h"
 /* For struct timeval */
 #include "amqp_time.h"
 
@@ -1192,10 +1192,11 @@ net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
     }
 
     if ( ssl ) {
+        __DEBUG__(warn("!!! SSL ENABLED !!!\n"));
 #ifndef NAR_HAVE_OPENSSL
         Perl_croak(aTHX_ "no ssl support, please install openssl and reinstall");
 #endif
-        if (!hv_exists(SvRV(options), "port", 4)) {
+        if (!hv_exists(options, "port", 4)) {
           port = 5671;
         }
         amqp_set_initialize_ssl_library( (amqp_boolean_t)ssl_init );
@@ -1219,6 +1220,8 @@ net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
         }
     }
     else {
+        __DEBUG__(
+          warn("!!! SSL DISABLED !!!\n"));
         sock = amqp_tcp_socket_new(conn);
         if (!sock) {
           Perl_croak(aTHX_ "error creating TCP socket");

@@ -26,8 +26,14 @@ my $has_htonll = check_lib(
 my @defines = ('-DHAVE_SOCKET', '-DHAVE_POLL', qq/-DAMQ_PLATFORM='"Perl_$^O_$^V"'/);
 push @defines, '-DHAVE_HTONLL' if $has_htonll;
 
-my @libs = ('-lrt');
-my @inc = ('-I.', '-Irabbitmq-include');
+my $OPTIMIZED_BUILD=$ENV{'OPTIMIZE'};
+if (($ARGV[-1] || 'NOPE') eq 'DEBUG') {
+  push @defines, '-DDEBUG -ggdb3';
+  $OPTIMIZED_BUILD = " ";
+}
+
+my @libs = ();
+my @inc = ('-I.', '-Irabbitmq-include', '-Irabbitmq-c/include');
 
 my %checklib_extra_options;
 if ( $^O eq 'darwin') {
@@ -79,7 +85,7 @@ my %WriteMakefileArgs = (
     ABSTRACT_FROM   => 'RabbitMQ.pm',
     AUTHOR          => 'Mark Ellis <markellis@cpan.org>, Michael Stemle, Jr. <mstemle@cpan.org>',
     OBJECT          => "RabbitMQ.o ${ofiles}",
-    OPTIMIZE        => $ENV{'OPTIMIZE'},
+    OPTIMIZE        => $OPTIMIZED_BUILD,
     DEFINE          => join( ' ', @defines ),
     LIBS            => join( ' ', @libs ),
     INC             => join( ' ', @inc ),
