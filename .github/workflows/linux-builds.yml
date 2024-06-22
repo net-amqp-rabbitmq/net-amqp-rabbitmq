@@ -21,11 +21,13 @@ jobs:
   linux-tests:
     name: "Perl v${{ matrix.perl-version }}"
     runs-on: ubuntu-latest
+    needs:
+      - perl-versions
 
     strategy:
       fail-fast: false
       matrix:
-        perl-versions: ${{ fromJson (needs.perl-versions.outputs.perl-versions) }}
+        perl-versions: ${{ needs.perl-versions.outputs.perl-versions }}
 
     container:
       image: perldocker/perl-tester:${{ matrix.perl-version }}
