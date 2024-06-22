@@ -45,6 +45,11 @@ jobs:
           sudo: false
           args: "--with-test"
 
+      - name: Prep the C module
+        run: |
+          cd rabbitmq-c
+          cmake .
+
       - name: Run CI tests
         run: sh ./ci/run-ci-tests.sh
         env:
