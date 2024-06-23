@@ -3,14 +3,11 @@
 
 # NOTICE
 
-This module is presently in a difficult-to-maintain state, and caution should be used in using it.
+This module has been in a pretty rough state of repair for a few years. I've been slowly cleaning it up and working on it as time allows.
+With version `2.40011`, I feel like we may be in pretty good shape. OpenSSL v3 is supported now, and `rabbitmq-c` is updated to `v0.14.0`.
 
-- The OpenSSL version used by the `librabbitmq-c` library is end-of-life
-- The code duplication in this module makes it very difficult to keep up with C library updates
-
-There is a [GitHub Discussion here regarding paths forward](https://github.com/net-amqp-rabbitmq/net-amqp-rabbitmq/discussions/241), and if you use this module then your input is requested.
-
-It is important that if you use this module, that you mitigate these risks to your satisfaction, or to that of your organization.
+> [!IMPORTANT]
+> I could really use a hand with peer review on some of this cleanup. If you, or someone you know, is excited about security and is competent to review C code, [please see this GitHub Discussion](https://github.com/net-amqp-rabbitmq/net-amqp-rabbitmq/discussions/247#discussion-6849541). Thank you.
 
 # Install
 
