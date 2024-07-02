@@ -55,6 +55,9 @@ sub new {
   }
   my $admin_protocol = $ENV{MQADMINPROTOCOL} || "https";
   my $admin_port     = $ENV{MQADMINPORT}     || "443";
+  my $admin_cacert   = exists $ENV{MQADMINCACERT} ? $ENV{MQADMINCACERT} : undef;
+  $username = $ENV{MQADMINUSERNAME} if exists $ENV{MQADMINUSERNAME};
+  $password = $ENV{MQADMINPASSWORD} if exists $ENV{MQADMINPASSWORD};
 
   if ( !defined $host || !defined $username ) {
     die
@@ -88,6 +91,7 @@ sub new {
     declared_exchanges => [],
     declared_queues    => [],
     admin_api_url      => $admin_api_url,
+    admin_api_cacert   => $admin_cacert,
     %options,
   };
   if ( $ENV{NARDEBUG} ) {

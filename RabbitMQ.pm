@@ -710,6 +710,10 @@ Protocol to use for accessing the admin. Defaults to https
 
 Port to use for accessing the admin interface. Defaults to 443
 
+=item MQADMINCACERT
+
+CA certificate to use for the admin port. There is no default.
+
 =back
 
 =head1 VERSION COMPATIBILITY
