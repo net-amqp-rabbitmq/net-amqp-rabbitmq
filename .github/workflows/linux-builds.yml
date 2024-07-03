@@ -66,6 +66,7 @@ jobs:
       - name: Prep SSL
         run: |
           echo "${{secrets.MQSSLCACERT}}" > "${{env.MQSSLCACERT}}"
+          ls -altr
 
       - name: Check out code (w/submodules)
         uses: actions/checkout@main
