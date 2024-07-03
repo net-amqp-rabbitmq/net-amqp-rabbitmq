@@ -21,7 +21,8 @@ on:
 env:
   COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
   MQSSL: ${{ vars.MQSSL }}
-  MQSSLCACERT: ${{ vars.MQSSLCACERT }}
+  MQSSLCACERT: ../cacert.pem
+  MQADMINCACERT: ../cacert.pem
   MQSSLHOST: ${{ secrets.MQSSLHOST }}
   MQSSLUSERNAME: ${{ secrets.MQSSLUSERNAME }}
   MQSSLPASSWORD: ${{ secrets.MQSSLPASSWORD }}
@@ -30,7 +31,7 @@ env:
   MQHOST: ${{ secrets.MQSSLHOST }}
   MQUSERNAME: ${{ secrets.MQSSLUSERNAME }}
   MQPASSWORD: ${{ secrets.MQSSLPASSWORD }}
-  MQPORT: 5672
+  MQPORT: ${{ secrets.MQSSLPORT
   MQVHOST: ${{ secrets.MQSSLVHOST }}
 
 jobs:
@@ -61,6 +62,10 @@ jobs:
       image: perldocker/perl-tester:${{ matrix.perl-version }}
 
     steps:
+
+      - name: Prep SSL
+        run: |
+          echo "${secrets.MQSSLCACERT}" > ./cacert.pem
 
       - name: Check out code (w/submodules)
         uses: actions/checkout@main

@@ -53,11 +53,14 @@ sub new {
     $vhost    = $ENV{MQVHOST}    if exists $ENV{MQVHOST};
     $port     = exists $ENV{MQPORT} ? $ENV{MQPORT} : undef;
   }
-  my $admin_protocol = $ENV{MQADMINPROTOCOL} || "https";
-  my $admin_port     = $ENV{MQADMINPORT}     || "443";
-  my $admin_cacert   = exists $ENV{MQADMINCACERT} ? $ENV{MQADMINCACERT} : undef;
-  $username = $ENV{MQADMINUSERNAME} if exists $ENV{MQADMINUSERNAME};
-  $password = $ENV{MQADMINPASSWORD} if exists $ENV{MQADMINPASSWORD};
+
+  # For admin site
+  my $admin_protocol = $ENV{MQADMINPROTOCOL} // "https";
+  my $admin_port     = $ENV{MQADMINPORT}     // "443";
+  my $admin_cacert   = $ENV{MQADMINCACERT}   // undef;
+  my $admin_host     = $ENV{MQADMINHOST}     // $host;
+  my $admin_username = $ENV{MQADMINUSERNAME} // $username;
+  my $admin_password = $ENV{MQADMINPASSWORD} // $password;
 
   if ( !defined $host || !defined $username ) {
     die
@@ -68,7 +71,7 @@ sub new {
   my $uri_encoded_vhost = $vhost;
   $uri_encoded_vhost =~ s|/|%2F|g;
   my $admin_api_url =
-"$admin_protocol://$username:$password\@$host:$admin_port/api/exchanges/$uri_encoded_vhost";
+"$admin_protocol://$admin_username:$admin_password\@$admin_host:$admin_port/api/exchanges/$uri_encoded_vhost";
 
   my $self = {
     unique             => $unique,
