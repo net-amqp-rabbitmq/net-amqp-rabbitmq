@@ -1,9 +1,16 @@
 use strict;
 use warnings;
 
+
 use Net::AMQP::RabbitMQ;
 use Test::More tests => 9;
 use Sys::Hostname;
+
+use FindBin qw/$Bin/;
+use lib "$Bin/../t/lib";
+use NAR::Helper;
+
+my $helper = NAR::Helper->new;
 
 my $unique   = hostname . "-$^O-$^V";    #hostname-os-perlversion
 my $exchange = "nr_test_x-$unique";
@@ -14,17 +21,8 @@ diag "this test is slow, and probably only works on linux";
 
 use_ok('Net::AMQP::RabbitMQ');
 
-my $mq = Net::AMQP::RabbitMQ->new();
-ok($mq);
-
-my $uname = $ENV{'MQUSERNAME'} || 'guest';
-my $pword = $ENV{'MQPASSWORD'} || 'guest';
-my $vhost = $ENV{'MQVHOST'}    || '/';
-eval {
-  $mq->connect( $host,
-    { user => $uname, password => $pword, vhost => $vhost } );
-};
-is( $@, '', "connect" );
+ok $helper->connect, "connected";
+my $mq = $helper->mq;
 eval { $mq->channel_open(1); };
 is( $@, '', "channel_open" );
 my $queuename = '';
