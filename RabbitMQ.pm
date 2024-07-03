@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '2.40011';
+our $VERSION = '2.40012';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -94,13 +94,10 @@ C<$options> is an optional hash respecting the following keys:
         ssl             => 1 | 0,        #default 0
         ssl_verify_host => 1 | 0,        #default 1
         ssl_cacert      => $caert_path,  #needed for ssl
-        ssl_init        => 1 | 0,        #default 1, initialise the openssl library
         
         ssl_cert        => $cert_path,   #client cert.pem and key.pem when using ssl certificate chains 
         ssl_key         => $key_path     #(with RabbitMQ's fail_if_no_peer_cert = true)
     }
-
-You probably don't want to touch C<ssl_init>, unless you know what it does.
 
 For now there is no option to disable ssl peer checking, meaning to use C<ssl>, C<ssl_cacert> is required.
 
@@ -693,10 +690,6 @@ Path to the certificate file for SSL-enabled connections.
 
 Whether SSL hostname verification should be enabled (defaults to
 true).
-
-=item MQSSLINIT
-
-Whether the openssl library should be initialized (defaults to true).
 
 =item MQSSLVHOST
 

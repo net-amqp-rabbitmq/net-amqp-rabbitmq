@@ -1159,7 +1159,6 @@ net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
     char *ssl_cert = NULL;
     char *ssl_key = NULL;
     int ssl_verify_host = 1;
-    int ssl_init = 1;
     char *sasl_method = "plain";
     amqp_sasl_method_enum sasl_type = AMQP_SASL_METHOD_PLAIN;
     amqp_table_t client_properties_tbl = amqp_empty_table;
@@ -1178,7 +1177,6 @@ net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
     str_from_hv(options, ssl_cert);
     str_from_hv(options, ssl_key);
     int_from_hv(options, ssl_verify_host);
-    int_from_hv(options, ssl_init);
     str_from_hv(options, sasl_method);
 
     if(client_properties)
@@ -1199,7 +1197,6 @@ net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
         if (!hv_exists(options, "port", 4)) {
           port = 5671;
         }
-        amqp_set_initialize_ssl_library( (amqp_boolean_t)ssl_init );
         sock = amqp_ssl_socket_new(conn);
         if ( !sock ) {
           Perl_croak(aTHX_ "error creating SSL socket");
