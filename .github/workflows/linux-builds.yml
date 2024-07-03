@@ -65,7 +65,7 @@ jobs:
 
       - name: Prep SSL
         run: |
-          echo "${secrets.MQSSLCACERT}" > ./cacert.pem
+          echo "${{secrets.MQSSLCACERT}}" > ./cacert.pem
 
       - name: Check out code (w/submodules)
         uses: actions/checkout@main
