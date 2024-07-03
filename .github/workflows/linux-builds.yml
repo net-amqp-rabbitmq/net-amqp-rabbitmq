@@ -62,12 +62,6 @@ jobs:
       image: perldocker/perl-tester:${{ matrix.perl-version }}
 
     steps:
-
-      - name: Prep SSL
-        run: |
-          echo "${{secrets.MQSSLCACERT}}" > "${{env.MQSSLCACERT}}"
-          ls -altr
-
       - name: Check out code (w/submodules)
         uses: actions/checkout@main
         with:
@@ -82,6 +76,7 @@ jobs:
 
       - name: Run CI tests
         run: |
+          echo "${{secrets.MQSSLCACERT}}" > "${{env.MQSSLCACERT}}"
           sh ./ci/run-ci-tests.sh
         env:
           IS_OSX: false
