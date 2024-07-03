@@ -63,7 +63,7 @@ sub new {
   my $admin_password = $ENV{MQADMINPASSWORD} // $password;
 
   if ( !defined $host || !defined $username ) {
-    die
+    warn
 'No host or user defined. Please see the https://metacpan.org/pod/Net::AMQP::RabbitMQ#RUNNING-THE-TEST-SUITE for more information.';
   }
 
@@ -105,6 +105,20 @@ sub new {
   bless $self, $class;
 
   $self;
+}
+
+sub plan {
+  my ( $self, $test_count ) = @_;
+
+  my $should_skip = ( !$self->{host} || !$self->{username} );
+
+  if ($should_skip) {
+    Test::More::plan skip_all =>
+'No host or user defined. Please see the https://metacpan.org/pod/Net::AMQP::RabbitMQ#RUNNING-THE-TEST-SUITE for more information.';
+  }
+  else {
+    Test::More::plan tests => $test_count;
+  }
 }
 
 sub mq {

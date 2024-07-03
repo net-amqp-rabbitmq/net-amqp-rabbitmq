@@ -2,23 +2,20 @@ use strict;
 use warnings;
 
 use Net::AMQP::RabbitMQ;
-use Test::More tests => 9;
+use Test::More;
 use Sys::Hostname;
 use FindBin qw/$Bin/;
 use lib "$Bin/../t/lib";
 use NAR::Helper;
 
 my $helper = NAR::Helper->new;
+$helper->plan(9);
 
 my $unique   = hostname . "-$^O-$^V";    #hostname-os-perlversion
 my $exchange = "nr_test_x-$unique";
 my $routekey = "nr_test_q-$unique";
 
-my $host = $ENV{'MQHOST'} || die "you must set MQHOST to run this test";
 diag "this test is slow, and probably only works on linux";
-
-use_ok('Net::AMQP::RabbitMQ');
-
 use_ok('Net::AMQP::RabbitMQ');
 
 ok $helper->connect, "connected";

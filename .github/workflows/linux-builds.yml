@@ -80,5 +80,4 @@ jobs:
           sh ./ci/run-ci-tests.sh
         env:
           IS_OSX: false
-          # NARDEBUG: 1
           PERL_VERSION: ${{ matrix.perl-version }}

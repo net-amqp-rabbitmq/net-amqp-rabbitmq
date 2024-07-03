@@ -16,7 +16,7 @@ if ( !$has_lwp ) {
   plan skip_all => 'LWP::UserAgent not available';
 }
 else {
-  plan tests => 12;
+  $helper->plan(12);
 }
 
 ok $helper->connect,      "connected";
