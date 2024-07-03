@@ -21,8 +21,8 @@ on:
 env:
   COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
   MQSSL: ${{ vars.MQSSL }}
-  MQSSLCACERT: ./cacert.pem
-  MQADMINCACERT: ./cacert.pem
+  MQSSLCACERT: ${{github.workspace}}/cacert.pem
+  MQADMINCACERT: ${{github.workspace}}/cacert.pem
   MQSSLHOST: ${{ secrets.MQSSLHOST }}
   MQSSLUSERNAME: ${{ secrets.MQSSLUSERNAME }}
   MQSSLPASSWORD: ${{ secrets.MQSSLPASSWORD }}
@@ -65,7 +65,7 @@ jobs:
 
       - name: Prep SSL
         run: |
-          echo "${{secrets.MQSSLCACERT}}" > ./cacert.pem
+          echo "${{secrets.MQSSLCACERT}}" > "${{env.MQSSLCACERT}}"
 
       - name: Check out code (w/submodules)
         uses: actions/checkout@main
