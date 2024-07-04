@@ -9,7 +9,7 @@ use lib "$Bin/../t/lib";
 use NAR::Helper;
 
 my $helper = NAR::Helper->new;
-$helper->plan(9);
+$helper->plan(8);
 
 my $unique   = hostname . "-$^O-$^V";    #hostname-os-perlversion
 my $exchange = "nr_test_x-$unique";
