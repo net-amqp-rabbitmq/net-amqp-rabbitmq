@@ -38,13 +38,19 @@ git submodule init
 git submodule update
 ```
 
+This module uses [Carton](https://metacpan.org/pod/Carton) for Perl dependencies. Please first install Carton, and then install Perl dependencies using:
+
+```sh
+carton install
+```
+
 When running your own tests, for quick access to a testing RabbitMQ service, consider [CloudAMQP](https://cloudamqp.com).
 
 There are a few convenience scripts to help you out:
 
 - `local-tests-no-ssl` - Convenience script to run tests on a local network without SSL at all.
 - `run-one-test` - This script helps you quickly run a single test while working on this project.
-- `ci/run-ci-tests.sh` - This script is what we run in GitHub Actions, it'll help you run the full suite.
+- `ci/run-ci-tests.sh` - This script is what we run in GitHub Actions, it'll help you run the full suite. This script will likely only run on GNU/Linux, and depending on your RabbitMQ server's capacity it could take in excess of two hours to run completely.
 
 # To build a release
 

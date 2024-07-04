@@ -53,11 +53,17 @@ sub new {
     $vhost    = $ENV{MQVHOST}    if exists $ENV{MQVHOST};
     $port     = exists $ENV{MQPORT} ? $ENV{MQPORT} : undef;
   }
-  my $admin_protocol = $ENV{MQADMINPROTOCOL} || "https";
-  my $admin_port     = $ENV{MQADMINPORT}     || "443";
+
+  # For admin site
+  my $admin_protocol = $ENV{MQADMINPROTOCOL} // "https";
+  my $admin_port     = $ENV{MQADMINPORT}     // "443";
+  my $admin_cacert   = $ENV{MQADMINCACERT}   // undef;
+  my $admin_host     = $ENV{MQADMINHOST}     // $host;
+  my $admin_username = $ENV{MQADMINUSERNAME} // $username;
+  my $admin_password = $ENV{MQADMINPASSWORD} // $password;
 
   if ( !defined $host || !defined $username ) {
-    die
+    warn
 'No host or user defined. Please see the https://metacpan.org/pod/Net::AMQP::RabbitMQ#RUNNING-THE-TEST-SUITE for more information.';
   }
 
@@ -65,7 +71,7 @@ sub new {
   my $uri_encoded_vhost = $vhost;
   $uri_encoded_vhost =~ s|/|%2F|g;
   my $admin_api_url =
-"$admin_protocol://$username:$password\@$host:$admin_port/api/exchanges/$uri_encoded_vhost";
+"$admin_protocol://$admin_username:$admin_password\@$admin_host:$admin_port/api/exchanges/$uri_encoded_vhost";
 
   my $self = {
     unique             => $unique,
@@ -88,6 +94,7 @@ sub new {
     declared_exchanges => [],
     declared_queues    => [],
     admin_api_url      => $admin_api_url,
+    admin_api_cacert   => $admin_cacert,
     %options,
   };
   if ( $ENV{NARDEBUG} ) {
@@ -98,6 +105,20 @@ sub new {
   bless $self, $class;
 
   $self;
+}
+
+sub plan {
+  my ( $self, $test_count ) = @_;
+
+  my $should_skip = ( !$self->{host} || !$self->{username} );
+
+  if ($should_skip) {
+    Test::More::plan skip_all =>
+'No host or user defined. Please see the https://metacpan.org/pod/Net::AMQP::RabbitMQ#RUNNING-THE-TEST-SUITE for more information.';
+  }
+  else {
+    Test::More::plan tests => $test_count;
+  }
 }
 
 sub mq {

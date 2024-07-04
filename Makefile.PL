@@ -5,6 +5,9 @@ use utf8;
 
 use ExtUtils::MakeMaker;
 use Config;
+
+use FindBin qw/$Bin/;
+use lib "$Bin/inc";
 use Devel::CheckLib;
 
 # This will help make the library compile on OSX

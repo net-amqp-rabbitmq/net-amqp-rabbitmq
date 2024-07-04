@@ -1,4 +1,4 @@
-use Test::More tests => 7;
+use Test::More;
 use strict;
 use warnings;
 
@@ -7,6 +7,7 @@ use lib "$Bin/lib";
 use NAR::Helper;
 
 my $helper = NAR::Helper->new;
+$helper->plan(7);
 
 ok $helper->connect, "connected";
 
@@ -18,6 +19,6 @@ is $server_properties->{'product'}, 'RabbitMQ', 'product is RabbitMQ';
 
 # Now verify client properties
 my $client_properties = $helper->get_client_properties;
-ok $client_properties, "get_client_properties";
+ok $client_properties,                      "get_client_properties";
 ok exists( $client_properties->{product} ), 'product should be returned';
 is $client_properties->{'product'}, 'rabbitmq-c', 'product is rabbitmq-c';

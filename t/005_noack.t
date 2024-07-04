@@ -1,4 +1,4 @@
-use Test::More tests => 15;
+use Test::More;
 use strict;
 use warnings;
 
@@ -7,53 +7,54 @@ use lib "$Bin/lib";
 use NAR::Helper;
 
 my $helper = NAR::Helper->new;
+$helper->plan(15);
 
-ok $helper->connect, "connected";
+ok $helper->connect,      "connected";
 ok $helper->channel_open, "channel_open";
 
 ok $helper->exchange_declare, "default exchange declare";
-ok $helper->queue_declare, "queue declare";
-ok $helper->queue_bind, "queue bind";
-ok $helper->drain, "drain queue";
+ok $helper->queue_declare,    "queue declare";
+ok $helper->queue_bind,       "queue bind";
+ok $helper->drain,            "drain queue";
 
-ok $helper->publish( "Magic Payload $$" ), "publish";
-ok $helper->consume( undef, 0 ), "consuming";
+ok $helper->publish("Magic Payload $$"), "publish";
+ok $helper->consume( undef, 0 ),         "consuming";
 my $payload = $helper->recv;
 is_deeply(
-    $payload,
-    {
-        body         => "Magic Payload $$",
-        channel      => 1,
-        routing_key  => $helper->{routekey},
-        delivery_tag => 1,
-        redelivered  => 0,
-        exchange     => $helper->{exchange},
-        consumer_tag => $helper->{consumer_tag},
-        props        => {},
-    },
-    "payload recived correctly"
+  $payload,
+  {
+    body         => "Magic Payload $$",
+    channel      => 1,
+    routing_key  => $helper->{routekey},
+    delivery_tag => 1,
+    redelivered  => 0,
+    exchange     => $helper->{exchange},
+    consumer_tag => $helper->{consumer_tag},
+    props        => {},
+  },
+  "payload recived correctly"
 );
 
 ok $helper->disconnect, "disconnect";
 
-ok $helper->connect, "connected";
-ok $helper->channel_open, "channel_open";
+ok $helper->connect,             "connected";
+ok $helper->channel_open,        "channel_open";
 ok $helper->consume( undef, 0 ), "consuming";
 
 my $payload2 = $helper->recv;
-my $ack_tag = $payload2->{delivery_tag};
+my $ack_tag  = $payload2->{delivery_tag};
 is_deeply(
-    $payload2,
-    {
-        body         => "Magic Payload $$",
-        channel      => 1,
-        routing_key  => $helper->{routekey},
-        delivery_tag => 1,
-        redelivered  => 1,
-        exchange     => $helper->{exchange},
-        consumer_tag => $helper->{consumer_tag},
-        props        => {},
-    },
-    "payload"
+  $payload2,
+  {
+    body         => "Magic Payload $$",
+    channel      => 1,
+    routing_key  => $helper->{routekey},
+    delivery_tag => 1,
+    redelivered  => 1,
+    exchange     => $helper->{exchange},
+    consumer_tag => $helper->{consumer_tag},
+    props        => {},
+  },
+  "payload"
 );
-ok $helper->ack( $ack_tag ), "ack";
+ok $helper->ack($ack_tag), "ack";

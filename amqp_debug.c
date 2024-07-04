@@ -4,7 +4,7 @@
 
 #include <ctype.h>
 
-#include <amqp.h>
+#include <rabbitmq-c/amqp.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <errno.h>

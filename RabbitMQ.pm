@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '2.40011';
+our $VERSION = '2.40012';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -94,13 +94,10 @@ C<$options> is an optional hash respecting the following keys:
         ssl             => 1 | 0,        #default 0
         ssl_verify_host => 1 | 0,        #default 1
         ssl_cacert      => $caert_path,  #needed for ssl
-        ssl_init        => 1 | 0,        #default 1, initialise the openssl library
         
         ssl_cert        => $cert_path,   #client cert.pem and key.pem when using ssl certificate chains 
         ssl_key         => $key_path     #(with RabbitMQ's fail_if_no_peer_cert = true)
     }
-
-You probably don't want to touch C<ssl_init>, unless you know what it does.
 
 For now there is no option to disable ssl peer checking, meaning to use C<ssl>, C<ssl_cacert> is required.
 
@@ -629,10 +626,20 @@ calls are made.
 
 =head1 RUNNING THE TEST SUITE
 
-When working on this module, we run tests against a RabbitMQ server at
-C<https://www.cloudamqp.com/>. You can create your own free instance to use with testing.
+This module is tested with private RabbitMQ services, and for security and
+compliance reasons it is no longer possible to expose this to the public.
 
-There are separate variables for the ssl and none ssl host/user/password/port.
+You can create your own free instance to use with testing at
+L<https://www.cloudamqp.com/>.
+
+There are separate variables for the ssl and none ssl host/user/password/port,
+as well as the admin capabilities. In order to run the full test suite, you
+must have the management module enabled.
+
+B<NOTE ON TESTS:> The full set of tests (especially the C<xt> tests) can take
+quite some time, and may only work on GNU/Linux environments. By "quite some
+time," I mean that they may take more than two hours depending on your RMQ
+server's capacity.
 
 These are the environment variables which control test behavior:
 
@@ -694,10 +701,6 @@ Path to the certificate file for SSL-enabled connections.
 Whether SSL hostname verification should be enabled (defaults to
 true).
 
-=item MQSSLINIT
-
-Whether the openssl library should be initialized (defaults to true).
-
 =item MQSSLVHOST
 
 Vhost to use when in SSL mode.
@@ -709,6 +712,10 @@ Protocol to use for accessing the admin. Defaults to https
 =item MQADMINPORT
 
 Port to use for accessing the admin interface. Defaults to 443
+
+=item MQADMINCACERT
+
+CA certificate to use for the admin port. There is no default.
 
 =back
 
@@ -750,10 +757,6 @@ Karen Etheridge E<lt>ether@cpan.orgE<gt>
 Eric Brine E<lt>ikegami@cpan.orgE<gt>
 
 Peter Valdemar Mørch E<lt>pmorch@cpan.orgE<gt>
-
-=head1 THANKS
-
-Special thanks to L<https://www.cloudamqp.com> for providing us with the RabbitMQ server the tests run against.
 
 =head1 LICENSE
 
