@@ -38,6 +38,12 @@ git submodule init
 git submodule update
 ```
 
+This module uses [Carton](https://metacpan.org/pod/Carton) for Perl dependencies. Please first install Carton, and then install Perl dependencies using:
+
+```sh
+carton install
+```
+
 When running your own tests, for quick access to a testing RabbitMQ service, consider [CloudAMQP](https://cloudamqp.com).
 
 There are a few convenience scripts to help you out:
