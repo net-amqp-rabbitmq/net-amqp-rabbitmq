@@ -1,5 +1,12 @@
 Revision history for perl module Net::AMQP::RabbitMQ
 
+2.40012 - 2024-07-03
+    - Updated to remove deprecated ssl_init functionality
+    - Updated all tests to make them skip tests which use RMQ when RMQ isn't available
+    - Lots of formatting changes
+    - Updated documentation to reflect new test-specific env vars
+    - Updated GitHub Actions to use latest RMQ service
+
 2.40011 - 2024-06-22
     - Updated `ppport.h`
     - Fixed a problem where the SSL port defaulted to 5672 incorrectly.
