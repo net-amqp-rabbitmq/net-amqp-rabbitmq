@@ -6,6 +6,7 @@ Revision history for perl module Net::AMQP::RabbitMQ
     - Lots of formatting changes
     - Updated documentation to reflect new test-specific env vars
     - Updated GitHub Actions to use latest RMQ service
+    - Added a test for the purge function.
 
 2.40011 - 2024-06-22
     - Updated `ppport.h`
