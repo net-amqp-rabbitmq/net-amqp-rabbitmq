@@ -29,7 +29,10 @@
 
 extern void dump_table(amqp_table_t table);
 
-/* perl Makefile.PL; make CCFLAGS=-DDEBUG */
+/**
+ * Wrap a statement in a debug conditional
+ * To use, `perl Makefile.PL DEBUG` and then remake.
+ **/
 #if DEBUG
  #define __DEBUG__(X)  X
  extern void dump_table(amqp_table_t table);
@@ -39,6 +42,7 @@ extern void dump_table(amqp_table_t table);
 
 typedef amqp_connection_state_t Net__AMQP__RabbitMQ;
 
+// TODO: Do we still need this?
 #define AMQP_STATUS_UNKNOWN_TYPE 0x500
 
 #ifdef USE_LONG_DOUBLE
@@ -94,14 +98,24 @@ static void maybe_release_buffers(amqp_connection_state_t state) {
   }
 }
 
+// Extract an int from an HV
 #define int_from_hv(hv,name) \
  do { SV **v; if(NULL != (v = hv_fetchs(hv, #name, 0))) name = SvIV(*v); } while(0)
+
+// Extract a double from an HV 
 #define double_from_hv(hv,name) \
  do { SV **v; if(NULL != (v = hv_fetchs(hv, #name, 0))) name = SvNV(*v); } while(0)
+
+// Extract a C string from an HV
+// (Sec?)
 #define str_from_hv(hv,name) \
  do { SV **v; if(NULL != (v = hv_fetchs(hv, #name, 0))) name = SvPV_nolen(*v); } while(0)
+
+// Determine whether or not theres a valid connection 
 #define has_valid_connection(conn) \
  ( amqp_get_socket( conn ) != NULL && amqp_get_sockfd( conn ) > -1 )
+ 
+// Asset that the connection is valid prior to performing an action which requires it 
 #define assert_amqp_connected(conn) \
  do { \
   if ( ! has_valid_connection(conn) ) { \
@@ -109,11 +123,19 @@ static void maybe_release_buffers(amqp_connection_state_t state) {
   } \
  } while(0)
 
+// Convert an HV to an AMQP table
 void hash_to_amqp_table(HV *hash, amqp_table_t *table, short force_utf8);
+
+// Convert an AV to an AMQP array
 void array_to_amqp_array(AV *perl_array, amqp_array_t *mq_array, short force_utf8);
+
+// Convert an AMQP array to an arrayref
 SV*  mq_array_to_arrayref(amqp_array_t *array);
+
+// Convert an AMQP table to a hashref
 SV*  mq_table_to_hashref(amqp_table_t *table);
 
+// Slightly less-than-gracefully exit due to an error condition
 void die_on_error(pTHX_ int x, amqp_connection_state_t conn, char const *context) {
   /* Handle socket errors */
   if ( x == AMQP_STATUS_CONNECTION_CLOSED || x == AMQP_STATUS_SOCKET_ERROR ) {
