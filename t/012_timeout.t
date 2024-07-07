@@ -27,4 +27,5 @@ ok !$helper->connect( undef, $timeout ), "not connected";
 my $duration = tv_interval($start);
 
 # 500ms tolerance should work with most operating systems
+# TODO: Solaris sometimes is an exception to this test
 cmp_ok( abs( $duration - $timeout ), '<', 0.5, 'timeout' );
