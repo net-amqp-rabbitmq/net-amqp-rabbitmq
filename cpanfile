@@ -1,7 +1,8 @@
-requires 'ExtUtils::PkgConfig' => '1.16';
+requires 'ExtUtils::PkgConfig' => '0';
 requires 'Math::Int64'         => '0';
 
 on 'test' => sub {
+  requires 'Net::SSLeay'              => '0';
   requires 'B::Debug'                        => '0';
   requires 'Devel::CheckLib'                 => '0';
   requires 'Devel::Cover'                    => '0';
