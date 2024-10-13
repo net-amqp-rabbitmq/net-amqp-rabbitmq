@@ -31,6 +31,7 @@ push @defines, '-DHAVE_HTONLL' if $has_htonll;
 
 my $OPTIMIZED_BUILD = $ENV{'OPTIMIZE'};
 if ( ( $ARGV[-1] || 'NOPE' ) eq 'DEBUG' ) {
+  print "DEBUG ENABLED\n";
   push @defines, '-DDEBUG -ggdb3';
   $OPTIMIZED_BUILD = " ";
 }
@@ -38,10 +39,11 @@ if ( ( $ARGV[-1] || 'NOPE' ) eq 'DEBUG' ) {
 my @libs = ();
 my @inc  = ( '-I.', '-Irabbitmq-include', '-Irabbitmq-c/include' );
 
-my %checklib_extra_options;
+my %checklib_extra_options = ();
 if ( $^O eq 'darwin' ) {
   eval {
     require ExtUtils::PkgConfig;
+
     push @libs, ExtUtils::PkgConfig->libs('openssl');
     push @inc,  ExtUtils::PkgConfig->cflags('openssl');
 
@@ -61,7 +63,7 @@ my $has_openssl = check_lib(
 );
 if ($has_openssl) {
   push @defines, '-DNAR_HAVE_OPENSSL';
-  push @libs, '-lssl', '-lcrypto';
+  push @libs, '-lssl', '-lcrypto' unless $^O eq 'darwin';
   if ( $^O eq 'MSWin32' ) {
     push @inc, "-Irabbitmq-include/win32";
   }
@@ -88,14 +90,13 @@ my %WriteMakefileArgs = (
   VERSION_FROM  => 'RabbitMQ.pm',
   LICENSE       => 'mozilla_1_1',
   ABSTRACT_FROM => 'RabbitMQ.pm',
-  AUTHOR        =>
-    'Mike "manchicken" Stemle <hello@mikestemle.com>',
-  OBJECT    => "RabbitMQ.o ${ofiles}",
-  OPTIMIZE  => $OPTIMIZED_BUILD,
-  DEFINE    => join( ' ', @defines ),
-  LIBS      => join( ' ', @libs ),
-  INC       => join( ' ', @inc ),
-  PREREQ_PM => {
+  AUTHOR        => 'Mike "manchicken" Stemle <hello@mikestemle.com>',
+  OBJECT        => "RabbitMQ.o ${ofiles}",
+  OPTIMIZE      => $OPTIMIZED_BUILD,
+  DEFINE        => join( ' ', @defines ),
+  LIBS          => join( ' ', @libs ),
+  INC           => join( ' ', @inc ),
+  PREREQ_PM     => {
     'Math::Int64'  => '0.34',
     'Scalar::Util' => '0',
     'XSLoader'     => '0',
