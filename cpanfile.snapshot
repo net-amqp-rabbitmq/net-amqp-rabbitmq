@@ -9,10 +9,10 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       Test::More 0
       deprecate 0.03
-  Clone-0.46
-    pathname: G/GA/GARU/Clone-0.46.tar.gz
+  Clone-0.47
+    pathname: A/AT/ATOOMIC/Clone-0.47.tar.gz
     provides:
-      Clone 0.46
+      Clone 0.47
     requirements:
       ExtUtils::MakeMaker 0
   Devel-CheckLib-1.16
@@ -105,12 +105,6 @@ DISTRIBUTIONS
       Encode::Alias 0
       ExtUtils::MakeMaker 0
       perl 5.008
-  ExtUtils-PkgConfig-1.16
-    pathname: X/XA/XAOC/ExtUtils-PkgConfig-1.16.tar.gz
-    provides:
-      ExtUtils::PkgConfig 1.16
-    requirements:
-      ExtUtils::MakeMaker 0
   File-Listing-6.16
     pathname: P/PL/PLICEASE/File-Listing-6.16.tar.gz
     provides:
@@ -180,19 +174,19 @@ DISTRIBUTIONS
       Time::Zone 0
       perl 5.006002
       strict 0
-  HTTP-Message-6.46
-    pathname: O/OA/OALDERS/HTTP-Message-6.46.tar.gz
+  HTTP-Message-7.00
+    pathname: O/OA/OALDERS/HTTP-Message-7.00.tar.gz
     provides:
-      HTTP::Config 6.46
-      HTTP::Headers 6.46
-      HTTP::Headers::Auth 6.46
-      HTTP::Headers::ETag 6.46
-      HTTP::Headers::Util 6.46
-      HTTP::Message 6.46
-      HTTP::Request 6.46
-      HTTP::Request::Common 6.46
-      HTTP::Response 6.46
-      HTTP::Status 6.46
+      HTTP::Config 7.00
+      HTTP::Headers 7.00
+      HTTP::Headers::Auth 7.00
+      HTTP::Headers::ETag 7.00
+      HTTP::Headers::Util 7.00
+      HTTP::Message 7.00
+      HTTP::Request 7.00
+      HTTP::Request::Common 7.00
+      HTTP::Response 7.00
+      HTTP::Status 7.00
     requirements:
       Carp 0
       Clone 0.46
@@ -236,22 +230,21 @@ DISTRIBUTIONS
       Exporter 5.57
       ExtUtils::MakeMaker 0
       perl 5.008
-  IO-Socket-SSL-2.085
-    pathname: S/SU/SULLR/IO-Socket-SSL-2.085.tar.gz
+  IO-Socket-SSL-2.089
+    pathname: S/SU/SULLR/IO-Socket-SSL-2.089.tar.gz
     provides:
-      IO::Socket::SSL 2.085
+      IO::Socket::SSL 2.089
       IO::Socket::SSL::Intercept 2.056
-      IO::Socket::SSL::OCSP_Cache 2.085
-      IO::Socket::SSL::OCSP_Resolver 2.085
+      IO::Socket::SSL::OCSP_Cache 2.089
+      IO::Socket::SSL::OCSP_Resolver 2.089
       IO::Socket::SSL::PublicSuffix undef
-      IO::Socket::SSL::SSL_Context 2.085
-      IO::Socket::SSL::SSL_HANDLE 2.085
-      IO::Socket::SSL::Session_Cache 2.085
-      IO::Socket::SSL::Trace 2.085
+      IO::Socket::SSL::SSL_Context 2.089
+      IO::Socket::SSL::SSL_HANDLE 2.089
+      IO::Socket::SSL::Session_Cache 2.089
+      IO::Socket::SSL::Trace 2.089
       IO::Socket::SSL::Utils 2.015
     requirements:
       ExtUtils::MakeMaker 0
-      Mozilla::CA 0
       Net::SSLeay 1.46
       Scalar::Util 0
   JSON-4.10
@@ -274,6 +267,15 @@ DISTRIBUTIONS
       Scalar::Util 0
       perl 5.006002
       strict 0
+  MIME-Base32-1.303
+    pathname: R/RE/REHSACK/MIME-Base32-1.303.tar.gz
+    provides:
+      MIME::Base32 1.303
+    requirements:
+      Exporter 0
+      ExtUtils::MakeMaker 0
+      perl 5.008001
+      utf8 0
   Math-Int64-0.54
     pathname: S/SA/SALVA/Math-Int64-0.54.tar.gz
     provides:
@@ -302,10 +304,10 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       Text::Template 1.45
-  Mozilla-CA-20240313
-    pathname: L/LW/LWP/Mozilla-CA-20240313.tar.gz
+  Mozilla-CA-20240924
+    pathname: L/LW/LWP/Mozilla-CA-20240924.tar.gz
     provides:
-      Mozilla::CA 20240313
+      Mozilla::CA 20240924
     requirements:
       ExtUtils::MakeMaker 0
   Net-HTTP-6.23
@@ -398,10 +400,10 @@ DISTRIBUTIONS
       TimeDate 1.21
     requirements:
       ExtUtils::MakeMaker 0
-  Try-Tiny-0.31
-    pathname: E/ET/ETHER/Try-Tiny-0.31.tar.gz
+  Try-Tiny-0.32
+    pathname: E/ET/ETHER/Try-Tiny-0.32.tar.gz
     provides:
-      Try::Tiny 0.31
+      Try::Tiny 0.32
     requirements:
       Carp 0
       Exporter 5.57
@@ -410,56 +412,62 @@ DISTRIBUTIONS
       perl 5.006
       strict 0
       warnings 0
-  URI-5.28
-    pathname: O/OA/OALDERS/URI-5.28.tar.gz
+  URI-5.30
+    pathname: O/OA/OALDERS/URI-5.30.tar.gz
     provides:
-      URI 5.28
-      URI::Escape 5.28
-      URI::Heuristic 5.28
-      URI::IRI 5.28
-      URI::QueryParam 5.28
-      URI::Split 5.28
-      URI::URL 5.28
-      URI::WithBase 5.28
-      URI::data 5.28
-      URI::file 5.28
-      URI::file::Base 5.28
-      URI::file::FAT 5.28
-      URI::file::Mac 5.28
-      URI::file::OS2 5.28
-      URI::file::QNX 5.28
-      URI::file::Unix 5.28
-      URI::file::Win32 5.28
-      URI::ftp 5.28
-      URI::geo 5.28
-      URI::gopher 5.28
-      URI::http 5.28
-      URI::https 5.28
-      URI::icap 5.28
-      URI::icaps 5.28
-      URI::ldap 5.28
-      URI::ldapi 5.28
-      URI::ldaps 5.28
-      URI::mailto 5.28
-      URI::mms 5.28
-      URI::news 5.28
-      URI::nntp 5.28
-      URI::nntps 5.28
-      URI::pop 5.28
-      URI::rlogin 5.28
-      URI::rsync 5.28
-      URI::rtsp 5.28
-      URI::rtspu 5.28
-      URI::sftp 5.28
-      URI::sip 5.28
-      URI::sips 5.28
-      URI::snews 5.28
-      URI::ssh 5.28
-      URI::telnet 5.28
-      URI::tn3270 5.28
-      URI::urn 5.28
-      URI::urn::isbn 5.28
-      URI::urn::oid 5.28
+      URI 5.30
+      URI::Escape 5.30
+      URI::Heuristic 5.30
+      URI::IRI 5.30
+      URI::QueryParam 5.30
+      URI::Split 5.30
+      URI::URL 5.30
+      URI::WithBase 5.30
+      URI::data 5.30
+      URI::file 5.30
+      URI::file::Base 5.30
+      URI::file::FAT 5.30
+      URI::file::Mac 5.30
+      URI::file::OS2 5.30
+      URI::file::QNX 5.30
+      URI::file::Unix 5.30
+      URI::file::Win32 5.30
+      URI::ftp 5.30
+      URI::ftpes 5.30
+      URI::ftps 5.30
+      URI::geo 5.30
+      URI::gopher 5.30
+      URI::http 5.30
+      URI::https 5.30
+      URI::icap 5.30
+      URI::icaps 5.30
+      URI::irc 5.30
+      URI::ircs 5.30
+      URI::ldap 5.30
+      URI::ldapi 5.30
+      URI::ldaps 5.30
+      URI::mailto 5.30
+      URI::mms 5.30
+      URI::news 5.30
+      URI::nntp 5.30
+      URI::nntps 5.30
+      URI::otpauth 5.30
+      URI::pop 5.30
+      URI::rlogin 5.30
+      URI::rsync 5.30
+      URI::rtsp 5.30
+      URI::rtspu 5.30
+      URI::scp 5.30
+      URI::sftp 5.30
+      URI::sip 5.30
+      URI::sips 5.30
+      URI::snews 5.30
+      URI::ssh 5.30
+      URI::telnet 5.30
+      URI::tn3270 5.30
+      URI::urn 5.30
+      URI::urn::isbn 5.30
+      URI::urn::oid 5.30
     requirements:
       Carp 0
       Cwd 0
@@ -467,6 +475,7 @@ DISTRIBUTIONS
       Encode 0
       Exporter 5.57
       ExtUtils::MakeMaker 0
+      MIME::Base32 0
       MIME::Base64 2
       Net::Domain 0
       Scalar::Util 0
