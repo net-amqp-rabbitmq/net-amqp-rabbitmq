@@ -1,4 +1,3 @@
-requires 'ExtUtils::PkgConfig' => '1.16';
 requires 'Math::Int64'         => '0';
 
 on 'test' => sub {

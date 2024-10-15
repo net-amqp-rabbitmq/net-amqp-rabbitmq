@@ -1959,7 +1959,7 @@ SV* net_amqp_rabbitmq_get_rpc_timeout(conn)
       output = newHV();
       hv_stores(output, "tv_sec", newSVi64( timeout_tv->tv_sec ));
       hv_stores(output, "tv_usec", newSVi64( timeout_tv->tv_usec ));
-      RETVAL = newRV_noinc( output );
+      RETVAL = newRV_noinc((SV*) output );
     }
   OUTPUT:
     RETVAL
@@ -1988,8 +1988,8 @@ void net_amqp_rabbitmq__set_rpc_timeout(conn, args = NULL)
 
     /* If we are setting the RPC timeout to something other than NULL... */
     else {
-      int_from_hv(SvRV(args), tv_sec);
-      int_from_hv(SvRV(args), tv_usec);
+      int_from_hv((HV*)SvRV(args), tv_sec);
+      int_from_hv((HV*)SvRV(args), tv_usec);
       __DEBUG__( warn("%d set_rpc_timeout: Setting to tv_sec:%d and tv_usec:%d.", __LINE__, tv_sec, tv_usec) );
       /* If we need to allocate the timeout... */
 
