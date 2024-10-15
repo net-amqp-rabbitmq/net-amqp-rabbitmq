@@ -2,7 +2,7 @@ Revision history for perl module Net::AMQP::RabbitMQ
 
 2.40013 - 2024-10-13
     - Added a `Containerfile` to test unstable Debian builds in podman.
-    - Fixed build issues with unstable Debian builds
+    - Fixed gcc-14-related build issues with a number of Linux distributions.
     - Resolved duplicate library warnings in macOS
 
 2.40012 - 2024-07-03

@@ -9,19 +9,19 @@ if [ $? != 0 ]; then
   exit
 fi
 
-$PODMAN build --network=host \
-  --env=MQADMINCACERT \
-  --env=MQADMINUSERNAME \
-  --env=MQADMINPASSWORD\
-  --env=MQADMINPORT \
-  --env=MQSSL \
-  --env=MQSSLCACERT \
-  --env=MQSSLHOST \
-  --env=MQSSLUSERNAME \
-  --env=MQSSLPASSWORD\
-  --env=MQSSLVHOST \
-  --env=MQHOST \
-  --env=MQUSERNAME\
-  --env=MQPASSWORD \
-  --env=MQVHOST \
+$PODMAN build --no-cache --network=host \
+  --env="$MQADMINCACERT" \
+  --env="$MQADMINUSERNAME" \
+  --env="$MQADMINPASSWORD" \
+  --env="$MQADMINPORT" \
+  --env="$MQSSL" \
+  --env="$MQSSLCACERT" \
+  --env="$MQSSLHOST" \
+  --env="$MQSSLUSERNAME" \
+  --env="$MQSSLPASSWORD" \
+  --env="$MQSSLVHOST" \
+  --env="$MQHOST" \
+  --env="$MQUSERNAME" \
+  --env="$MQPASSWORD" \
+  --env="$MQVHOST" \
   .

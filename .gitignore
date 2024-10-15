@@ -23,4 +23,3 @@ local
 .vstags
 .vscode
 compile_commands.json
-Containerfile
