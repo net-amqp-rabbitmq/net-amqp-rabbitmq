@@ -2018,6 +2018,105 @@ net_amqp_rabbitmq_basic_qos(conn, channel, args = NULL)
                    prefetch_size, prefetch_count, global);
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Basic QoS");
 
+void
+net_amqp_rabbitmq_confirm_select(conn, channel)
+  Net::AMQP::RabbitMQ conn
+  int channel
+  CODE:
+    amqp_confirm_select(conn, channel);
+    die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn),
+                      conn,
+                      "Confirm Select");
+
+SV* net_amqp_rabbitmq_publisher_confirm_wait(conn, timeout)
+  Net::AMQP::RabbitMQ conn
+  int timeout
+
+  PREINIT:
+
+    HV *output = (HV*)NULL;
+    struct timeval timeout_tv = {0,0};
+    amqp_publisher_confirm_t result;
+    amqp_rpc_reply_t ret;
+
+  CODE:
+
+    if (timeout > 0) {
+      timeout_tv.tv_sec = timeout / 1000;
+      timeout_tv.tv_usec = (timeout % 1000) * 1000;
+    } else if (timeout < 0) {
+      timeout_tv.tv_sec = 0;
+      timeout_tv.tv_usec = 0;
+    }
+    ret = amqp_publisher_confirm_wait(
+            conn,
+            timeout ? &timeout_tv : (struct timeval*)NULL,
+            &result
+          );
+
+    // This condition is for when there's no method received in
+    // the allotted time.
+    if (AMQP_RESPONSE_LIBRARY_EXCEPTION == ret.reply_type &&
+        AMQP_STATUS_TIMEOUT == ret.library_error) {
+      XSRETURN_UNDEF;
+    } else {
+      die_on_amqp_error(aTHX_ ret, conn, "Publisher Confirm Wait");
+    }
+
+    // Allocate our output hash
+    output = (HV*)newHV();
+    hv_stores(output, "channel", newSViv(result.channel));
+    switch (result.method) {
+      case AMQP_BASIC_ACK_METHOD:
+        __DEBUG__(warn("AMQP_BASIC_ACK_METHOD received (%ld).", result.payload.ack.delivery_tag));
+        hv_stores(output,
+                  "method",
+                  newSVpvs("basic.ack"));
+        hv_stores(output,
+                  "delivery_tag",
+                  newSVu64(result.payload.ack.delivery_tag));
+        hv_stores(output,
+                  "multiple",
+                  newSViv(result.payload.ack.multiple));
+        break;
+
+      case AMQP_BASIC_NACK_METHOD:
+        __DEBUG__(warn("AMQP_BASIC_NACK_METHOD received (%ld).", result.payload.nack.delivery_tag));
+        hv_stores(output,
+                  "method",
+                  newSVpvs("basic.nack"));
+        hv_stores(output,
+                  "delivery_tag",
+                  newSVu64(result.payload.nack.delivery_tag));
+        hv_stores(output,
+                  "multiple",
+                  newSViv(result.payload.nack.multiple));
+        hv_stores(output,
+                  "requeue",
+                  newSViv(result.payload.nack.requeue));
+        break;
+
+      case AMQP_BASIC_REJECT_METHOD:
+        __DEBUG__(warn("AMQP_BASIC_REJECT_METHOD received (%ld).", result.payload.reject.delivery_tag));
+        hv_stores(output,
+                  "method",
+                  newSVpvs("basic.reject"));
+        hv_stores(output,
+                  "delivery_tag",
+                  newSViv(result.payload.reject.delivery_tag));
+        hv_stores(output,
+                  "requeue",
+                  newSViv(result.payload.reject.requeue));
+        break;
+      default:
+        Perl_croak(aTHX_ "Unexpected method received waiting for publisher confirm: %s", amqp_method_name(result.method));
+    };
+
+    // Make our hashref
+    RETVAL = newRV_noinc(MUTABLE_SV(output));
+  OUTPUT:
+    RETVAL
+
 SV* net_amqp_rabbitmq_get_server_properties(conn)
   Net::AMQP::RabbitMQ conn
   PREINIT:

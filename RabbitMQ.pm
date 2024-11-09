@@ -2,7 +2,7 @@ package Net::AMQP::RabbitMQ;
 use strict;
 use warnings;
 
-our $VERSION = '2.40013';
+our $VERSION = '2.40014';
 
 use XSLoader;
 XSLoader::load "Net::AMQP::RabbitMQ", $VERSION;
@@ -464,15 +464,18 @@ C<$channel> is a channel that has been opened with C<channel_open>.
 C<$delivery_tag> the delivery tag seen from a returned message from the
 C<recv> method.
 
-C<$multiple> specifies if multiple are to be acknowledged at once.
+C<$multiple> specifies if multiple are to be acknowledged at once. If C<$multiple> is non-zero, the broker will operate on all messages delivered with a delivery tag less than or equal to C<$delivery_tag>.
 
-=head2 purge($channel, $queuename)
+=head2 nack($channel, $delivery_tag, $multiple = 0)
 
-Purge all messages from the specified queue.
+Negatively acknowledge a message.
 
 C<$channel> is a channel that has been opened with C<channel_open>.
 
-C<$queuename> is the queue to be purged.
+C<$delivery_tag> the delivery tag seen from a returned message from the
+C<recv> method.
+
+C<$multiple> specifies if multiple are to be acknowledged at once. If C<$multiple> is non-zero, the broker will operate on all messages delivered with a delivery tag less than or equal to C<$delivery_tag>.
 
 =head2 reject($channel, $delivery_tag, $requeue = 0)
 
@@ -484,6 +487,14 @@ C<$delivery_tag> the delivery tag seen from a returned message from the
 C<recv> method.
 
 C<$requeue> specifies if the message should be requeued.
+
+=head2 purge($channel, $queuename)
+
+Purge all messages from the specified queue.
+
+C<$channel> is a channel that has been opened with C<channel_open>.
+
+C<$queuename> is the queue to be purged.
 
 =head2 tx_select($channel)
 
@@ -553,6 +564,78 @@ it automatically handles sending heartbeats for you while active.
 =head2 has_ssl
 
 Returns true if the module was compiled with SSL support, false otherwise
+
+=head2 confirm_select($channel)
+
+Put the C<$channel> into select mode so that publisher confirmations will be sent by the broker.
+
+C<$channel> is the channel number you wish to put into select mode.
+
+Note that there is presently no way to disable select mode on a channel, so in order to cancel select mode you will need to close the channel and open another one.
+
+=head2 publisher_confirm_wait($timeout)
+
+Wait for a publisher confirm from the broker. If no publisher confirm has appeared before the timeout expires, C<undef> is returned.
+
+C<$timeout> is an E<integer> representing the amount of time, in seconds, to wait for a confirmation. If a positive timeout is not specified or is specified as zero, this call will block until a response is received. If you specify a negative value for the timeout, it will time out immediately.
+
+When a response is received, a hashref will be returned in the appropriate format for the method returned.
+
+For a `basic.ack` response:
+
+    {
+      channel => 2,
+      method  => 'basic.ack',
+      delivery_tag => 12,
+      multiple     => 0,
+    }
+
+For a `basic.nack` response:
+
+    {
+      channel => 2,
+      method  => 'basic.nack',
+      delivery_tag => 12,
+      multiple     => 0,
+      requeue      => 1,
+    }
+
+For a `basic.reject` response:
+
+    {
+      channel => 2,
+      method  => 'basic.reject',
+      delivery_tag => 12,
+      requeue      => 1,
+    }
+
+=over 4
+
+=item C<channel>
+
+This is the channel for which the publisher confirmation was received.
+
+=item C<method>
+
+The method received from the broker, which will always be one of C<basic.ack>, C<basic.nack>, or C<basic.reject>.
+
+=item C<delivery_tag>
+
+A numeric value identifying a message. This is a sequential integer set by the broker for messages delivered in order.
+
+For example, if you publish one message, that message will have C<delivery_tag> of C<n>. When you publish another message, that message will have a C<delivery_tag> of C<n+1>.
+
+=item C<multiple>
+
+Both C<basic.ack> and C<basic.nack> can be sent once for multiple messages. This boolean field, when true, indicates that B<all> messages up to the current C<delivery_tag> since the last response have been confirmed using the same message.
+
+So if you publish three messages, and you get a single C<basic.ack> with the C<multiple> field set to C<1>, then you know that all three of those messages have confirmed with the same method.
+
+=item C<requeue>
+
+For both C<basic.nack> and C<basic.reject>, a message can be requeued by whichever consumer received the message. If you receive a confirmation with this set to C<1>, then you know that the message(s) have already been requeued.
+
+=back
 
 =head1 WARNING AND ERROR MESSAGES
 
@@ -731,6 +814,8 @@ version 2+. Also, since the version of librabbitmq used is not a custom fork, it
 means this module doesn't support the basic_return callback method.
 
 This module has been tested with OpenSSL up to version 3.3.1.
+
+Please note that legacy versions of OpenSSL may or may not work, but are indeed unsupported. Only currently-supported versions of OpenSSL will be supported.
 
 =head1 AUTHORS
 

@@ -107,6 +107,10 @@ sub new {
   $self;
 }
 
+sub change_channel {
+  my ( $self, $channel ) = @_;
+  }
+
 sub plan {
   my ( $self, $test_count ) = @_;
 
@@ -634,6 +638,32 @@ sub reject {
       $self->mq->reject( $self->{channel}, $tag );
     }
   );
+}
+
+sub confirm_select {
+  my ( $self ) = @_;
+
+  $self->_ok(
+    sub {
+      $self->mq->confirm_select( $self->{channel} );
+    }
+  );
+}
+
+sub publisher_confirm_wait {
+  my ( $self, $timeout_sec ) = @_;
+
+  # Default to 2 seconds of wait
+  $timeout_sec ||= 2;
+
+  my $rv;
+  $self->_ok(
+    sub {
+      $rv = $self->mq->publisher_confirm_wait( $timeout_sec );
+    }
+  );
+
+  return $rv;
 }
 
 sub get_server_properties {
