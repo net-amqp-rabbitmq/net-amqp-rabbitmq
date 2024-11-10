@@ -577,7 +577,7 @@ Note that there is presently no way to disable select mode on a channel, so in o
 
 Wait for a publisher confirm from the broker. If no publisher confirm has appeared before the timeout expires, C<undef> is returned.
 
-C<$timeout> is an E<integer> representing the amount of time, in seconds, to wait for a confirmation. If a positive timeout is not specified or is specified as zero, this call will block until a response is received. If you specify a negative value for the timeout, it will time out immediately.
+C<$timeout> is an C<integer> representing the amount of time, in seconds, to wait for a confirmation. If a positive timeout is not specified or is specified as zero, this call will block until a response is received. If you specify a negative value for the timeout, it will time out immediately.
 
 When a response is received, a hashref will be returned in the appropriate format for the method returned.
 
