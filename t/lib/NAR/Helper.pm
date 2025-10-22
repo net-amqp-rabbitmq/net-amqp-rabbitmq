@@ -4,7 +4,7 @@ use warnings;
 
 use Net::AMQP::RabbitMQ;
 use Test::More ();
-use Carp qw/carp/;
+use Carp       qw/carp/;
 
 sub new {
   my ( $class, %options ) = @_;
@@ -12,12 +12,9 @@ sub new {
   my $mq     = Net::AMQP::RabbitMQ->new;
   my $unique = _unique();
 
-  my $ssl = $ENV{MQSSL} ? 1 : 0;
-  my $ssl_cacert =
-    exists $ENV{MQSSLCACERT}
-    ? $ENV{MQSSLCACERT}
-    : "t/ssl/api-cloudamqp-com-chain.pem",
-    my $ssl_verify_host = 1;
+  my $ssl             = $ENV{MQSSL} ? 1 : 0;
+  my $ssl_cacert      = $ENV{MQSSLCACERT};
+  my $ssl_verify_host = 1;
   if ( defined( $ENV{MQSSLVERIFYHOST} ) ) {
     $ssl_verify_host = $ENV{MQSSLVERIFYHOST};
   }
@@ -32,11 +29,12 @@ sub new {
     $ssl_verify_peer = $ENV{MQSSLVERIFYPEER};
   }
 
+  # THESE VALUES MUST BE USER-SUPPLIED!
   my $port;
-  my $host     = "shrimp.rmq.cloudamqp.com";
-  my $username = "frkwiwbi";
-  my $password = "n1rN3wmzelie8TYCTRjK9KHnJxo10HyN";
-  my $vhost    = "frkwiwbi";
+  my $host     = "";
+  my $username = "";
+  my $password = "";
+  my $vhost    = "";
 
   if ( $ssl || $options{ssl} ) {
     Test::More::note("ssl mode");
@@ -55,14 +53,25 @@ sub new {
     $vhost    = $ENV{MQVHOST}    if exists $ENV{MQVHOST};
     $port     = exists $ENV{MQPORT} ? $ENV{MQPORT} : undef;
   }
-  my $admin_protocol = $ENV{MQADMINPROTOCOL} || "https";
-  my $admin_port     = $ENV{MQADMINPORT}     || "443";
+
+  # For admin site
+  my $admin_protocol = $ENV{MQADMINPROTOCOL} // "https";
+  my $admin_port     = $ENV{MQADMINPORT}     // "443";
+  my $admin_cacert   = $ENV{MQADMINCACERT}   // undef;
+  my $admin_host     = $ENV{MQADMINHOST}     // $host;
+  my $admin_username = $ENV{MQADMINUSERNAME} // $username;
+  my $admin_password = $ENV{MQADMINPASSWORD} // $password;
+
+  if ( !defined $host || !defined $username ) {
+    warn
+'No host or user defined. Please see the https://metacpan.org/pod/Net::AMQP::RabbitMQ#RUNNING-THE-TEST-SUITE for more information.';
+  }
 
   #hack but it's ok as it's for testing and I don't want more deps
   my $uri_encoded_vhost = $vhost;
   $uri_encoded_vhost =~ s|/|%2F|g;
   my $admin_api_url =
-"$admin_protocol://$username:$password\@$host:$admin_port/api/exchanges/$uri_encoded_vhost";
+"$admin_protocol://$admin_username:$admin_password\@$admin_host:$admin_port/api/exchanges/$uri_encoded_vhost";
 
   my $self = {
     unique             => $unique,
@@ -85,6 +94,7 @@ sub new {
     declared_exchanges => [],
     declared_queues    => [],
     admin_api_url      => $admin_api_url,
+    admin_api_cacert   => $admin_cacert,
     %options,
   };
   if ( $ENV{NARDEBUG} ) {
@@ -95,6 +105,24 @@ sub new {
   bless $self, $class;
 
   $self;
+}
+
+sub change_channel {
+  my ( $self, $channel ) = @_;
+  }
+
+sub plan {
+  my ( $self, $test_count ) = @_;
+
+  my $should_skip = ( !$self->{host} || !$self->{username} );
+
+  if ($should_skip) {
+    Test::More::plan skip_all =>
+'No host or user defined. Please see the https://metacpan.org/pod/Net::AMQP::RabbitMQ#RUNNING-THE-TEST-SUITE for more information.';
+  }
+  else {
+    Test::More::plan tests => $test_count;
+  }
 }
 
 sub mq {
@@ -131,7 +159,7 @@ sub connect {
     ssl_init        => $self->{ssl_init},
     vhost           => $self->{vhost},
   };
-  if (defined $self->{port}) {
+  if ( defined $self->{port} ) {
     $options->{port} = $self->{port};
   }
   if ( defined $heartbeat ) {
@@ -162,7 +190,7 @@ sub get_connection_options {
     vhost           => $self->{vhost},
   };
 
-  if (defined $self->{port}) {
+  if ( defined $self->{port} ) {
     $to_return->{port} = $self->{port};
   }
 
@@ -610,6 +638,32 @@ sub reject {
       $self->mq->reject( $self->{channel}, $tag );
     }
   );
+}
+
+sub confirm_select {
+  my ( $self ) = @_;
+
+  $self->_ok(
+    sub {
+      $self->mq->confirm_select( $self->{channel} );
+    }
+  );
+}
+
+sub publisher_confirm_wait {
+  my ( $self, $timeout_sec ) = @_;
+
+  # Default to 2 seconds of wait
+  $timeout_sec ||= 2;
+
+  my $rv;
+  $self->_ok(
+    sub {
+      $rv = $self->mq->publisher_confirm_wait( $timeout_sec );
+    }
+  );
+
+  return $rv;
 }
 
 sub get_server_properties {

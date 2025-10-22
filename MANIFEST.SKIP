@@ -38,3 +38,7 @@ Net-AMQP-RabbitMQ-.*
 \.?tags
 local
 cpanfile*
+
+# Clang files
+^\.cache
+^compile_commands\.json

@@ -1,6 +1,14 @@
 ![example workflow](https://github.com/net-amqp-rabbitmq/net-amqp-rabbitmq/actions/workflows/linux-builds.yml/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/net-amqp-rabbitmq/net-amqp-rabbitmq/badge.png)](https://coveralls.io/r/net-amqp-rabbitmq/net-amqp-rabbitmq)
 
+# NOTICE
+
+This module has been in a pretty rough state of repair for a few years. I've been slowly cleaning it up and working on it as time allows.
+With version `2.40011`, I feel like we may be in pretty good shape. OpenSSL v3 is supported now, and `rabbitmq-c` is updated to `v0.14.0`.
+
+> [!IMPORTANT]
+> I could really use a hand with peer review on some of this cleanup. If you, or someone you know, is excited about security and is competent to review C code, [please see this GitHub Discussion](https://github.com/net-amqp-rabbitmq/net-amqp-rabbitmq/discussions/247#discussion-6849541). Thank you.
+
 # Install
 
 ` cpanm Net::AMQP::RabbitMQ`
@@ -30,31 +38,32 @@ git submodule init
 git submodule update
 ```
 
-There is a vagrant development environment available, with a local rabbitmq installation and ssl enabled.
-
-The test environment variables have been set to use this install
-
+This module uses [Carton](https://metacpan.org/pod/Carton) for Perl dependencies. Please first install Carton, and then install Perl dependencies using:
 
 ```sh
-vagrant up
-vagrant ssh
-cd /vagrant
-make distclean; perl Makefile.PL; make
-
-#run all tests with test debugging
-NARDEBUG=1 prove -I blib/lib -I blib/arch -v t/
-
-#run all tests in ssl mode
-MQSSL=1 prove -I blib/lib -I blib/arch -v t/
+carton install
 ```
+
+When running your own tests, for quick access to a testing RabbitMQ service, consider [CloudAMQP](https://cloudamqp.com).
+
+There are a few convenience scripts to help you out:
+
+- `local-tests-no-ssl` - Convenience script to run tests on a local network without SSL at all.
+- `run-one-test` - This script helps you quickly run a single test while working on this project.
+- `ci/run-ci-tests.sh` - This script is what we run in GitHub Actions, it'll help you run the full suite. This script will likely only run on GNU/Linux, and depending on your RabbitMQ server's capacity it could take in excess of two hours to run completely.
 
 # To build a release
 
 ```sh
+make distclean
 perl Makefile.PL
 make manifest
 make dist
 ```
+
+## Known challenges
+
+- In order to run test `024_boolean_header_fields.t`, you need to have the web client for RabbitMQ enabled, and your test user must have access to it. This is because this test uses the web client to test specific use cases which require a literal Boolean type (which Perl lacks).
 
 # Special note for macOS
 
@@ -68,6 +77,4 @@ that you check this _first_.
 
 # OpenSSL Compatibility
 
-So far we have been testing with OpenSSL 1.1. We appear to be good there, but
-OpenSSL 3 is not supported at this time.
-
+To date, OpenSSL v3 is supported.

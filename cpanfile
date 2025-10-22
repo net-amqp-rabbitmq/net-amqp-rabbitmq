@@ -1,8 +1,8 @@
-requires 'ExtUtils::PkgConfig' => '1.16';
 requires 'Math::Int64'         => '0';
 
 on 'test' => sub {
   requires 'B::Debug'                        => '0';
+  requires 'Devel::CheckLib'                 => '0';
   requires 'Devel::Cover'                    => '0';
   requires 'Devel::Cover::Report::Coveralls' => '0';
   requires 'CPAN::Meta'                      => '0';

@@ -17,10 +17,10 @@
 #  define MUTABLE_HV(p) ((HV*)MUTABLE_PTR(p))
 #endif
 
-#include "amqp.h"
+#include "rabbitmq-c/amqp.h"
 #include "amqp_socket.h"
-#include "amqp_tcp_socket.h"
-#include "amqp_ssl_socket.h"
+#include "rabbitmq-c/tcp_socket.h"
+#include "rabbitmq-c/ssl_socket.h"
 /* For struct timeval */
 #include "amqp_time.h"
 
@@ -1159,7 +1159,6 @@ net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
     char *ssl_cert = NULL;
     char *ssl_key = NULL;
     int ssl_verify_host = 1;
-    int ssl_init = 1;
     char *sasl_method = "plain";
     amqp_sasl_method_enum sasl_type = AMQP_SASL_METHOD_PLAIN;
     amqp_table_t client_properties_tbl = amqp_empty_table;
@@ -1178,7 +1177,6 @@ net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
     str_from_hv(options, ssl_cert);
     str_from_hv(options, ssl_key);
     int_from_hv(options, ssl_verify_host);
-    int_from_hv(options, ssl_init);
     str_from_hv(options, sasl_method);
 
     if(client_properties)
@@ -1192,13 +1190,13 @@ net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
     }
 
     if ( ssl ) {
+        __DEBUG__(warn("!!! SSL ENABLED !!!\n"));
 #ifndef NAR_HAVE_OPENSSL
         Perl_croak(aTHX_ "no ssl support, please install openssl and reinstall");
 #endif
-        if (!hv_exists(SvRV(options), "port", 4)) {
+        if (!hv_exists(options, "port", 4)) {
           port = 5671;
         }
-        amqp_set_initialize_ssl_library( (amqp_boolean_t)ssl_init );
         sock = amqp_ssl_socket_new(conn);
         if ( !sock ) {
           Perl_croak(aTHX_ "error creating SSL socket");
@@ -1219,6 +1217,8 @@ net_amqp_rabbitmq_connect(conn, hostname, options, client_properties = NULL)
         }
     }
     else {
+        __DEBUG__(
+          warn("!!! SSL DISABLED !!!\n"));
         sock = amqp_tcp_socket_new(conn);
         if (!sock) {
           Perl_croak(aTHX_ "error creating TCP socket");
@@ -1959,7 +1959,7 @@ SV* net_amqp_rabbitmq_get_rpc_timeout(conn)
       output = newHV();
       hv_stores(output, "tv_sec", newSVi64( timeout_tv->tv_sec ));
       hv_stores(output, "tv_usec", newSVi64( timeout_tv->tv_usec ));
-      RETVAL = newRV_noinc( output );
+      RETVAL = newRV_noinc((SV*) output );
     }
   OUTPUT:
     RETVAL
@@ -1988,8 +1988,8 @@ void net_amqp_rabbitmq__set_rpc_timeout(conn, args = NULL)
 
     /* If we are setting the RPC timeout to something other than NULL... */
     else {
-      int_from_hv(SvRV(args), tv_sec);
-      int_from_hv(SvRV(args), tv_usec);
+      int_from_hv((HV*)SvRV(args), tv_sec);
+      int_from_hv((HV*)SvRV(args), tv_usec);
       __DEBUG__( warn("%d set_rpc_timeout: Setting to tv_sec:%d and tv_usec:%d.", __LINE__, tv_sec, tv_usec) );
       /* If we need to allocate the timeout... */
 
@@ -2017,6 +2017,105 @@ net_amqp_rabbitmq_basic_qos(conn, channel, args = NULL)
     amqp_basic_qos(conn, channel,
                    prefetch_size, prefetch_count, global);
     die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn), conn, "Basic QoS");
+
+void
+net_amqp_rabbitmq_confirm_select(conn, channel)
+  Net::AMQP::RabbitMQ conn
+  int channel
+  CODE:
+    amqp_confirm_select(conn, channel);
+    die_on_amqp_error(aTHX_ amqp_get_rpc_reply(conn),
+                      conn,
+                      "Confirm Select");
+
+SV* net_amqp_rabbitmq_publisher_confirm_wait(conn, timeout)
+  Net::AMQP::RabbitMQ conn
+  int timeout
+
+  PREINIT:
+
+    HV *output = (HV*)NULL;
+    struct timeval timeout_tv = {0,0};
+    amqp_publisher_confirm_t result;
+    amqp_rpc_reply_t ret;
+
+  CODE:
+
+    if (timeout > 0) {
+      timeout_tv.tv_sec = timeout / 1000;
+      timeout_tv.tv_usec = (timeout % 1000) * 1000;
+    } else if (timeout < 0) {
+      timeout_tv.tv_sec = 0;
+      timeout_tv.tv_usec = 0;
+    }
+    ret = amqp_publisher_confirm_wait(
+            conn,
+            timeout ? &timeout_tv : (struct timeval*)NULL,
+            &result
+          );
+
+    // This condition is for when there's no method received in
+    // the allotted time.
+    if (AMQP_RESPONSE_LIBRARY_EXCEPTION == ret.reply_type &&
+        AMQP_STATUS_TIMEOUT == ret.library_error) {
+      XSRETURN_UNDEF;
+    } else {
+      die_on_amqp_error(aTHX_ ret, conn, "Publisher Confirm Wait");
+    }
+
+    // Allocate our output hash
+    output = (HV*)newHV();
+    hv_stores(output, "channel", newSViv(result.channel));
+    switch (result.method) {
+      case AMQP_BASIC_ACK_METHOD:
+        __DEBUG__(warn("AMQP_BASIC_ACK_METHOD received (%ld).", result.payload.ack.delivery_tag));
+        hv_stores(output,
+                  "method",
+                  newSVpvs("basic.ack"));
+        hv_stores(output,
+                  "delivery_tag",
+                  newSVu64(result.payload.ack.delivery_tag));
+        hv_stores(output,
+                  "multiple",
+                  newSViv(result.payload.ack.multiple));
+        break;
+
+      case AMQP_BASIC_NACK_METHOD:
+        __DEBUG__(warn("AMQP_BASIC_NACK_METHOD received (%ld).", result.payload.nack.delivery_tag));
+        hv_stores(output,
+                  "method",
+                  newSVpvs("basic.nack"));
+        hv_stores(output,
+                  "delivery_tag",
+                  newSVu64(result.payload.nack.delivery_tag));
+        hv_stores(output,
+                  "multiple",
+                  newSViv(result.payload.nack.multiple));
+        hv_stores(output,
+                  "requeue",
+                  newSViv(result.payload.nack.requeue));
+        break;
+
+      case AMQP_BASIC_REJECT_METHOD:
+        __DEBUG__(warn("AMQP_BASIC_REJECT_METHOD received (%ld).", result.payload.reject.delivery_tag));
+        hv_stores(output,
+                  "method",
+                  newSVpvs("basic.reject"));
+        hv_stores(output,
+                  "delivery_tag",
+                  newSViv(result.payload.reject.delivery_tag));
+        hv_stores(output,
+                  "requeue",
+                  newSViv(result.payload.reject.requeue));
+        break;
+      default:
+        Perl_croak(aTHX_ "Unexpected method received waiting for publisher confirm: %s", amqp_method_name(result.method));
+    };
+
+    // Make our hashref
+    RETVAL = newRV_noinc(MUTABLE_SV(output));
+  OUTPUT:
+    RETVAL
 
 SV* net_amqp_rabbitmq_get_server_properties(conn)
   Net::AMQP::RabbitMQ conn

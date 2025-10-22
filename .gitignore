@@ -22,3 +22,4 @@ MANIFEST.bak
 local
 .vstags
 .vscode
+compile_commands.json
