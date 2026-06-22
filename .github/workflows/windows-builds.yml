@@ -1,0 +1,80 @@
+name: Windows Builds for Net::AMQP::RabbitMQ
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  win-tests:
+    name: "perl v${{ matrix.perl-version }} on windows-latest"
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        perl-version:
+          - "5.36.3.1"
+#          - "5.32.0.1"
+#          - "5.30.0.1"
+#          - "5.28.0.1"
+#          - "5.26.0.1"
+#          - "5.24.0.1"
+#          - "5.22.3.1"
+#          - "5.20.0.1"
+#          - "5.18.4.1"
+#          - "5.16.3.1"
+#          - "5.14.4.1"
+#          - "5.12.3.0"
+
+    steps:
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          
+#      - name: Build something requiring CL.EXE
+#        shell: cmd
+#        run: |
+#          cmake -G "NMake Makefiles" .
+#          nmake
+
+      - name: Check out code (w/submodules)
+        uses: actions/checkout@main
+        with:
+          submodules: recursive
+          
+      - name: Set up Perl
+        shell: cmd
+        run: |
+          choco install strawberryperl -y --no-progress --allow-unofficial --version="'${{ matrix.perl-version }}'"
+          echo "##[add-path]C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin"
+        
+#      - name: Set up Perl
+#        run: |
+#          choco install strawberryperl --version="'${{ matrix.perl-version }}'"
+#          echo "##[add-path]C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin"
+
+      - name: Set PATH
+        shell: cmd
+        run: |
+          set PATH=%PATH%;C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin
+          perl -V
+
+
+
+      - name: Install Perl dependencies
+        uses: perl-actions/install-with-cpanm@v1
+        with:
+          cpanfile: "cpanfile"
+          sudo: false
+          args: "--with-test"
+          perl: C:\strawberry\perl\bin\perl.exe
+
+      - name: Run CI tests
+        shell: cmd
+        run: ./ci/run-ci-tests.bat
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          IS_OSX: false
+          PERL_VERSION: ${{ matrix.perl-version }}

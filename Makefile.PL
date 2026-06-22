@@ -25,9 +25,18 @@ my $has_htonll = check_lib(
 );
 
 #XXX i wonder if we should check for socket and poll...
-my @defines =
-  ( '-DHAVE_SOCKET', '-DHAVE_POLL', qq/-DAMQ_PLATFORM='"Perl_$^O_$^V"'/ );
+
+my @defines = ('-DHAVE_SOCKET', qq/-DAMQ_PLATFORM='"Perl_$^O_$^V"'/);
 push @defines, '-DHAVE_HTONLL' if $has_htonll;
+
+# Important: Windows doesn't support POLL yet, instead we needd SELECT
+if ($^O eq 'MSWin32') {
+  push @defines, '-DHAVE_SELECT';
+  push @defines, '-D_WIN32';
+  push @defines, '-DAMQP_BUILD';
+} else {
+  push @defines, '-DHAVE_POLL';
+}
 
 my $OPTIMIZED_BUILD = $ENV{'OPTIMIZE'};
 if ( ( $ARGV[-1] || 'NOPE' ) eq 'DEBUG' ) {
@@ -36,7 +45,7 @@ if ( ( $ARGV[-1] || 'NOPE' ) eq 'DEBUG' ) {
   $OPTIMIZED_BUILD = " ";
 }
 
-my @libs = ();
+my @libs = ('-rt');
 my @inc  = ( '-I.', '-Irabbitmq-include', '-Irabbitmq-c/include' );
 
 my %checklib_extra_options = ();
