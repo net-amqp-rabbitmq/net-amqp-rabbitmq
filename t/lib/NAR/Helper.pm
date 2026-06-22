@@ -653,7 +653,7 @@ sub confirm_select {
 sub publisher_confirm_wait {
   my ( $self, $timeout_sec ) = @_;
 
-  # Default to 2 seconds of wait
+  # Default to 2 milliseconds of wait
   $timeout_sec ||= 2;
 
   my $rv;
