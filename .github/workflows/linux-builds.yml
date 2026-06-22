@@ -66,12 +66,12 @@ jobs:
 
     steps:
       - name: Check out code (w/submodules)
-        uses: actions/checkout@main
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           submodules: recursive
 
       - name: Install Perl dependencies
-        uses: perl-actions/install-with-cpanm@v1
+        uses: perl-actions/install-with-cpanm@8ec40bce95c287169e8c13551e5e49d0185ce955
         with:
           cpanfile: "cpanfile"
           sudo: false
